@@ -145,6 +145,17 @@
   .pdftext{margin-top:10px;max-height:220px;overflow:auto;white-space:pre-wrap;font-family:'Geist Mono',monospace;
     font-size:11.5px;color:var(--text-dim);background:var(--glass-2);border:1px solid var(--stroke);border-radius:13px;padding:12px 14px}
 
+  .shop{list-style:none;margin-top:2px}
+  .shop li{display:flex;align-items:center;gap:11px;padding:9px 2px;font-size:14px;color:var(--text);
+    cursor:pointer;border-bottom:1px solid var(--stroke);-webkit-tap-highlight-color:transparent}
+  .shop li:last-child{border-bottom:none}
+  .shop li .box{flex:0 0 auto;width:19px;height:19px;border-radius:6px;border:1.5px solid var(--stroke-2);
+    display:flex;align-items:center;justify-content:center;transition:.15s ease}
+  .shop li.on{color:var(--text-faint);text-decoration:line-through}
+  .shop li.on .box{background:var(--accent);border-color:var(--accent)}
+  .shop li.on .box::after{content:"";width:5px;height:9px;border:solid var(--accent-ink);border-width:0 2px 2px 0;
+    transform:rotate(45deg) translateY(-1px)}
+
   footer{margin-top:28px;padding-top:22px;border-top:1px solid var(--stroke);color:var(--text-faint);font-size:12.5px}
   footer .lk{display:flex;align-items:center;gap:8px;color:var(--text-dim);margin-bottom:8px}
   footer .lk svg{width:13px;height:13px;color:var(--accent)}
@@ -358,12 +369,33 @@ const PREP_BATCH=[
  ['Legumi in scatola','Sciacqua e scola ceci/lenticchie','Pronti all’uso, tolgono il sale in eccesso']
 ];
 
-const SPESA={
- 'Carboidrati':['Pasta di semola','Pasta all’uovo','Orzo','Farro','Riso','Cous cous','Pane integrale','Patate','Crackers','Cereali da colazione'],
- 'Proteine':['Pollo (petto e coscia)','Manzo magro (fettine e macinato)','Merluzzo','Salmone','Uova','Tonno in scatola','Feta','Mozzarella','Lenticchie e ceci in scatola'],
- 'Verdura e frutta':['Verdure miste (zucchine, melanzane, broccoli, cavolfiore, pomodori, carote, insalata)','Frutta fresca di stagione','Frutta secca o oleosa'],
- 'Dispensa':['Olio EVO','Pesto Genovese','Grana','Latte parzialmente scremato','Cioccolato fondente','Erbe e spezie (basilico, origano, rosmarino, aglio, limone, paprika, prezzemolo, menta)']
-};
+function categoriaSpesa(name){
+  const n=name.toLowerCase();
+  const has=(...ks)=>ks.some(k=>n.includes(k));
+  if(has('pasta','riso','orzo','farro','cous','pane','patate','cracker','cereali','avena','grissini','biscott','wasa','bauletto','frollini','muesli','corn flakes')) return 'Carboidrati';
+  if(has('verdur','pomodor','insalata','carote','zucchine','melanzane','broccoli','cavolfiore','frutta')) return 'Verdura e frutta';
+  if(has('pollo','manzo','merluzzo','salmone','uov','tonno','feta','mozzarella','lenticchie','ceci','fagioli','pesce','gamberetti','vongole','cozze','tofu','affettato','prosciutto','ricotta','stracchino','cavallo','polpo','formaggio')) return 'Proteine';
+  if(has('olio','pesto','cioccolat','grana','latte','kefir','yogurt','sale','spezie','salsa','passata')) return 'Dispensa';
+  return 'Altro';
+}
+
+function buildSpesa(){
+  const cats={'Carboidrati':[],'Proteine':[],'Verdura e frutta':[],'Dispensa':[],'Altro':[]};
+  const seen=new Set();
+  const add=(ing)=>{(ing||[]).forEach(pair=>{
+    const clean=String(pair[0]).replace(/\s*\([^)]*\)/g,'').trim();
+    if(!clean||seen.has(clean.toLowerCase())) return;
+    seen.add(clean.toLowerCase());
+    cats[categoriaSpesa(clean)].push(clean);
+  });};
+  add(PLAN.colazione.ing);add(PLAN.spMattino.ing);add(PLAN.spPomeriggio.ing);
+  PLAN.days.forEach(d=>{add(d.pranzo.ing);add(d.cena.ing);});
+  return cats;
+}
+
+const SPESA_KEY='piano11-spesa-checked';
+function loadChecked(){try{return new Set(JSON.parse(localStorage.getItem(SPESA_KEY)||'[]'));}catch(e){return new Set();}}
+function saveChecked(set){try{localStorage.setItem(SPESA_KEY,JSON.stringify([...set]));}catch(e){}}
 
 const TRUCCHI=[
  'Mise en place la sera prima: lava e taglia le verdure del giorno dopo — 5 minuti guadagnati a pranzo.',
@@ -393,8 +425,10 @@ const rail=document.getElementById('rail');
 const content=document.getElementById('content');
 const heroDay=document.getElementById('heroDay');
 const heroDate=document.getElementById('heroDate');
+let currentDay=0;
 
 function render(i){
+  currentDay=i;
   const d=PLAN.days[i];
   heroDay.textContent=d.full;
   const seq=[PLAN.colazione,PLAN.spMattino,
@@ -406,22 +440,51 @@ function render(i){
   [...rail.children].forEach((b,bi)=>b.setAttribute('aria-selected',bi===i));
 }
 
+function selectDay(i){
+  i=Math.max(0,Math.min(PLAN.days.length-1,i));
+  render(i);
+  const chip=rail.children[i];
+  if(chip) chip.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+}
+
 function renderPrep(){
+  currentDay=-1;
   heroDay.textContent='Organizza';
+  const checked=loadChecked();
   let h='<div class="day-label">Organizzazione settimanale</div>';
 
   h+='<div class="card"><div class="kick">Batch cooking</div><div class="mtitle">Cosa cuocere in anticipo</div>';
   h+='<div class="alts"><span>Inizio settimana</span><ul>'+PREP_BATCH.map(p=>'<li><b>'+p[0]+'</b> '+p[1]+' — '+p[2]+'</li>').join('')+'</ul></div></div>';
 
-  h+='<div class="card"><div class="kick">Lista della spesa</div><div class="mtitle">Per tutta la settimana</div>';
-  h+=Object.entries(SPESA).map(([cat,items])=>'<div class="alts"><span>'+cat+'</span><ul>'+items.map(i=>'<li>'+i+'</li>').join('')+'</ul></div>').join('');
-  h+='</div>';
+  const cats=buildSpesa();
+  h+='<div class="card"><div class="meal-top"><div><div class="kick">Lista della spesa</div><div class="mtitle">Generata dal piano</div></div>';
+  h+='<button class="btn" id="clearShop">Azzera spunte</button></div>';
+  h+=Object.entries(cats).filter(([,items])=>items.length).map(([cat,items])=>
+    '<div class="alts"><span>'+cat+'</span><ul class="shop">'+items.map(i=>{
+      const on=checked.has(i)?' class="on"':'';
+      return '<li'+on+' data-ing="'+i.replace(/"/g,'&quot;')+'"><span class="box"></span>'+i+'</li>';
+    }).join('')+'</ul></div>').join('');
+  h+='<div class="liberi">Tocca un alimento per segnarlo come preso. Le spunte restano salvate sul dispositivo.</div></div>';
 
   h+='<div class="card accent"><div class="kick">Trucchi</div><div class="mtitle">Per fare tutto più in fretta</div>'+steps(TRUCCHI)+'</div>';
 
   content.innerHTML=h;
   content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
   [...rail.children].forEach(b=>b.setAttribute('aria-selected',b===prepBtn));
+
+  content.querySelectorAll('.shop li').forEach(li=>{
+    li.addEventListener('click',()=>{
+      const set=loadChecked();
+      const ing=li.dataset.ing;
+      if(li.classList.toggle('on')) set.add(ing); else set.delete(ing);
+      saveChecked(set);
+    });
+  });
+  const clear=document.getElementById('clearShop');
+  if(clear) clear.addEventListener('click',()=>{
+    saveChecked(new Set());
+    content.querySelectorAll('.shop li.on').forEach(li=>li.classList.remove('on'));
+  });
 }
 
 let prepBtn=null, pianoBtn=null;
@@ -431,7 +494,7 @@ function buildRail(){
     const b=document.createElement('button');
     b.className='dchip';b.textContent=d.name;b.setAttribute('role','tab');
     b.setAttribute('aria-selected',i===0);
-    b.addEventListener('click',()=>{render(i);b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});});
+    b.addEventListener('click',()=>selectDay(i));
     rail.appendChild(b);
   });
 
@@ -476,6 +539,7 @@ async function extractPdfText(file){
 }
 
 function renderPiano(){
+  currentDay=-1;
   heroDay.textContent='Piano';
   let h='<div class="day-label">Cambia il piano alimentare</div>';
 
@@ -530,9 +594,9 @@ function renderPiano(){
     if(err){ planMsg.innerHTML='<div class="msg err">'+err+'</div>'; return; }
     PLAN=parsed;
     try{localStorage.setItem(PLAN_KEY,JSON.stringify(PLAN));}catch(e){}
-    planMsg.innerHTML='<div class="msg ok">Piano applicato e salvato su questo dispositivo.</div>';
+    planMsg.innerHTML='<div class="msg ok">Piano applicato e salvato su questo dispositivo. Tocca un giorno per vederlo.</div>';
     buildRail();
-    render(0);
+    [...rail.children].forEach(b=>b.setAttribute('aria-selected',b===pianoBtn));
   });
 
   document.getElementById('exportBtn').addEventListener('click',()=>{
@@ -555,13 +619,35 @@ function renderPiano(){
     if(!confirm('Ripristinare il piano originale? Le modifiche correnti andranno perse.')) return;
     try{localStorage.removeItem(PLAN_KEY);}catch(e){}
     PLAN=clonePlan(DEFAULT_PLAN);
-    planMsg.innerHTML='<div class="msg ok">Piano originale ripristinato.</div>';
     buildRail();
-    render(0);
+    renderPiano();
+    const m=document.getElementById('planMsg');
+    if(m) m.innerHTML='<div class="msg ok">Piano originale ripristinato.</div>';
   });
 }
 
 buildRail();
+
+// Swipe orizzontale tra i giorni (solo quando si sta visualizzando un giorno)
+let tsx=0,tsy=0;
+content.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tsx=t.clientX;tsy=t.clientY;},{passive:true});
+content.addEventListener('touchend',e=>{
+  if(currentDay<0) return;
+  const t=e.changedTouches[0];
+  const dx=t.clientX-tsx, dy=t.clientY-tsy;
+  if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.6) selectDay(currentDay+(dx<0?1:-1));
+},{passive:true});
+
+// Frecce tastiera per spostarsi tra le schede
+rail.addEventListener('keydown',e=>{
+  if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft') return;
+  const items=[...rail.children];
+  let idx=items.findIndex(b=>b.getAttribute('aria-selected')==='true');
+  if(idx<0) idx=0;
+  idx=(idx+(e.key==='ArrowRight'?1:-1)+items.length)%items.length;
+  items[idx].click();items[idx].focus();
+  e.preventDefault();
+});
 
 const sws=document.querySelectorAll('.sw');
 function setTheme(t){

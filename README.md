@@ -8,7 +8,8 @@ Grammi e macro identici al piano del Dott. Salvatore Occhino.
 - Funziona offline (service worker)
 - Aggiungibile alla schermata Home su iOS
 - Trucco "veloce" su ogni pranzo e cena per ridurre i tempi in cucina
-- Scheda **Prep**: batch cooking a inizio settimana, lista della spesa per categoria, trucchi generali di organizzazione
+- **Swipe** sinistra/destra per cambiare giorno; frecce ← → da tastiera tra le schede
+- Scheda **Prep**: batch cooking, **lista della spesa generata automaticamente dal piano** con caselle spuntabili (le spunte restano salvate), trucchi di organizzazione
 - Scheda **Piano**: cambia il piano alimentare senza toccare il codice
 
 ## Cambiare il piano alimentare
