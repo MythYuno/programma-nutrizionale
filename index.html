@@ -131,6 +131,20 @@
   .tip svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px;color:var(--accent)}
   .tip b{color:var(--accent);font-weight:600}
 
+  .field{width:100%;margin-top:10px;background:var(--glass-2);border:1px solid var(--stroke);border-radius:13px;
+    padding:12px 14px;color:var(--text);font-family:'Geist Mono',monospace;font-size:12.5px;line-height:1.5;resize:vertical}
+  .field:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .btn{font-family:'Geist',sans-serif;font-weight:600;font-size:13.5px;border-radius:11px;padding:10px 16px;
+    cursor:pointer;border:1px solid var(--stroke-2);background:var(--glass-2);color:var(--text);transition:.15s ease;display:inline-flex;align-items:center}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .msg{margin-top:12px;font-size:12.5px;border-radius:10px;padding:9px 12px}
+  .msg.ok{background:rgba(120,200,140,.12);color:#9fe3b0;border:1px solid rgba(120,200,140,.3)}
+  .msg.err{background:rgba(220,90,90,.12);color:#f3a3a3;border:1px solid rgba(220,90,90,.3)}
+  .pdftext{margin-top:10px;max-height:220px;overflow:auto;white-space:pre-wrap;font-family:'Geist Mono',monospace;
+    font-size:11.5px;color:var(--text-dim);background:var(--glass-2);border:1px solid var(--stroke);border-radius:13px;padding:12px 14px}
+
   footer{margin-top:28px;padding-top:22px;border-top:1px solid var(--stroke);color:var(--text-faint);font-size:12.5px}
   footer .lk{display:flex;align-items:center;gap:8px;color:var(--text-dim);margin-bottom:8px}
   footer .lk svg{width:13px;height:13px;color:var(--accent)}
@@ -303,6 +317,37 @@ const DAYS=[
    tip:'La cena più rapida della settimana: le uova sode si fanno mentre apparecchi, 8 minuti in tutto.'}}
 ];
 
+const DEFAULT_PLAN={colazione:COLAZIONE,spMattino:SP_MATTINO,spPomeriggio:SP_POMERIGGIO,days:DAYS};
+const PLAN_KEY='piano11-plan-v1';
+
+function clonePlan(p){return JSON.parse(JSON.stringify(p));}
+
+function validatePlan(p){
+  if(!p||typeof p!=='object') return 'Il piano deve essere un oggetto JSON valido.';
+  if(!p.colazione||!Array.isArray(p.colazione.ing)) return 'Manca "colazione" con un array "ing".';
+  if(!p.spMattino||!Array.isArray(p.spMattino.ing)) return 'Manca "spMattino" con un array "ing".';
+  if(!p.spPomeriggio||!Array.isArray(p.spPomeriggio.ing)) return 'Manca "spPomeriggio" con un array "ing".';
+  if(!Array.isArray(p.days)||p.days.length!==7) return '"days" deve essere un array di 7 giorni.';
+  for(const d of p.days){
+    if(!d.name||!d.full) return 'Ogni giorno richiede "name" e "full".';
+    if(!d.pranzo||!Array.isArray(d.pranzo.ing)||!d.pranzo.title) return 'Ogni giorno richiede "pranzo" con "title" e "ing" (array).';
+    if(!d.cena||!Array.isArray(d.cena.ing)||!d.cena.title) return 'Ogni giorno richiede "cena" con "title" e "ing" (array).';
+  }
+  return null;
+}
+
+function loadPlan(){
+  try{
+    const raw=localStorage.getItem(PLAN_KEY);
+    if(!raw) return clonePlan(DEFAULT_PLAN);
+    const parsed=JSON.parse(raw);
+    if(validatePlan(parsed)) return clonePlan(DEFAULT_PLAN);
+    return parsed;
+  }catch(e){return clonePlan(DEFAULT_PLAN);}
+}
+
+let PLAN=loadPlan();
+
 const MESI=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
 
 const PREP_BATCH=[
@@ -350,11 +395,11 @@ const heroDay=document.getElementById('heroDay');
 const heroDate=document.getElementById('heroDate');
 
 function render(i){
-  const d=DAYS[i];
+  const d=PLAN.days[i];
   heroDay.textContent=d.full;
-  const seq=[COLAZIONE,SP_MATTINO,
+  const seq=[PLAN.colazione,PLAN.spMattino,
     Object.assign({kick:'Pranzo · veloce',accent:true},d.pranzo),
-    SP_POMERIGGIO,
+    PLAN.spPomeriggio,
     Object.assign({kick:'Cena'},d.cena)];
   content.innerHTML='<div class="day-label">'+d.full+'</div>'+seq.map(renderMeal).join('');
   content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
@@ -379,19 +424,144 @@ function renderPrep(){
   [...rail.children].forEach(b=>b.setAttribute('aria-selected',b===prepBtn));
 }
 
-DAYS.forEach((d,i)=>{
-  const b=document.createElement('button');
-  b.className='dchip';b.textContent=d.name;b.setAttribute('role','tab');
-  b.setAttribute('aria-selected',i===0);
-  b.addEventListener('click',()=>{render(i);b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});});
-  rail.appendChild(b);
-});
+let prepBtn=null, pianoBtn=null;
+function buildRail(){
+  rail.innerHTML='';
+  PLAN.days.forEach((d,i)=>{
+    const b=document.createElement('button');
+    b.className='dchip';b.textContent=d.name;b.setAttribute('role','tab');
+    b.setAttribute('aria-selected',i===0);
+    b.addEventListener('click',()=>{render(i);b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});});
+    rail.appendChild(b);
+  });
 
-const prepBtn=document.createElement('button');
-prepBtn.className='dchip';prepBtn.textContent='Prep';prepBtn.setAttribute('role','tab');
-prepBtn.setAttribute('aria-selected','false');
-prepBtn.addEventListener('click',()=>{renderPrep();prepBtn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});});
-rail.appendChild(prepBtn);
+  prepBtn=document.createElement('button');
+  prepBtn.className='dchip';prepBtn.textContent='Prep';prepBtn.setAttribute('role','tab');
+  prepBtn.setAttribute('aria-selected','false');
+  prepBtn.addEventListener('click',()=>{renderPrep();prepBtn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});});
+  rail.appendChild(prepBtn);
+
+  pianoBtn=document.createElement('button');
+  pianoBtn.className='dchip';pianoBtn.textContent='Piano';pianoBtn.setAttribute('role','tab');
+  pianoBtn.setAttribute('aria-selected','false');
+  pianoBtn.addEventListener('click',()=>{renderPiano();pianoBtn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});});
+  rail.appendChild(pianoBtn);
+}
+
+function planJsonString(){return JSON.stringify(PLAN,null,2);}
+
+async function loadPdfJs(){
+  if(window.pdfjsLib) return window.pdfjsLib;
+  await new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js';
+    s.onload=res;s.onerror=()=>rej(new Error('Impossibile caricare il lettore PDF: serve connessione internet la prima volta.'));
+    document.head.appendChild(s);
+  });
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+  return window.pdfjsLib;
+}
+
+async function extractPdfText(file){
+  const pdfjsLib=await loadPdfJs();
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let text='';
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const tc=await page.getTextContent();
+    text+=tc.items.map(it=>it.str).join(' ')+'\n\n';
+  }
+  return text.trim();
+}
+
+function renderPiano(){
+  heroDay.textContent='Piano';
+  let h='<div class="day-label">Cambia il piano alimentare</div>';
+
+  h+='<div class="card"><div class="kick">PDF</div><div class="mtitle">Estrai testo da un PDF</div>';
+  h+='<div class="liberi">Carica il PDF del medico per leggerne il testo qui sotto: copia i valori che ti servono e incollali nel JSON del piano qui sotto. Il parsing automatico dei grammi non è affidabile su PDF con layout diversi, quindi va sempre controllato a mano. Serve connessione internet solo la prima volta (scarica il lettore PDF).</div>';
+  h+='<div class="btnrow"><label class="btn">Scegli PDF<input type="file" id="pdfFile" accept="application/pdf" hidden></label></div>';
+  h+='<div id="pdfMsg"></div>';
+  h+='<div class="pdftext" id="pdfText" hidden></div>';
+  h+='</div>';
+
+  h+='<div class="card accent"><div class="kick">Editor</div><div class="mtitle">Piano in formato JSON</div>';
+  h+='<div class="liberi">Modifica i valori qui sotto (o incolla/importa un piano esportato in precedenza) e premi <b>Applica modifiche</b>. Resta salvato su questo dispositivo, senza bisogno di toccare il codice dell’app.</div>';
+  h+='<textarea class="field" id="planEditor" rows="14" spellcheck="false">'+planJsonString()+'</textarea>';
+  h+='<div class="btnrow">';
+  h+='<button class="btn primary" id="applyBtn">Applica modifiche</button>';
+  h+='<button class="btn" id="exportBtn">Esporta JSON</button>';
+  h+='<label class="btn">Importa file JSON<input type="file" id="jsonFile" accept="application/json" hidden></label>';
+  h+='<button class="btn" id="resetBtn">Ripristina piano originale</button>';
+  h+='</div>';
+  h+='<div id="planMsg"></div>';
+  h+='</div>';
+
+  content.innerHTML=h;
+  content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
+  [...rail.children].forEach(b=>b.setAttribute('aria-selected',b===pianoBtn));
+
+  const pdfMsg=document.getElementById('pdfMsg');
+  const pdfText=document.getElementById('pdfText');
+  document.getElementById('pdfFile').addEventListener('change',async (e)=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    pdfMsg.innerHTML='<div class="msg">Lettura in corso…</div>';
+    pdfText.hidden=true;
+    try{
+      const text=await extractPdfText(file);
+      pdfText.textContent=text||'(nessun testo trovato — il PDF potrebbe essere una scansione/immagine)';
+      pdfText.hidden=false;
+      pdfMsg.innerHTML='<div class="msg ok">Testo estratto. Copia i valori che ti servono nel JSON qui sotto.</div>';
+    }catch(err){
+      pdfMsg.innerHTML='<div class="msg err">'+(err&&err.message?err.message:'Errore nella lettura del PDF.')+'</div>';
+    }
+  });
+
+  const planMsg=document.getElementById('planMsg');
+  const planEditor=document.getElementById('planEditor');
+
+  document.getElementById('applyBtn').addEventListener('click',()=>{
+    let parsed;
+    try{ parsed=JSON.parse(planEditor.value); }
+    catch(e){ planMsg.innerHTML='<div class="msg err">JSON non valido: '+e.message+'</div>'; return; }
+    const err=validatePlan(parsed);
+    if(err){ planMsg.innerHTML='<div class="msg err">'+err+'</div>'; return; }
+    PLAN=parsed;
+    try{localStorage.setItem(PLAN_KEY,JSON.stringify(PLAN));}catch(e){}
+    planMsg.innerHTML='<div class="msg ok">Piano applicato e salvato su questo dispositivo.</div>';
+    buildRail();
+    render(0);
+  });
+
+  document.getElementById('exportBtn').addEventListener('click',()=>{
+    const blob=new Blob([planJsonString()],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='piano11.json';a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('jsonFile').addEventListener('change',(e)=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=()=>{ planEditor.value=reader.result; };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    if(!confirm('Ripristinare il piano originale? Le modifiche correnti andranno perse.')) return;
+    try{localStorage.removeItem(PLAN_KEY);}catch(e){}
+    PLAN=clonePlan(DEFAULT_PLAN);
+    planMsg.innerHTML='<div class="msg ok">Piano originale ripristinato.</div>';
+    buildRail();
+    render(0);
+  });
+}
+
+buildRail();
 
 const sws=document.querySelectorAll('.sw');
 function setTheme(t){
