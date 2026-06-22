@@ -1,10 +1,10 @@
-# Piano 11 — Ricette
+# Programma Nutrizionale
 
-Web app (PWA) installabile su iPhone con le ricette del piano alimentare 11:
+Web app (PWA) installabile su iPhone con le ricette del piano alimentare:
 colazione, spuntini, pranzo (veloce) e cena per ogni giorno della settimana.
 Grammi e macro identici al piano del Dott. Salvatore Occhino.
 
-- Dark glassmorphism, font Geist, 3 temi (Grafite / Brace / Indaco)
+- Dark glassmorphism, font Geist
 - Funziona offline (service worker)
 - Aggiungibile alla schermata Home su iOS
 - Trucco "veloce" su ogni pranzo e cena per ridurre i tempi in cucina

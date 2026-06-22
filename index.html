@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="it" data-theme="grafite">
+<html lang="it">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Piano 11</title>
+<title>Programma Nutrizionale</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Piano 11">
+<meta name="apple-mobile-web-app-title" content="Programma">
 <meta name="theme-color" content="#0B0D11">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -27,9 +27,6 @@
     --accent:#BDCAD9;--accent-ink:#0B0D11;--accent-soft:rgba(189,202,217,.14);
     --bloom:rgba(120,150,200,.16);--radius:20px;
   }
-  html[data-theme="brace"]{--accent:#FF8E78;--accent-ink:#1A0C08;--accent-soft:rgba(255,142,120,.15);--bloom:rgba(255,120,90,.16);}
-  html[data-theme="indaco"]{--accent:#AAB1FF;--accent-ink:#0B0C1A;--accent-soft:rgba(170,177,255,.16);--bloom:rgba(130,140,255,.18);}
-
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%}
   body{
@@ -54,18 +51,6 @@
   .brand b{font-weight:600;font-size:17px;letter-spacing:-.01em}
   .brand .n{font-family:'Geist Mono',monospace;font-size:13px;color:var(--accent);
     background:var(--accent-soft);border:1px solid var(--stroke);padding:2px 7px;border-radius:7px}
-  .swatches{display:flex;gap:8px}
-  .sw{width:22px;height:22px;border-radius:50%;cursor:pointer;border:1.5px solid var(--stroke-2);padding:0;position:relative;transition:transform .15s ease}
-  .sw:active{transform:scale(.9)}
-  .sw[data-t="grafite"]{background:#BDCAD9}
-  .sw[data-t="brace"]{background:#FF8E78}
-  .sw[data-t="indaco"]{background:#AAB1FF}
-  .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px currentColor}
-  .sw[data-t="grafite"][aria-pressed="true"]{color:#BDCAD9}
-  .sw[data-t="brace"][aria-pressed="true"]{color:#FF8E78}
-  .sw[data-t="indaco"][aria-pressed="true"]{color:#AAB1FF}
-  .sw:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-
   .hero{padding:18px 0 6px}
   .hero .ey{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
   .hero h1{font-weight:600;font-size:clamp(34px,10vw,52px);line-height:.98;letter-spacing:-.03em}
@@ -170,12 +155,7 @@
 
 <div class="topbar">
   <div class="topbar-inner">
-    <div class="brand"><b>Piano</b><span class="n">11</span></div>
-    <div class="swatches" role="group" aria-label="Tema colore">
-      <button class="sw" data-t="grafite" aria-pressed="true" aria-label="Tema Grafite"></button>
-      <button class="sw" data-t="brace" aria-pressed="false" aria-label="Tema Brace"></button>
-      <button class="sw" data-t="indaco" aria-pressed="false" aria-label="Tema Indaco"></button>
-    </div>
+    <div class="brand"><b>Programma</b><span class="n">Nutrizionale</span></div>
   </div>
 </div>
 
@@ -648,15 +628,6 @@ rail.addEventListener('keydown',e=>{
   items[idx].click();items[idx].focus();
   e.preventDefault();
 });
-
-const sws=document.querySelectorAll('.sw');
-function setTheme(t){
-  document.documentElement.setAttribute('data-theme',t);
-  sws.forEach(s=>s.setAttribute('aria-pressed',s.dataset.t===t));
-  try{localStorage.setItem('piano11-theme',t);}catch(e){}
-}
-sws.forEach(s=>s.addEventListener('click',()=>setTheme(s.dataset.t)));
-try{const saved=localStorage.getItem('piano11-theme');if(saved)setTheme(saved);}catch(e){}
 
 const now=new Date();
 heroDate.textContent=now.getDate()+' '+MESI[now.getMonth()]+' '+now.getFullYear();
