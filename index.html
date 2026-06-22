@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="grafite">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Piano 11</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Piano 11">
+<meta name="theme-color" content="#0B0D11">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0B0D11;--text:#ECEEF1;--text-dim:#9AA0A9;--text-faint:#666C75;
+    --glass:rgba(255,255,255,.045);--glass-2:rgba(255,255,255,.07);
+    --stroke:rgba(255,255,255,.09);--stroke-2:rgba(255,255,255,.16);
+    --accent:#BDCAD9;--accent-ink:#0B0D11;--accent-soft:rgba(189,202,217,.14);
+    --bloom:rgba(120,150,200,.16);--radius:20px;
+  }
+  html[data-theme="brace"]{--accent:#FF8E78;--accent-ink:#1A0C08;--accent-soft:rgba(255,142,120,.15);--bloom:rgba(255,120,90,.16);}
+  html[data-theme="indaco"]{--accent:#AAB1FF;--accent-ink:#0B0C1A;--accent-soft:rgba(170,177,255,.16);--bloom:rgba(130,140,255,.18);}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:'Geist',-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100dvh;overflow-x:hidden;
+    padding-bottom:calc(56px + env(safe-area-inset-bottom));
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(60% 50% at 18% 8%,var(--bloom),transparent 70%),
+               radial-gradient(55% 45% at 92% 100%,var(--bloom),transparent 72%);
+    transition:background .5s ease;
+  }
+  ::selection{background:var(--accent);color:var(--accent-ink)}
+  .wrap{max-width:660px;margin:0 auto;padding:0 18px}
+
+  .topbar{position:sticky;top:0;z-index:30;padding:calc(env(safe-area-inset-top) + 12px) 0 12px;
+    background:linear-gradient(var(--bg) 70%,rgba(11,13,17,0))}
+  .topbar-inner{max-width:660px;margin:0 auto;padding:0 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;align-items:baseline;gap:8px}
+  .brand b{font-weight:600;font-size:17px;letter-spacing:-.01em}
+  .brand .n{font-family:'Geist Mono',monospace;font-size:13px;color:var(--accent);
+    background:var(--accent-soft);border:1px solid var(--stroke);padding:2px 7px;border-radius:7px}
+  .swatches{display:flex;gap:8px}
+  .sw{width:22px;height:22px;border-radius:50%;cursor:pointer;border:1.5px solid var(--stroke-2);padding:0;position:relative;transition:transform .15s ease}
+  .sw:active{transform:scale(.9)}
+  .sw[data-t="grafite"]{background:#BDCAD9}
+  .sw[data-t="brace"]{background:#FF8E78}
+  .sw[data-t="indaco"]{background:#AAB1FF}
+  .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px currentColor}
+  .sw[data-t="grafite"][aria-pressed="true"]{color:#BDCAD9}
+  .sw[data-t="brace"][aria-pressed="true"]{color:#FF8E78}
+  .sw[data-t="indaco"][aria-pressed="true"]{color:#AAB1FF}
+  .sw:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+  .hero{padding:18px 0 6px}
+  .hero .ey{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  .hero h1{font-weight:600;font-size:clamp(34px,10vw,52px);line-height:.98;letter-spacing:-.03em}
+  .hero .date{color:var(--text-dim);font-size:14px;margin-top:10px}
+  .reminders{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+  .rem{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-dim);
+    background:var(--glass);border:1px solid var(--stroke);border-radius:100px;padding:6px 12px;
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+  .rem .v{font-family:'Geist Mono',monospace;color:var(--text);font-size:12px}
+  .rem i{width:5px;height:5px;border-radius:50%;background:var(--accent);font-style:normal}
+
+  .rail-shell{position:sticky;top:calc(env(safe-area-inset-top) + 56px);z-index:25;padding:14px 0 10px;
+    background:linear-gradient(var(--bg) 74%,rgba(11,13,17,0))}
+  .rail{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:0 18px;max-width:660px;margin:0 auto;-webkit-overflow-scrolling:touch}
+  .rail::-webkit-scrollbar{display:none}
+  .dchip{flex:0 0 auto;font-weight:500;font-size:14px;color:var(--text-dim);background:var(--glass);
+    border:1px solid var(--stroke);border-radius:12px;padding:10px 15px;cursor:pointer;white-space:nowrap;transition:.16s ease;
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+  .dchip:hover{color:var(--text);border-color:var(--stroke-2)}
+  .dchip[aria-selected="true"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent);font-weight:600}
+  .dchip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .day-label{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--text-faint);margin:10px 0 16px;display:flex;align-items:center;gap:12px}
+  .day-label::after{content:"";flex:1;height:1px;background:var(--stroke)}
+
+  .card{background:var(--glass);border:1px solid var(--stroke);border-radius:var(--radius);padding:22px 20px;margin-bottom:16px;
+    -webkit-backdrop-filter:blur(22px) saturate(1.3);backdrop-filter:blur(22px) saturate(1.3);position:relative}
+  .card .meal-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+  .kick{font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;color:var(--text-faint)}
+  .card.accent .kick{color:var(--accent)}
+  .mtitle{font-weight:600;font-size:22px;letter-spacing:-.015em;line-height:1.12}
+  .timepill{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;margin-top:2px;font-family:'Geist Mono',monospace;font-size:13px;
+    color:var(--accent);background:var(--accent-soft);border:1px solid var(--stroke-2);border-radius:9px;padding:5px 9px}
+  .timepill svg{width:12px;height:12px}
+
+  .ing{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0 2px}
+  .chip{display:inline-flex;align-items:baseline;gap:7px;font-size:13.5px;background:var(--glass-2);
+    border:1px solid var(--stroke);border-radius:9px;padding:6px 10px}
+  .chip .g{font-family:'Geist Mono',monospace;font-size:12.5px;color:var(--accent);font-weight:500}
+
+  .liberi{font-size:12.5px;color:var(--text-faint);margin-top:11px}
+  .liberi b{color:var(--text-dim);font-weight:500}
+  .oppure{font-size:12.5px;color:var(--text-dim);margin-top:11px;padding-left:13px;border-left:2px solid var(--stroke)}
+  .oppure span{display:block;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-faint);margin-bottom:3px}
+
+  .alts{margin-top:16px;padding-top:14px;border-top:1px solid var(--stroke)}
+  .alts>span{display:block;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px}
+  .alts ul{list-style:none}
+  .alts li{position:relative;padding:0 0 9px 16px;font-size:13.5px;color:var(--text-dim)}
+  .alts li:last-child{padding-bottom:0}
+  .alts li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+
+  ol.steps{list-style:none;counter-reset:s;margin-top:18px}
+  ol.steps li{counter-increment:s;position:relative;padding:0 0 13px 34px;font-size:14.5px;color:var(--text)}
+  ol.steps li:last-child{padding-bottom:0}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:-1px;width:22px;height:22px;border-radius:7px;
+    font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;
+    color:var(--text-dim);background:var(--glass-2);border:1px solid var(--stroke)}
+
+  .tip{margin-top:18px;display:flex;gap:11px;background:var(--accent-soft);border:1px solid var(--stroke-2);
+    border-radius:13px;padding:13px 15px;font-size:13.5px;color:var(--text)}
+  .tip svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px;color:var(--accent)}
+  .tip b{color:var(--accent);font-weight:600}
+
+  footer{margin-top:28px;padding-top:22px;border-top:1px solid var(--stroke);color:var(--text-faint);font-size:12.5px}
+  footer .lk{display:flex;align-items:center;gap:8px;color:var(--text-dim);margin-bottom:8px}
+  footer .lk svg{width:13px;height:13px;color:var(--accent)}
+  footer .mt{font-family:'Geist Mono',monospace;font-size:11px}
+
+  .fade{animation:fade .28s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><b>Piano</b><span class="n">11</span></div>
+    <div class="swatches" role="group" aria-label="Tema colore">
+      <button class="sw" data-t="grafite" aria-pressed="true" aria-label="Tema Grafite"></button>
+      <button class="sw" data-t="brace" aria-pressed="false" aria-label="Tema Brace"></button>
+      <button class="sw" data-t="indaco" aria-pressed="false" aria-label="Tema Indaco"></button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="ey">Ricette · macro bloccate</div>
+    <h1 id="heroDay">Lunedì</h1>
+    <div class="date" id="heroDate"></div>
+    <div class="reminders">
+      <span class="rem"><i></i>Acqua <span class="v">3–3,5 L</span></span>
+      <span class="rem"><i></i>Creatina <span class="v">5 g</span></span>
+      <span class="rem"><i></i>Omega-3 <span class="v">1 g</span></span>
+      <span class="rem"><i></i>Libero <span class="v">1/sett</span></span>
+    </div>
+  </section>
+</div>
+
+<div class="rail-shell">
+  <div class="rail" id="rail" role="tablist" aria-label="Giorni"></div>
+</div>
+
+<div class="wrap">
+  <main id="content"></main>
+  <footer>
+    <div class="lk">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      Colazione e spuntini sono uguali ogni giorno. Condimenti liberi non spostano i macro.
+    </div>
+    <div class="mt">Dott. Salvatore Occhino · 22/04/2026 · sale moderato salvo dove indicato “no sale”.</div>
+  </footer>
+</div>
+
+<script>
+const clock='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const bolt='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>';
+
+const COLAZIONE={kick:'Colazione',title:'Latte e cereali',
+  ing:[['Latte p.s.','200 g'],['Cereali','50 g'],['Cioccolato fondente','10 g']],
+  oppure:'Latte → Kefir 150 g · Yogurt 2% 150 g · Yogurt intero 125 g  ·  Cereali → Corn Flakes 40 g · Muesli 45 g · Frollini 40 g · Avena 40 g',
+  altsTitle:'Colazioni alternative',
+  alts:['Pancake: 1 uovo + 40 g farina + latte q.b., con 10 g marmellata o crema cacao',
+    'Porridge cotto: 100 g latte + 50 g farina, cioccolato fondente sopra',
+    'Panino 80 g con 10 g formaggio molle + 30 g affettato (o 50 g mozzarella e pomodoro)',
+    '2 uova + 60 g di pane o pan bauletto']};
+
+const SP_MATTINO={kick:'Spuntino · mattino',title:'Frutta e frutta secca',
+  ing:[['Frutta fresca','150 g'],['Frutta secca/oleosa','30 g']],
+  liberi:'Un frutto medio va benissimo.'};
+
+const SP_POMERIGGIO={kick:'Spuntino · pomeriggio',title:'Spuntino salato',
+  ing:[['Crackers','50 g']],
+  oppure:'Crackers → Pan Bauletto bianco 60 g · Grissini 50 g · Biscotti 40 g',
+  liberi:'+ 20 g di marmellata solo se ti alleni.'};
+
+const DAYS=[
+ {id:'lun',name:'Lun',full:'Lunedì',
+  pranzo:{title:'Pasta caprese',time:'~10 min',
+   ing:[['Pasta di semola','110 g'],['Mozzarella','100 g'],['Pomodori','100 g'],['Olio EVO','5 g']],
+   liberi:'Basilico, origano, pepe.',
+   steps:['Metti su l’acqua e cuoci la pasta al dente.','Intanto taglia mozzarella e pomodori a cubetti e condisci con l’olio, basilico e pepe.','Scola, lascia intiepidire un minuto e manteca. Origano a chiudere.'],
+   tip:'Cuoci <b>220 g</b> di pasta in un colpo: metà in frigo con un filo d’olio → domani pasta fredda pronta in 60 secondi.'},
+  cena:{title:'Pollo arrosto, verdure e pane',
+   ing:[['Pollo','250 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Pane integrale','100 g']],
+   oppure:'Coscia 300 g (con osso) · pane → Patate 300 g o Cous cous 70 g',
+   liberi:'Paprika, rosmarino, aglio, limone.',
+   steps:['Marina il pollo 5 min con limone, paprika, rosmarino e aglio.','Cuoci in padella o forno a 200° finché dorato (15–18 min).','Arrostisci le verdure con metà olio; il resto a crudo. Pane a parte.']}},
+
+ {id:'mar',name:'Mar',full:'Martedì',
+  pranzo:{title:'Insalata di orzo e tonno',time:'~5 min',
+   ing:[['Orzo','100 g'],['Tonno sgocciolato','50 g'],['Verdure','200 g'],['Olio EVO','5 g']],
+   liberi:'Limone e spezie — <b>no sale</b> (c’è il tonno).',
+   oppure:'Orzo → Riso 100 g · verdure: zucchine, melanzane, broccoli, cavolfiore, cavoletti',
+   steps:['Sgocciola bene il tonno e usa l’orzo già cotto (vedi tip).','Aggiungi le verdure: ottime anche surgelate ripassate o lessate.','Unisci a freddo con olio, limone e spezie. Niente sale.'],
+   tip:'Lessa <b>300 g di orzo</b> a inizio settimana e porziona: assembli in 2 minuti.'},
+  cena:{title:'Frittata di verdure, pane e insalata',
+   ing:[['Uova (3)','150 g'],['Pane integrale','130 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+   oppure:'Uova → Gamberetti 300 g · pane → Patate 380 g',
+   liberi:'Pomodori, carote, iceberg a crudo. Sale moderato, pepe.',
+   steps:['Sbatti le uova con pepe e poco sale.','Cuoci la frittata a fuoco medio con parte dell’olio (con un po’ di verdura dentro se vuoi).','Servi con pane e insalata cruda condita con l’olio rimasto e limone.']}},
+
+ {id:'mer',name:'Mer',full:'Mercoledì',
+  pranzo:{title:'Farro e lenticchie tiepido',time:'~4 min',
+   ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Grana','10 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+   oppure:'Farro → Riso 101 g · lenticchie scatola → 70 g secche',
+   liberi:'Spezie, prezzemolo.',
+   steps:['Sciacqua le lenticchie in scatola per togliere il sale in eccesso.','Usa il farro già cotto, unisci lenticchie e verdure.','Condisci con olio e spezie, grana sopra. Frutta a chiudere.'],
+   tip:'Farro <b>batch-cooked</b> + lenticchie in vetro = piatto freddo o tiepido in 3–4 minuti.'},
+  cena:{title:'Manzo magro alla griglia',
+   ing:[['Manzo magro','200 g'],['Pane integrale','130 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+   oppure:'Manzo → Pollo 230 g · Pesce azzurro 200 g · Cavallo 225 g · Feta 102 g · pane → Patate 380 g',
+   liberi:'Rosmarino, pepe.',
+   steps:['Scalda bene una piastra o padella.','Cuoci la carne 2–3 min per lato secondo lo spessore; sala dopo la cottura.','Verdure grigliate o crude con l’olio; pane a parte.']}},
+
+ {id:'gio',name:'Gio',full:'Giovedì',
+  pranzo:{title:'Riso freddo con feta e verdure',time:'~4 min',
+   ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
+   liberi:'Menta, limone, spezie — <b>no sale</b> (c’è la feta).',
+   oppure:'Feta → Formaggio molle 40 g o Ricotta 80 g · verdure: zucchine, melanzane, broccoli, cavolfiore',
+   steps:['Usa il riso freddo già cotto.','Sbriciola la feta e unisci le verdure (grigliate o surgelate ripassate).','Condisci con olio, limone e menta. Niente sale.'],
+   tip:'Cuoci <b>2–3 porzioni di riso</b> e tienile in frigo: si monta a freddo in pochi minuti.'},
+  cena:{title:'Merluzzo al forno con cous cous',
+   ing:[['Cous cous','100 g'],['Merluzzo','300 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+   oppure:'Cous cous → Riso 100 g · Merluzzo → Pesce azzurro 145 g · Salmone affumicato 135 g · Uova 150 g (3) · Tofu 253 g + salsa soia 10 g',
+   liberi:'Limone, prezzemolo, aglio.',
+   steps:['Idrata il cous cous con pari volume d’acqua bollente, coperto 5 min, poi sgrana.','Cuoci il merluzzo al forno o in padella con limone ed erbe (8–10 min).','Verdure di contorno; chiudi con l’olio a crudo.']}},
+
+ {id:'ven',name:'Ven',full:'Venerdì',
+  pranzo:{title:'Pasta e ceci',time:'~12 min',
+   ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+   oppure:'Ceci → 60 g secchi · oppure Fagioli 160 g scatola / 60 g secchi',
+   liberi:'Rosmarino, aglio, pepe.',
+   steps:['Sciacqua i ceci. Soffriggi appena aglio e rosmarino nell’olio.','Cuoci la pasta; unisci i ceci (frullane una parte per cremosità, se ti va).','Manteca con un po’ d’acqua di cottura. Frutta dopo.'],
+   tip:'Versione fredda: pasta corta cotta prima + ceci in scatola a crudo → <b>4 minuti</b>.'},
+  cena:{title:'Salmone al forno, patate e verdure',
+   ing:[['Patate','400 g'],['Salmone','120 g'],['Olio EVO','10 g'],['Verdure','150 g']],
+   oppure:'Salmone → Affumicato 100 g · Ricotta 120 g · Vongole 300 g · Cozze 250 g · Polpo 400 g',
+   liberi:'Limone, aglio.',
+   steps:['Patate a tocchetti in forno a 200° con parte dell’olio (~25 min).','A metà cottura aggiungi il salmone con limone (oppure cozze/vongole in padella aglio e olio).','Verdure di contorno; olio a crudo per finire.']}},
+
+ {id:'sab',name:'Sab',full:'Sabato',
+  pranzo:{title:'Pasta al pesto',time:'~10 min',
+   ing:[['Pasta o riso','100 g'],['Pesto Genovese','40 g'],['Grana','10 g'],['Frutta','150 g']],
+   liberi:'—',
+   steps:['Cuoci la pasta al dente.','Stempera il pesto con un cucchiaio d’acqua di cottura (non scaldarlo sul fuoco).','Manteca fuori dal fuoco, grana sopra. Frutta a chiudere.'],
+   tip:'È già il più rapido: tieni il pesto pronto e in <b>10 min</b> sei a tavola.'},
+  cena:{title:'Pollo al forno, pane e verdure crude',
+   ing:[['Pollo petto','250 g'],['Pane integrale','120 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+   oppure:'Petto → Coscia 200 g · pane → Patate 350 g · se panato: togli olio e panatura dal totale',
+   liberi:'Paprika, limone.',
+   steps:['Insaporisci il pollo con paprika e limone.','Forno a 200° o padella finché dorato (~15 min).','Verdure crude condite con l’olio; pane a parte.']}},
+
+ {id:'dom',name:'Dom',full:'Domenica',
+  pranzo:{title:'Pasta all’uovo al ragù',time:'~15 min',
+   ing:[['Pasta all’uovo','130 g'],['Manzo magro tritato','100 g'],['Grana','10 g'],['Frutta','150 g']],
+   oppure:'Manzo → Legumi 70 g / 140 g scatola (versione ancora più rapida)',
+   liberi:'Passata/salsa, aglio, spezie.',
+   steps:['Rosola il tritato con poca passata e aglio (niente olio extra: i grassi sono già nei macro).','Cuoci la pasta all’uovo — cottura breve.','Manteca col ragù, grana sopra. Frutta dopo.'],
+   tip:'Di domenica hai più tempo, ma un ragù lampo si fa in 12–15 min. Per il più veloce usa la <b>versione legumi</b>.'},
+  cena:{title:'Uova, pane integrale e verdure',
+   ing:[['Uova (3)','150 g'],['Pane integrale','70 g'],['Olio EVO','10 g'],['Verdure','200 g']],
+   oppure:'Uova → Tonno sgocciolato 80 g · Stracchino 64 g · Gamberetti 270 g · Vongole 270 g · pane → Wasa',
+   liberi:'Limone, spezie.',
+   steps:['Cuoci le uova come preferisci: sode, in camicia o à la coque.','Condisci una bella porzione di verdure con l’olio e limone.','Pane integrale o Wasa a parte.']}}
+];
+
+const MESI=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+
+function chips(a){return '<div class="ing">'+a.map(i=>'<span class="chip">'+i[0]+'<span class="g">'+i[1]+'</span></span>').join('')+'</div>';}
+function steps(a){return '<ol class="steps">'+a.map(s=>'<li>'+s+'</li>').join('')+'</ol>';}
+function renderMeal(m){
+  let h='<div class="card'+(m.accent?' accent':'')+'"><div class="meal-top"><div>';
+  h+='<div class="kick">'+m.kick+'</div><div class="mtitle">'+m.title+'</div></div>';
+  if(m.time) h+='<span class="timepill">'+clock+m.time+'</span>';
+  h+='</div>'+chips(m.ing);
+  if(m.liberi&&m.liberi!=='—') h+='<div class="liberi">Liberi: '+m.liberi+'</div>';
+  if(m.oppure) h+='<div class="oppure"><span>Oppure</span>'+m.oppure+'</div>';
+  if(m.alts) h+='<div class="alts"><span>'+(m.altsTitle||'Alternative')+'</span><ul>'+m.alts.map(a=>'<li>'+a+'</li>').join('')+'</ul></div>';
+  if(m.steps) h+=steps(m.steps);
+  if(m.tip) h+='<div class="tip">'+bolt+'<div><b>Veloce.</b> '+m.tip+'</div></div>';
+  return h+'</div>';
+}
+
+const rail=document.getElementById('rail');
+const content=document.getElementById('content');
+const heroDay=document.getElementById('heroDay');
+const heroDate=document.getElementById('heroDate');
+
+function render(i){
+  const d=DAYS[i];
+  heroDay.textContent=d.full;
+  const seq=[COLAZIONE,SP_MATTINO,
+    Object.assign({kick:'Pranzo · veloce',accent:true},d.pranzo),
+    SP_POMERIGGIO,
+    Object.assign({kick:'Cena'},d.cena)];
+  content.innerHTML='<div class="day-label">'+d.full+'</div>'+seq.map(renderMeal).join('');
+  content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
+  [...rail.children].forEach((b,bi)=>b.setAttribute('aria-selected',bi===i));
+}
+
+DAYS.forEach((d,i)=>{
+  const b=document.createElement('button');
+  b.className='dchip';b.textContent=d.name;b.setAttribute('role','tab');
+  b.setAttribute('aria-selected',i===0);
+  b.addEventListener('click',()=>{render(i);b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});});
+  rail.appendChild(b);
+});
+
+const sws=document.querySelectorAll('.sw');
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  sws.forEach(s=>s.setAttribute('aria-pressed',s.dataset.t===t));
+  try{localStorage.setItem('piano11-theme',t);}catch(e){}
+}
+sws.forEach(s=>s.addEventListener('click',()=>setTheme(s.dataset.t)));
+try{const saved=localStorage.getItem('piano11-theme');if(saved)setTheme(saved);}catch(e){}
+
+const now=new Date();
+heroDate.textContent=now.getDate()+' '+MESI[now.getMonth()]+' '+now.getFullYear();
+const map={1:0,2:1,3:2,4:3,5:4,6:5,0:6};
+const start=map[now.getDay()]??0;
+render(start);
+rail.children[start]&&rail.children[start].scrollIntoView({inline:'center',block:'nearest'});
+
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}
+</script>
+</body>
+</html>
