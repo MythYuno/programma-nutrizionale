@@ -377,6 +377,12 @@ function fmtGrams(g){
   if(g>=1000){const kg=g/1000;return (Number.isInteger(kg)?kg:kg.toFixed(1)).toString().replace('.',',')+' kg';}
   return g+' g';
 }
+// Arrotonda per eccesso a una quantità pratica da spesa
+function roundPractical(g){
+  if(g<=0) return 0;
+  const step=g>=1000?100:50;
+  return Math.ceil(g/step)*step;
+}
 // Accorpa i doppioni del piano in una voce di spesa unica
 function normNome(name){
   const clean=String(name).replace(/\s*\([^)]*\)/g,'').trim();
@@ -483,9 +489,9 @@ function renderPrep(){
   h+=Object.entries(cats).filter(([,items])=>items.length).map(([cat,items])=>
     '<div class="alts"><span>'+cat+'</span><ul class="shop">'+items.map(it=>{
       const on=checked.has(it.nome)?' class="on"':'';
-      return '<li'+on+' data-ing="'+it.nome.replace(/"/g,'&quot;')+'"><span class="box"></span><span class="sname">'+it.nome+'</span><span class="sqty">'+fmtGrams(it.qty)+'</span></li>';
+      return '<li'+on+' data-ing="'+it.nome.replace(/"/g,'&quot;')+'"><span class="box"></span><span class="sname">'+it.nome+'</span><span class="sqty">'+fmtGrams(roundPractical(it.qty))+'</span></li>';
     }).join('')+'</ul></div>').join('');
-  h+='<div class="liberi">Quantità stimate per 7 giorni (colazione e spuntini contati × 7). Tocca un alimento per spuntarlo: le spunte restano salvate.</div></div>';
+  h+='<div class="liberi">Quantità per 7 giorni, arrotondate per eccesso (colazione e spuntini contati × 7). Tocca un alimento per spuntarlo: le spunte restano salvate.</div></div>';
 
   h+='<div class="card accent"><div class="kick">Trucchi</div><div class="mtitle">Per fare tutto più in fretta</div>'+steps(TRUCCHI)+'</div>';
 
