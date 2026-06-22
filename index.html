@@ -140,6 +140,17 @@
   .shop li.on .box{background:var(--accent);border-color:var(--accent)}
   .shop li.on .box::after{content:"";width:5px;height:9px;border:solid var(--accent-ink);border-width:0 2px 2px 0;
     transform:rotate(45deg) translateY(-1px)}
+  .shop li .sname{flex:1}
+  .shop li .sqty{flex:0 0 auto;font-family:'Geist Mono',monospace;font-size:12px;color:var(--accent)}
+  .shop li.on .sqty{color:var(--text-faint)}
+
+  .prep-item{padding:15px 0;border-bottom:1px solid var(--stroke)}
+  .prep-item:first-child{padding-top:4px}
+  .prep-item:last-child{border-bottom:none;padding-bottom:0}
+  .pi-name{font-weight:600;font-size:15.5px;letter-spacing:-.01em;margin-bottom:9px}
+  .pi-row{display:flex;gap:11px;font-size:13px;color:var(--text-dim);padding:2.5px 0}
+  .pi-row span{flex:0 0 78px;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--text-faint);padding-top:3px}
 
   footer{margin-top:28px;padding-top:22px;border-top:1px solid var(--stroke);color:var(--text-faint);font-size:12.5px}
   footer .lk{display:flex;align-items:center;gap:8px;color:var(--text-dim);margin-bottom:8px}
@@ -342,11 +353,12 @@ let PLAN=loadPlan();
 const MESI=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
 
 const PREP_BATCH=[
- ['Pasta di semola','220 g','Lunedì pranzo — metà avanza per un pranzo freddo extra'],
- ['Orzo','300 g','Martedì pranzo, insalata di orzo e tonno'],
- ['Farro','200 g','Mercoledì pranzo, farro e lenticchie'],
- ['Riso','250–300 g (2–3 porzioni)','Giovedì pranzo + Sabato pranzo al pesto'],
- ['Legumi in scatola','Sciacqua e scola ceci/lenticchie','Pronti all’uso, tolgono il sale in eccesso']
+ {nome:'Cereali in chicco — riso, orzo, farro',quando:'Domenica o lunedì, tutti insieme',conserva:'3–4 giorni in frigo (contenitore chiuso) · fino a 1 mese in freezer',per:'Orzo (mar), farro (mer), riso (gio e sab)'},
+ {nome:'Pasta',quando:'Al momento, oppure raddoppia il lunedì',conserva:'1–2 giorni in frigo, condita con un filo d’olio',per:'Pasta fredda pronta per il pranzo del giorno dopo'},
+ {nome:'Pollo e carne',quando:'Cuoci una porzione in più quando li prepari',conserva:'3–4 giorni in frigo · 2–3 mesi in freezer',per:'Proteina pronta per un pranzo o una cena extra'},
+ {nome:'Uova sode',quando:'Anche 2–3 giorni prima',conserva:'Fino a 1 settimana in frigo, con il guscio',per:'Spuntino o cena rapida'},
+ {nome:'Verdure',quando:'Lava e taglia la sera prima',conserva:'2–3 giorni in frigo in contenitore ermetico',per:'Contorni e insalate della settimana'},
+ {nome:'Legumi in scatola',quando:'All’occorrenza',conserva:'3–4 giorni in frigo, travasati dalla lattina e sciacquati',per:'Lenticchie (mer), ceci (ven)'}
 ];
 
 function categoriaSpesa(name){
@@ -359,17 +371,41 @@ function categoriaSpesa(name){
   return 'Altro';
 }
 
+function parseGrams(q){const m=String(q).replace(',','.').match(/([\d.]+)/);return m?parseFloat(m[1]):0;}
+function fmtGrams(g){
+  g=Math.round(g);
+  if(g>=1000){const kg=g/1000;return (Number.isInteger(kg)?kg:kg.toFixed(1)).toString().replace('.',',')+' kg';}
+  return g+' g';
+}
+// Accorpa i doppioni del piano in una voce di spesa unica
+function normNome(name){
+  const clean=String(name).replace(/\s*\([^)]*\)/g,'').trim();
+  const n=clean.toLowerCase();
+  if(n.includes('pasta')&&n.includes('uovo')) return 'Pasta all’uovo';
+  if(n.includes('pasta')) return 'Pasta';
+  if(n.startsWith('verdur')) return 'Verdure';
+  if(n.startsWith('frutta secca')||n.includes('oleosa')) return 'Frutta secca';
+  if(n.startsWith('frutta')) return 'Frutta fresca';
+  if(n.includes('pollo')) return 'Pollo';
+  if(n.includes('manzo')) return 'Manzo magro';
+  return clean;
+}
+
 function buildSpesa(){
-  const cats={'Carboidrati':[],'Proteine':[],'Verdura e frutta':[],'Dispensa':[],'Altro':[]};
-  const seen=new Set();
-  const add=(ing)=>{(ing||[]).forEach(pair=>{
-    const clean=String(pair[0]).replace(/\s*\([^)]*\)/g,'').trim();
-    if(!clean||seen.has(clean.toLowerCase())) return;
-    seen.add(clean.toLowerCase());
-    cats[categoriaSpesa(clean)].push(clean);
+  const items={}; // nome canonico -> {qty, cat}
+  const addMeal=(meal,mult)=>{(meal&&meal.ing||[]).forEach(pair=>{
+    const nome=normNome(pair[0]);
+    if(!nome) return;
+    if(!items[nome]) items[nome]={qty:0,cat:categoriaSpesa(nome)};
+    items[nome].qty+=parseGrams(pair[1])*mult;
   });};
-  add(PLAN.colazione.ing);add(PLAN.spMattino.ing);add(PLAN.spPomeriggio.ing);
-  PLAN.days.forEach(d=>{add(d.pranzo.ing);add(d.cena.ing);});
+  // Colazione e spuntini sono uguali ogni giorno → x7
+  addMeal(PLAN.colazione,7);addMeal(PLAN.spMattino,7);addMeal(PLAN.spPomeriggio,7);
+  PLAN.days.forEach(d=>{addMeal(d.pranzo,1);addMeal(d.cena,1);});
+  const cats={'Carboidrati':[],'Proteine':[],'Verdura e frutta':[],'Dispensa':[],'Altro':[]};
+  Object.keys(items).sort((a,b)=>a.localeCompare(b,'it')).forEach(nome=>{
+    cats[items[nome].cat].push({nome,qty:items[nome].qty});
+  });
   return cats;
 }
 
@@ -433,18 +469,23 @@ function renderPrep(){
   const checked=loadChecked();
   let h='<div class="day-label">Organizzazione settimanale</div>';
 
-  h+='<div class="card"><div class="kick">Batch cooking</div><div class="mtitle">Cosa cuocere in anticipo</div>';
-  h+='<div class="alts"><span>Inizio settimana</span><ul>'+PREP_BATCH.map(p=>'<li><b>'+p[0]+'</b> '+p[1]+' — '+p[2]+'</li>').join('')+'</ul></div></div>';
+  h+='<div class="card"><div class="kick">Batch cooking</div><div class="mtitle">Cosa preparare prima e quanto dura</div>';
+  h+=PREP_BATCH.map(p=>
+    '<div class="prep-item"><div class="pi-name">'+p.nome+'</div>'+
+    '<div class="pi-row"><span>Quando</span>'+p.quando+'</div>'+
+    '<div class="pi-row"><span>Si conserva</span>'+p.conserva+'</div>'+
+    '<div class="pi-row"><span>Per</span>'+p.per+'</div></div>'
+  ).join('')+'</div>';
 
   const cats=buildSpesa();
-  h+='<div class="card"><div class="meal-top"><div><div class="kick">Lista della spesa</div><div class="mtitle">Generata dal piano</div></div>';
-  h+='<button class="btn" id="clearShop">Azzera spunte</button></div>';
+  h+='<div class="card"><div class="meal-top"><div><div class="kick">Lista della spesa</div><div class="mtitle">Stima per la settimana</div></div>';
+  h+='<button class="btn" id="clearShop">Azzera</button></div>';
   h+=Object.entries(cats).filter(([,items])=>items.length).map(([cat,items])=>
-    '<div class="alts"><span>'+cat+'</span><ul class="shop">'+items.map(i=>{
-      const on=checked.has(i)?' class="on"':'';
-      return '<li'+on+' data-ing="'+i.replace(/"/g,'&quot;')+'"><span class="box"></span>'+i+'</li>';
+    '<div class="alts"><span>'+cat+'</span><ul class="shop">'+items.map(it=>{
+      const on=checked.has(it.nome)?' class="on"':'';
+      return '<li'+on+' data-ing="'+it.nome.replace(/"/g,'&quot;')+'"><span class="box"></span><span class="sname">'+it.nome+'</span><span class="sqty">'+fmtGrams(it.qty)+'</span></li>';
     }).join('')+'</ul></div>').join('');
-  h+='<div class="liberi">Tocca un alimento per segnarlo come preso. Le spunte restano salvate sul dispositivo.</div></div>';
+  h+='<div class="liberi">Quantità stimate per 7 giorni (colazione e spuntini contati × 7). Tocca un alimento per spuntarlo: le spunte restano salvate.</div></div>';
 
   h+='<div class="card accent"><div class="kick">Trucchi</div><div class="mtitle">Per fare tutto più in fretta</div>'+steps(TRUCCHI)+'</div>';
 
