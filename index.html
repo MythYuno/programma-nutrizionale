@@ -79,6 +79,8 @@
   .dchip:focus-visible{outline:2px solid var(--accent);outline-offset:-4px;border-radius:5px}
 
   .day-label{font-size:13px;color:var(--ink-3);margin:30px 0 -6px}
+  .rgroup{font-family:var(--serif);font-weight:600;font-size:21px;letter-spacing:-.015em;
+    margin:34px 0 -10px;padding-top:26px;border-top:2px solid var(--ink)}
 
   .card{padding:28px 0;border-top:1px solid var(--rule)}
   .card:first-of-type{border-top:none;padding-top:26px}
@@ -519,46 +521,161 @@ const TRUCCHI=[
 // Fonti: petrininutrizione.it, educazionenutrizionale.granapadano.it, melarossa.it
 const WEB_RULES=[
  {re:/pasta|riso|orzo|farro|cous|polenta/i,subs:[
-   ['Altro cereale in chicco',1,'Riso, orzo, farro e cous cous si scambiano 1:1 a crudo'],
+   ['Riso, orzo o farro',1,'I cereali in chicco si scambiano 1:1 a crudo'],
+   ['Quinoa o amaranto',1,'1:1 a crudo, senza glutine e più proteici del riso'],
+   ['Bulgur o cous cous',1,'1:1 a crudo, pronti in 5 minuti'],
+   ['Miglio o grano saraceno',1,'1:1 a crudo, senza glutine'],
    ['Pane',1.25,'80 g di pasta ≈ 100 g di pane'],
    ['Patate',4,'50 g di pasta ≈ 210 g di patate']]},
  {re:/pane|cracker|grissini|bauletto|wasa|biscott|frollini/i,subs:[
+   ['Pane di segale o integrale',1,'A pari peso, più fibra'],
+   ['Gallette o Wasa',1,'A pari peso, comode da tenere in borsa'],
    ['Pasta o riso (a crudo)',.8,'100 g di pane ≈ 80 g di pasta'],
+   ['Cous cous (a crudo)',.7,'Stesso rapporto usato nel piano'],
    ['Patate',3,'50 g di pane ≈ 150 g di patate']]},
  {re:/patate/i,subs:[
+   ['Patate dolci',1,'A pari peso, indice glicemico più basso'],
    ['Pane',.33,'150 g di patate ≈ 50 g di pane'],
    ['Pasta o riso (a crudo)',.25,'210 g di patate ≈ 50 g di pasta']]},
  {re:/pollo|tacchino|cavallo|manzo|vitello|carne/i,subs:[
    ['Tacchino',1.05,'Praticamente equivalente al pollo'],
    ['Merluzzo o nasello',1.33,'200 g di pollo ≈ 250–280 g di merluzzo'],
+   ['Platessa o sogliola',1.2,'Pesce magro, cottura rapidissima'],
    ['Salmone',.68,'200 g di pollo ≈ 120–150 g di salmone'],
+   ['Gamberi o gamberetti',1.3,'A pari proteine, molto magri'],
    ['Ricotta o mozzarella',.55,'Formaggi freschi, a pari proteine'],
-   ['Legumi secchi',.25,'Aggiungono però parecchi carboidrati']]},
- {re:/merluzzo|nasello|sogliola|pesce|salmone|vongole|cozze|polpo|gamberetti|tonno/i,subs:[
+   ['Seitan',.9,'25 g di proteine per 100 g: il più proteico dei vegetali'],
+   ['Tempeh',1.2,'Circa 19 g di proteine per 100 g'],
+   ['Tofu',1.6,'Circa 14 g di proteine per 100 g'],
+   ['Legumi secchi',.25,'Aggiungono però parecchi carboidrati'],
+   ['Bresaola o prosciutto sgrassato',.3,'Salumi magri, da limitare per il sale']]},
+ {re:/merluzzo|nasello|sogliola|platessa|pesce|salmone|vongole|cozze|polpo|gamberetti|tonno/i,subs:[
+   ['Altro pesce magro',1,'Merluzzo, nasello, platessa e orata si scambiano a pari peso'],
    ['Pollo o tacchino',.75,'250–280 g di merluzzo ≈ 200 g di pollo'],
+   ['Gamberi o calamari',1,'A pari peso, stesso profilo magro'],
    ['Uova',.5,'A pari proteine, circa 3 uova ogni 300 g di pesce magro'],
-   ['Ricotta o mozzarella',.42,'Formaggi freschi, a pari proteine']]},
+   ['Ricotta o mozzarella',.42,'Formaggi freschi, a pari proteine'],
+   ['Tofu',.8,'Alternativa vegetale, meno proteica a pari peso']]},
  {re:/uova|uovo/i,subs:[
    ['Merluzzo o pesce magro',2,'150 g di uova (3) ≈ 300 g di merluzzo'],
    ['Pollo o tacchino',1.4,'A pari proteine'],
-   ['Ricotta o fiocchi di latte',1.1,'Alternativa vegetariana']]},
+   ['Gamberetti',1.8,'A pari proteine'],
+   ['Ricotta o fiocchi di latte',1.1,'Alternativa vegetariana'],
+   ['Tofu',1.6,'Alternativa vegetale, ottimo strapazzato']]},
  {re:/latte|kefir|yogurt/i,subs:[
    ['Yogurt bianco naturale',.75,'200 g di latte ≈ 150 g di yogurt'],
+   ['Kefir',.75,'Stesso rapporto dello yogurt, più fermenti'],
+   ['Yogurt greco o skyr',.55,'Più densi di proteine: ne serve meno'],
+   ['Fiocchi di latte',.5,'Versione salata, molto proteica'],
    ['Bevanda vegetale non zuccherata',1,'Attenzione: ha molte meno proteine del latte']]},
  {re:/lenticchie|ceci|fagioli|legumi|piselli/i,subs:[
-   ['Altri legumi',1,'Ceci, fagioli, lenticchie e piselli si scambiano a pari peso'],
-   ['Secchi ↔ in scatola',.4,'I secchi pesano circa 2,5 volte meno di quelli in scatola']]},
+   ['Altri legumi',1,'Ceci, fagioli, lenticchie, piselli e fave a pari peso'],
+   ['Secchi ↔ in scatola',.4,'I secchi pesano circa 2,5 volte meno di quelli in scatola'],
+   ['Pasta di legumi',.45,'Da ceci o lenticchie: comoda e proteica'],
+   ['Tofu o tempeh',.7,'Sempre da soia, con meno carboidrati']]},
  {re:/feta|ricotta|mozzarella|stracchino|formaggio|grana/i,subs:[
-   ['Altro formaggio fresco',1,'Ricotta, fiocchi di latte e mozzarella si equivalgono'],
+   ['Altro formaggio fresco',1,'Mozzarella, caciotta fresca e primo sale: 1:1'],
+   ['Ricotta',1.8,'50 g di mozzarella ≈ 90 g di ricotta'],
+   ['Fiocchi di latte',1.2,'Più magri e molto sazianti'],
    ['Grana o parmigiano',.45,'Stagionati: più proteine e grassi a parità di peso'],
    ['Pollo o tacchino',1.8,'A pari proteine']]},
  {re:/frutta secca|oleosa|mandorle|noci/i,subs:[
-   ['Altra frutta oleosa',1,'Mandorle, noci e nocciole si scambiano a pari peso']]},
+   ['Altra frutta oleosa',1,'Mandorle, noci, nocciole, pistacchi e anacardi a pari peso'],
+   ['Semi (girasole, zucca, lino)',1,'A pari peso, buoni sullo yogurt o in insalata']]},
  {re:/frutta/i,subs:[
-   ['Altra frutta di stagione',1,'A pari peso, preferendo frutta non troppo zuccherina']]},
+   ['Altra frutta di stagione',1,'A pari peso, preferendo frutta non troppo zuccherina'],
+   ['Frutti di bosco',1,'A pari peso, meno zuccheri della media']]},
  {re:/verdur|pomodor|insalata/i,subs:[
    ['Altra verdura a pari peso',1,'Zucchine, melanzane, broccoli, cavolfiore, cavoletti, carote, insalata'],
-   ['Verdure surgelate',1,'Equivalenti alle fresche e già pulite']]}
+   ['Verdure surgelate',1,'Equivalenti alle fresche e già pulite'],
+   ['Verdure grigliate o al vapore',1,'Stesso peso: cambia solo la cottura']]},
+ {re:/pesto/i,subs:[
+   ['Pesto di pistacchi o noci',1,'A pari peso, stesso ruolo di condimento grasso'],
+   ['Crema di verdure frullate + olio',1,'Zucchine o piselli frullati, contando l’olio a parte']]},
+ {re:/olio/i,subs:[
+   ['Olio di semi di lino o noce',1,'A crudo, a pari peso'],
+   ['Frutta secca tritata',1,'Stessa quota di grassi, ma con fibra e croccantezza']]},
+ {re:/cioccolat/i,subs:[
+   ['Cacao amaro in polvere',.5,'Molto più concentrato: ne basta la metà'],
+   ['Crema di frutta secca 100%',.7,'Senza zuccheri aggiunti']]}
+];
+
+// Ogni ricetta usa gli stessi ingredienti e grammi del pasto che sostituisce:
+// cambiano solo tecnica e aromi, quindi i macro restano quelli del piano.
+const RICETTE=[
+ {gruppo:'Pranzi',nome:'Pasta al pomodoro confit',quando:'Pranzo di lunedì',tempo:'~20 min',
+  ing:[['Pasta di semola','110 g'],['Mozzarella','100 g'],['Pomodori','100 g'],['Olio EVO','5 g']],
+  steps:['Pomodorini in forno a 200° per 15 minuti con origano e pepe, senza condimento.','Cuoci la pasta al dente.','Manteca fuori dal fuoco con i pomodori confit, la mozzarella a cubetti e l’olio a crudo. Basilico a chiudere.'],
+  nota:'Il forno concentra gli zuccheri del pomodoro: più dolcezza e profondità senza aggiungere nulla.'},
+ {gruppo:'Pranzi',nome:'Pasta gratinata all’origano',quando:'Pranzo di lunedì',tempo:'~15 min',
+  ing:[['Pasta di semola','110 g'],['Mozzarella','100 g'],['Pomodori','100 g'],['Olio EVO','5 g']],
+  steps:['Cuoci la pasta molto al dente e condiscila con i pomodori a cubetti, origano e pepe.','Trasferisci in una pirofila e copri con la mozzarella a fette.','Grill acceso, 3–4 minuti, finché fa la crosticina. Olio a crudo all’uscita.'],
+  nota:'Il grill dà la crosta dorata che di solito si ottiene con besciamella o formaggio in più.'},
+ {gruppo:'Pranzi',nome:'Tabbouleh d’orzo',quando:'Pranzo di martedì',tempo:'~10 min',
+  ing:[['Orzo','100 g'],['Tonno sgocciolato','50 g'],['Verdure','200 g'],['Olio EVO','5 g']],
+  steps:['Usa l’orzo già cotto e freddo.','Trita finissimi prezzemolo e menta in abbondanza; taglia pomodoro e cetriolo a dadini piccolissimi.','Condisci con olio e molto limone, unisci il tonno ben sgocciolato all’ultimo. Niente sale.'],
+  nota:'Il segreto è tagliare tutto molto piccolo: il sapore si distribuisce e il sale non serve.'},
+ {gruppo:'Pranzi',nome:'Orzo freddo al curry e limone',quando:'Pranzo di martedì',tempo:'~10 min',
+  ing:[['Orzo','100 g'],['Tonno sgocciolato','50 g'],['Verdure','200 g'],['Olio EVO','5 g']],
+  steps:['Sciogli mezzo cucchiaino di curry nel succo di limone e nell’olio, come una vinaigrette.','Ripassa le verdure in padella antiaderente senza grassi finché prendono colore.','Unisci orzo, verdure e tonno e condisci con l’emulsione al curry.'],
+  nota:'Sciogliere le spezie in un liquido acido le distribuisce molto meglio che spolverarle a secco.'},
+ {gruppo:'Pranzi',nome:'Zuppa tiepida di farro e lenticchie',quando:'Pranzo di mercoledì',tempo:'~15 min',
+  ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Grana','10 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+  steps:['Sciacqua le lenticchie. Scalda appena aglio e rosmarino nell’olio.','Unisci le verdure a dadini e un po’ d’acqua calda, cuoci 8 minuti.','Aggiungi farro e lenticchie, scalda e chiudi con il grana. Frutta a fine pasto.'],
+  nota:'Frulla due cucchiai di lenticchie e rimettile nella zuppa: diventa cremosa senza panna.'},
+ {gruppo:'Pranzi',nome:'Farro speziato al cumino',quando:'Pranzo di mercoledì',tempo:'~10 min',
+  ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Grana','10 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+  steps:['Tosta cumino e coriandolo in padella a secco per 30 secondi, finché profumano.','Unisci verdure e lenticchie sciacquate e salta 5 minuti.','Spegni, aggiungi il farro, poi limone e prezzemolo a crudo con l’olio. Grana sopra.'],
+  nota:'Tostare le spezie prima di usarle moltiplica l’aroma: è il passaggio che manca a quasi tutti i piatti “da dieta”.'},
+ {gruppo:'Pranzi',nome:'Riso freddo alla greca',quando:'Pranzo di giovedì',tempo:'~8 min',
+  ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
+  steps:['Usa il riso già cotto e freddo.','Taglia cetriolo e pomodoro a dadini, aggiungi menta e origano abbondanti.','Feta sbriciolata, olio e molto limone. Niente sale: la feta è già sapida.'],
+  nota:'Lascialo riposare 10 minuti prima di mangiarlo: il riso assorbe il condimento e cambia completamente.'},
+ {gruppo:'Pranzi',nome:'Riso alla paprika affumicata',quando:'Pranzo di giovedì',tempo:'~10 min',
+  ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
+  steps:['Griglia le verdure finché sono ben segnate.','Sciogli la paprika affumicata nell’olio con qualche goccia di limone.','Condisci il riso, unisci le verdure e chiudi con la feta a scaglie, a crudo.'],
+  nota:'La paprika affumicata dà la nota “di brace” che di solito arriva da salumi o formaggi stagionati.'},
+ {gruppo:'Pranzi',nome:'Pasta e ceci cremosa',quando:'Pranzo di venerdì',tempo:'~15 min',
+  ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+  steps:['Sciacqua i ceci e frullane metà con poca acqua.','Scalda aglio e rosmarino nell’olio, unisci la crema e i ceci interi.','Cuoci la pasta molto al dente e finiscila direttamente nella crema con un po’ d’acqua di cottura.'],
+  nota:'Finire la pasta nel condimento la rende cremosa senza aggiungere un grammo di grassi.'},
+ {gruppo:'Pranzi',nome:'Pasta e ceci al peperoncino',quando:'Pranzo di venerdì',tempo:'~14 min',
+  ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+  steps:['Scalda aglio, peperoncino e rosmarino nell’olio.','Unisci poca passata e i ceci sciacquati, cuoci 5 minuti.','Manteca la pasta al dente nel sugo con l’acqua di cottura.'],
+  nota:'Passata, aglio e spezie sono condimenti liberi: danno sapore senza spostare i macro.'},
+ {gruppo:'Pranzi',nome:'Ragù bianco alle erbe',quando:'Pranzo di domenica',tempo:'~18 min',
+  ing:[['Pasta all’uovo','130 g'],['Manzo magro tritato','100 g'],['Grana','10 g'],['Frutta','150 g']],
+  steps:['Rosola il tritato a fuoco vivo in padella antiaderente, senza olio, finché è ben colorato.','Sfuma con poca acqua, unisci alloro e rosmarino e cuoci 10 minuti.','Manteca la pasta all’uovo nel sugo, grana a chiudere.'],
+  nota:'Senza pomodoro il gusto viene tutto dalla rosolatura: lascia colorare bene la carne prima di bagnarla.'},
+
+ {gruppo:'Cene',nome:'Pollo alla paprika affumicata',quando:'Cena di lunedì',tempo:'~20 min',
+  ing:[['Pollo','250 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Pane integrale','100 g']],
+  steps:['Marina il pollo 10 minuti con succo di limone, paprika affumicata, aglio e pepe.','Padella rovente: 4–5 minuti per lato senza mai muoverlo, così fa crosta.','Verdure arrostite con metà olio; il resto a crudo sul pollo. Pane a parte.'],
+  nota:'Non muovere la carne nei primi minuti: è così che si forma la crosticina saporita.'},
+ {gruppo:'Cene',nome:'Pollo agli agrumi e timo',quando:'Cena di sabato',tempo:'~18 min',
+  ing:[['Pollo petto','250 g'],['Pane integrale','120 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+  steps:['Copri il pollo con scorza grattugiata di limone e arancia, timo, aglio e pepe.','Forno a 200° per 15 minuti, irrorando col succo degli agrumi.','Verdure crude condite con l’olio e la scorza rimasta. Pane a parte.'],
+  nota:'La scorza contiene gli oli aromatici: il succo da solo porta acidità ma non profumo.'},
+ {gruppo:'Cene',nome:'Uova in purgatorio',quando:'Cena di martedì',tempo:'~15 min',
+  ing:[['Uova (3)','150 g'],['Pane integrale','130 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+  steps:['Scalda aglio e peperoncino nell’olio, unisci pomodori a pezzi e cuoci 8 minuti.','Fai degli incavi nel sugo e rompici dentro le uova; coperchio, 5 minuti.','Pane a fette per raccogliere il sugo, verdure crude a parte.'],
+  nota:'Cuocere le uova dentro il sugo invece che a parte: assorbono sapore e non serve altro condimento.'},
+ {gruppo:'Cene',nome:'Frittata alle erbe e limone',quando:'Cena di domenica',tempo:'~12 min',
+  ing:[['Uova (3)','150 g'],['Pane integrale','70 g'],['Olio EVO','10 g'],['Verdure','200 g']],
+  steps:['Sbatti le uova con prezzemolo, erba cipollina, scorza di limone e pepe.','Padella a fuoco medio-basso con parte dell’olio e coperchio: resta morbida.','Verdure condite a crudo con l’olio rimasto e limone. Pane a parte.'],
+  nota:'Fuoco basso e coperchio: la frittata resta cremosa invece di diventare gommosa.'},
+ {gruppo:'Cene',nome:'Tagliata al rosmarino',quando:'Cena di mercoledì',tempo:'~12 min',
+  ing:[['Manzo magro','200 g'],['Pane integrale','130 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+  steps:['Carne a temperatura ambiente, piastra rovente: 2–3 minuti per lato.','Falla riposare 5 minuti prima di tagliarla; sala solo adesso.','Affetta controfibra, condisci con rosmarino, pepe, olio a crudo e limone.'],
+  nota:'Il riposo prima del taglio trattiene i succhi: è la differenza tra una tagliata tenera e una asciutta.'},
+ {gruppo:'Cene',nome:'Merluzzo all’acqua pazza',quando:'Cena di giovedì',tempo:'~18 min',
+  ing:[['Cous cous','100 g'],['Merluzzo','300 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+  steps:['In padella metti aglio, prezzemolo, pomodorini e poca acqua.','Adagia il merluzzo, coperchio, 8 minuti a fuoco dolce.','Filtra il brodetto di cottura e usalo al posto dell’acqua per idratare il cous cous.'],
+  nota:'Usare il liquido di cottura del pesce per il cous cous è il passaggio che cambia davvero il piatto.'},
+ {gruppo:'Cene',nome:'Salmone e patate in teglia unica',quando:'Cena di venerdì',tempo:'~35 min',
+  ing:[['Patate','400 g'],['Salmone','120 g'],['Olio EVO','10 g'],['Verdure','150 g']],
+  steps:['Patate a tocchetti in forno a 200° con metà olio, 20 minuti.','Aggiungi salmone e verdure nella stessa teglia, altri 10 minuti.','Limone e aneto a crudo all’uscita, con l’olio rimasto.'],
+  nota:'Una sola teglia: meno lavoro, e le patate si insaporiscono col grasso che rilascia il salmone.'}
 ];
 
 function sameFood(ing,sub){
@@ -687,7 +804,36 @@ function renderPrep(){
   });
 }
 
-let prepBtn=null, pianoBtn=null;
+function ingRows(list){
+  return '<ul class="ing">'+list.map(i=>'<li><span class="chip"><span class="nm">'+i[0]+'</span><span class="g">'+i[1]+'</span></span></li>').join('')+'</ul>';
+}
+
+function renderRicette(){
+  currentDay=-1;
+  heroDay.textContent='Ricette';
+  let h='<div class="day-label">Varianti che rispettano i macro</div>';
+  h+='<div class="card"><div class="kick">Come funziona</div><div class="mtitle">Stessi grammi, gusto diverso</div>'
+    +'<div class="liberi">Ogni ricetta usa <b>gli stessi ingredienti e le stesse quantità</b> del pasto che sostituisce: '
+    +'cambiano solo la tecnica e gli aromi, quindi i macro restano quelli del piano. '
+    +'Erbe, spezie, limone, aceto, aglio e passata sono condimenti liberi e non spostano nulla.</div></div>';
+
+  [...new Set(RICETTE.map(r=>r.gruppo))].forEach(g=>{
+    h+='<div class="rgroup">'+g+'</div>';
+    RICETTE.filter(r=>r.gruppo===g).forEach(r=>{
+      h+='<div class="card"><div class="meal-top"><div>';
+      h+='<div class="kick">'+r.quando+'</div><div class="mtitle">'+r.nome+'</div></div>';
+      h+='<span class="timepill">'+r.tempo+'</span></div>';
+      h+=ingRows(r.ing)+steps(r.steps);
+      h+='<div class="tip"><div><b>Il trucco.</b> '+r.nota+'</div></div></div>';
+    });
+  });
+
+  content.innerHTML=h;
+  content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
+  [...rail.children].forEach(b=>b.setAttribute('aria-selected',b===ricetteBtn));
+}
+
+let prepBtn=null, pianoBtn=null, ricetteBtn=null;
 function buildRail(){
   rail.innerHTML='';
   PLAN.days.forEach((d,i)=>{
@@ -697,6 +843,12 @@ function buildRail(){
     b.addEventListener('click',()=>selectDay(i));
     rail.appendChild(b);
   });
+
+  ricetteBtn=document.createElement('button');
+  ricetteBtn.className='dchip';ricetteBtn.textContent='Ricette';ricetteBtn.setAttribute('role','tab');
+  ricetteBtn.setAttribute('aria-selected','false');
+  ricetteBtn.addEventListener('click',()=>{renderRicette();centerChip(ricetteBtn);});
+  rail.appendChild(ricetteBtn);
 
   prepBtn=document.createElement('button');
   prepBtn.className='dchip';prepBtn.textContent='Prep';prepBtn.setAttribute('role','tab');
