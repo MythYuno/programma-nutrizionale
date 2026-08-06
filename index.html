@@ -89,8 +89,50 @@
 
   .ing{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0 2px}
   .chip{display:inline-flex;align-items:baseline;gap:7px;font-size:13.5px;background:var(--glass-2);
-    border:1px solid var(--stroke);border-radius:9px;padding:6px 10px}
+    border:1px solid var(--stroke);border-radius:9px;padding:6px 10px;color:var(--text);font-family:inherit;text-align:left}
   .chip .g{font-family:'Geist Mono',monospace;font-size:12.5px;color:var(--accent);font-weight:500}
+  button.chip{cursor:pointer;transition:.15s ease;position:relative;padding-right:25px;-webkit-tap-highlight-color:transparent}
+  button.chip::after{content:"";position:absolute;right:10px;top:50%;width:5.5px;height:5.5px;margin-top:-4px;
+    border:solid var(--text-faint);border-width:0 1.5px 1.5px 0;transform:rotate(45deg);transition:.15s ease}
+  button.chip:hover{border-color:var(--accent);background:var(--accent-soft)}
+  button.chip:hover::after{border-color:var(--accent)}
+  button.chip:active{transform:scale(.97)}
+  button.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .sheet-bg{position:fixed;inset:0;z-index:60;background:rgba(5,7,10,.6);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s ease}
+  .sheet-bg.open{opacity:1;pointer-events:auto}
+  .sheet{width:100%;max-width:560px;max-height:82dvh;display:flex;flex-direction:column;
+    background:#12151B;border:1px solid var(--stroke-2);border-bottom:none;border-radius:22px 22px 0 0;
+    transform:translateY(16px);transition:transform .24s cubic-bezier(.32,.72,0,1);padding-bottom:env(safe-area-inset-bottom)}
+  .sheet-bg.open .sheet{transform:none}
+  @media(min-width:640px){
+    .sheet-bg{align-items:center}
+    .sheet{border-radius:22px;border-bottom:1px solid var(--stroke-2);max-height:76dvh}
+  }
+  .sheet-grab{width:36px;height:4px;border-radius:99px;background:var(--stroke-2);margin:9px auto 0;flex:0 0 auto}
+  .sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 20px 0}
+  .sheet-kick{font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-faint);margin-bottom:5px}
+  .sheet-title{font-weight:600;font-size:20px;letter-spacing:-.015em;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .sheet-title em{font-style:normal;font-family:'Geist Mono',monospace;font-size:13px;color:var(--accent)}
+  .sheet-x{flex:0 0 auto;width:32px;height:32px;border-radius:9px;cursor:pointer;background:var(--glass-2);
+    border:1px solid var(--stroke);color:var(--text-dim);font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center}
+  .sheet-x:hover{color:var(--text);border-color:var(--stroke-2)}
+  .sheet-tabs{display:flex;gap:7px;padding:15px 20px 0;flex:0 0 auto}
+  .sheet-tabs button{flex:1;font-family:inherit;font-weight:500;font-size:13px;cursor:pointer;padding:9px 10px;border-radius:11px;
+    background:var(--glass-2);border:1px solid var(--stroke);color:var(--text-dim);transition:.15s ease}
+  .sheet-tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+  .sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 22px;flex:1 1 auto}
+  .sub{display:flex;align-items:baseline;gap:12px;padding:13px 0;border-bottom:1px solid var(--stroke)}
+  .sub:last-child{border-bottom:none}
+  .sub .sn{flex:1;font-size:15px}
+  .sub .sn i{display:block;font-style:normal;font-size:12px;color:var(--text-faint);margin-top:3px;line-height:1.45}
+  .sub .sq{flex:0 0 auto;font-family:'Geist Mono',monospace;font-size:14px;color:var(--accent);font-weight:500}
+  .sheet-empty{padding:24px 2px;font-size:13.5px;color:var(--text-faint);line-height:1.5}
+  .sheet-note{margin-top:15px;font-size:12px;color:var(--text-faint);line-height:1.5;
+    background:var(--glass-2);border:1px solid var(--stroke);border-radius:11px;padding:11px 13px}
+  .sheet-note b{color:var(--text-dim);font-weight:600}
 
   .liberi{font-size:12.5px;color:var(--text-faint);margin-top:11px}
   .liberi b{color:var(--text-dim);font-weight:500}
@@ -199,13 +241,32 @@
   </footer>
 </div>
 
+<div class="sheet-bg" id="sheetBg" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head">
+      <div>
+        <div class="sheet-kick">Con cosa posso sostituirlo</div>
+        <div class="sheet-title" id="sheetTitle"></div>
+      </div>
+      <button class="sheet-x" id="sheetX" aria-label="Chiudi">✕</button>
+    </div>
+    <div class="sheet-tabs" role="tablist">
+      <button role="tab" id="tabDoc" aria-selected="true">Dott. Occhino</button>
+      <button role="tab" id="tabWeb" aria-selected="false">Alternative</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+
 <script>
 const clock='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 const bolt='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>';
 
 const COLAZIONE={kick:'Colazione',title:'Latte e cereali',
   ing:[['Latte p.s.','200 g'],['Cereali','50 g'],['Cioccolato fondente','10 g']],
-  oppure:'Latte → Kefir 150 g · Yogurt 2% 150 g · Yogurt intero 125 g  ·  Cereali → Corn Flakes 40 g · Muesli 45 g · Frollini 40 g · Avena 40 g',
+  sub:{'Latte p.s.':[['Kefir','150 g'],['Yogurt 2%','150 g'],['Yogurt intero','125 g']],
+       'Cereali':[['Corn Flakes','40 g'],['Muesli','45 g'],['Frollini','40 g'],['Avena','40 g']]},
   altsTitle:'Colazioni alternative',
   alts:['Pancake: 1 uovo + 40 g farina + latte q.b., con 10 g marmellata o crema cacao',
     'Porridge cotto: 100 g latte + 50 g farina, cioccolato fondente sopra',
@@ -218,7 +279,7 @@ const SP_MATTINO={kick:'Spuntino · mattino',title:'Frutta e frutta secca',
 
 const SP_POMERIGGIO={kick:'Spuntino · pomeriggio',title:'Spuntino salato',
   ing:[['Crackers','50 g']],
-  oppure:'Crackers → Pan Bauletto bianco 60 g · Grissini 50 g · Biscotti 40 g',
+  sub:{'Crackers':[['Pan Bauletto bianco','60 g'],['Grissini','50 g'],['Biscotti','40 g']]},
   liberi:'+ 20 g di marmellata solo se ti alleni.'};
 
 const DAYS=[
@@ -230,7 +291,8 @@ const DAYS=[
    tip:'Cuoci <b>220 g</b> di pasta in un colpo: metà in frigo con un filo d’olio → domani pasta fredda pronta in 60 secondi.'},
   cena:{title:'Pollo arrosto, verdure e pane',
    ing:[['Pollo','250 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Pane integrale','100 g']],
-   oppure:'Coscia 300 g (con osso) · pane → Patate 300 g o Cous cous 70 g',
+   sub:{'Pollo':[['Coscia (con osso)','300 g']],
+        'Pane integrale':[['Patate','300 g'],['Cous cous','70 g']]},
    liberi:'Paprika, rosmarino, aglio, limone.',
    steps:['Marina il pollo 5 min con limone, paprika, rosmarino e aglio.','Cuoci in padella o forno a 200° finché dorato (15–18 min).','Arrostisci le verdure con metà olio; il resto a crudo. Pane a parte.'],
    tip:'Cuoci una porzione di pollo in più: la coscia avanzata diventa proteina già pronta per un pranzo extra in settimana.'}},
@@ -239,12 +301,14 @@ const DAYS=[
   pranzo:{title:'Insalata di orzo e tonno',time:'~5 min',
    ing:[['Orzo','100 g'],['Tonno sgocciolato','50 g'],['Verdure','200 g'],['Olio EVO','5 g']],
    liberi:'Limone e spezie — <b>no sale</b> (c’è il tonno).',
-   oppure:'Orzo → Riso 100 g · verdure: zucchine, melanzane, broccoli, cavolfiore, cavoletti',
+   sub:{'Orzo':[['Riso','100 g']]},
+   oppure:'Verdure: zucchine, melanzane, broccoli, cavolfiore, cavoletti.',
    steps:['Sgocciola bene il tonno e usa l’orzo già cotto (vedi tip).','Aggiungi le verdure: ottime anche surgelate ripassate o lessate.','Unisci a freddo con olio, limone e spezie. Niente sale.'],
    tip:'Lessa <b>300 g di orzo</b> a inizio settimana e porziona: assembli in 2 minuti.'},
   cena:{title:'Frittata di verdure, pane e insalata',
    ing:[['Uova (3)','150 g'],['Pane integrale','130 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
-   oppure:'Uova → Gamberetti 300 g · pane → Patate 380 g',
+   sub:{'Uova (3)':[['Gamberetti','300 g']],
+        'Pane integrale':[['Patate','380 g']]},
    liberi:'Pomodori, carote, iceberg a crudo. Sale moderato, pepe.',
    steps:['Sbatti le uova con pepe e poco sale.','Cuoci la frittata a fuoco medio con parte dell’olio (con un po’ di verdura dentro se vuoi).','Servi con pane e insalata cruda condita con l’olio rimasto e limone.'],
    tip:'Usa le verdure già lavate e tagliate per il pranzo di domani (vedi tip orzo): frittata pronta in 8 minuti.'}},
@@ -252,13 +316,15 @@ const DAYS=[
  {id:'mer',name:'Mer',full:'Mercoledì',
   pranzo:{title:'Farro e lenticchie tiepido',time:'~4 min',
    ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Grana','10 g'],['Olio EVO','5 g'],['Frutta','150 g']],
-   oppure:'Farro → Riso 101 g · lenticchie scatola → 70 g secche',
+   sub:{'Farro':[['Riso','101 g']],
+        'Lenticchie scatola':[['Lenticchie secche','70 g']]},
    liberi:'Spezie, prezzemolo.',
    steps:['Sciacqua le lenticchie in scatola per togliere il sale in eccesso.','Usa il farro già cotto, unisci lenticchie e verdure.','Condisci con olio e spezie, grana sopra. Frutta a chiudere.'],
    tip:'Farro <b>batch-cooked</b> + lenticchie in vetro = piatto freddo o tiepido in 3–4 minuti.'},
   cena:{title:'Manzo magro alla griglia',
    ing:[['Manzo magro','200 g'],['Pane integrale','130 g'],['Verdure','150 g'],['Olio EVO','10 g']],
-   oppure:'Manzo → Pollo 230 g · Pesce azzurro 200 g · Cavallo 225 g · Feta 102 g · pane → Patate 380 g',
+   sub:{'Manzo magro':[['Pollo','230 g'],['Pesce azzurro','200 g'],['Cavallo','225 g'],['Feta','102 g']],
+        'Pane integrale':[['Patate','380 g']]},
    liberi:'Rosmarino, pepe.',
    steps:['Scalda bene una piastra o padella.','Cuoci la carne 2–3 min per lato secondo lo spessore; sala dopo la cottura.','Verdure grigliate o crude con l’olio; pane a parte.'],
    tip:'Non serve marinare: bastano 2–3 minuti per lato a fuoco alto. Sala solo a fine cottura per non far perdere succosità.'}},
@@ -267,12 +333,14 @@ const DAYS=[
   pranzo:{title:'Riso freddo con feta e verdure',time:'~4 min',
    ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
    liberi:'Menta, limone, spezie — <b>no sale</b> (c’è la feta).',
-   oppure:'Feta → Formaggio molle 40 g o Ricotta 80 g · verdure: zucchine, melanzane, broccoli, cavolfiore',
+   sub:{'Feta':[['Formaggio molle','40 g'],['Ricotta','80 g']]},
+   oppure:'Verdure: zucchine, melanzane, broccoli, cavolfiore.',
    steps:['Usa il riso freddo già cotto.','Sbriciola la feta e unisci le verdure (grigliate o surgelate ripassate).','Condisci con olio, limone e menta. Niente sale.'],
    tip:'Cuoci <b>2–3 porzioni di riso</b> e tienile in frigo: si monta a freddo in pochi minuti.'},
   cena:{title:'Merluzzo al forno con cous cous',
    ing:[['Cous cous','100 g'],['Merluzzo','300 g'],['Verdure','150 g'],['Olio EVO','10 g']],
-   oppure:'Cous cous → Riso 100 g · Merluzzo → Pesce azzurro 145 g · Salmone affumicato 135 g · Uova 150 g (3) · Tofu 253 g + salsa soia 10 g',
+   sub:{'Cous cous':[['Riso','100 g']],
+        'Merluzzo':[['Pesce azzurro','145 g'],['Salmone affumicato','135 g'],['Uova (3)','150 g'],['Tofu (+ salsa soia 10 g)','253 g']]},
    liberi:'Limone, prezzemolo, aglio.',
    steps:['Idrata il cous cous con pari volume d’acqua bollente, coperto 5 min, poi sgrana.','Cuoci il merluzzo al forno o in padella con limone ed erbe (8–10 min).','Verdure di contorno; chiudi con l’olio a crudo.'],
    tip:'Tieni filetti di merluzzo surgelati in monoporzione: si cuociono in forno direttamente da congelati, bastano 5 minuti in più.'}},
@@ -280,13 +348,13 @@ const DAYS=[
  {id:'ven',name:'Ven',full:'Venerdì',
   pranzo:{title:'Pasta e ceci',time:'~12 min',
    ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g'],['Frutta','150 g']],
-   oppure:'Ceci → 60 g secchi · oppure Fagioli 160 g scatola / 60 g secchi',
+   sub:{'Ceci scatola':[['Ceci secchi','60 g'],['Fagioli scatola','160 g'],['Fagioli secchi','60 g']]},
    liberi:'Rosmarino, aglio, pepe.',
    steps:['Sciacqua i ceci. Soffriggi appena aglio e rosmarino nell’olio.','Cuoci la pasta; unisci i ceci (frullane una parte per cremosità, se ti va).','Manteca con un po’ d’acqua di cottura. Frutta dopo.'],
    tip:'Versione fredda: pasta corta cotta prima + ceci in scatola a crudo → <b>4 minuti</b>.'},
   cena:{title:'Salmone al forno, patate e verdure',
    ing:[['Patate','400 g'],['Salmone','120 g'],['Olio EVO','10 g'],['Verdure','150 g']],
-   oppure:'Salmone → Affumicato 100 g · Ricotta 120 g · Vongole 300 g · Cozze 250 g · Polpo 400 g',
+   sub:{'Salmone':[['Salmone affumicato','100 g'],['Ricotta','120 g'],['Vongole','300 g'],['Cozze','250 g'],['Polpo','400 g']]},
    liberi:'Limone, aglio.',
    steps:['Patate a tocchetti in forno a 200° con parte dell’olio (~25 min).','A metà cottura aggiungi il salmone con limone (oppure cozze/vongole in padella aglio e olio).','Verdure di contorno; olio a crudo per finire.'],
    tip:'Un’unica teglia per patate e salmone: meno tempo ai fornelli e meno da lavare.'}},
@@ -299,7 +367,9 @@ const DAYS=[
    tip:'È già il più rapido: tieni il pesto pronto e in <b>10 min</b> sei a tavola.'},
   cena:{title:'Pollo al forno, pane e verdure crude',
    ing:[['Pollo petto','250 g'],['Pane integrale','120 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
-   oppure:'Petto → Coscia 200 g · pane → Patate 350 g · se panato: togli olio e panatura dal totale',
+   sub:{'Pollo petto':[['Coscia','200 g']],
+        'Pane integrale':[['Patate','350 g']]},
+   oppure:'Se lo fai panato, togli olio e panatura dal totale.',
    liberi:'Paprika, limone.',
    steps:['Insaporisci il pollo con paprika e limone.','Forno a 200° o padella finché dorato (~15 min).','Verdure crude condite con l’olio; pane a parte.'],
    tip:'Marina il pollo al mattino, anche solo 10 minuti: la sera è già pronto da cuocere.'}},
@@ -307,13 +377,14 @@ const DAYS=[
  {id:'dom',name:'Dom',full:'Domenica',
   pranzo:{title:'Pasta all’uovo al ragù',time:'~15 min',
    ing:[['Pasta all’uovo','130 g'],['Manzo magro tritato','100 g'],['Grana','10 g'],['Frutta','150 g']],
-   oppure:'Manzo → Legumi 70 g / 140 g scatola (versione ancora più rapida)',
+   sub:{'Manzo magro tritato':[['Legumi secchi','70 g'],['Legumi scatola','140 g']]},
    liberi:'Passata/salsa, aglio, spezie.',
    steps:['Rosola il tritato con poca passata e aglio (niente olio extra: i grassi sono già nei macro).','Cuoci la pasta all’uovo — cottura breve.','Manteca col ragù, grana sopra. Frutta dopo.'],
    tip:'Di domenica hai più tempo, ma un ragù lampo si fa in 12–15 min. Per il più veloce usa la <b>versione legumi</b>.'},
   cena:{title:'Uova, pane integrale e verdure',
    ing:[['Uova (3)','150 g'],['Pane integrale','70 g'],['Olio EVO','10 g'],['Verdure','200 g']],
-   oppure:'Uova → Tonno sgocciolato 80 g · Stracchino 64 g · Gamberetti 270 g · Vongole 270 g · pane → Wasa',
+   sub:{'Uova (3)':[['Tonno sgocciolato','80 g'],['Stracchino','64 g'],['Gamberetti','270 g'],['Vongole','270 g']],
+        'Pane integrale':[['Wasa','q.b.']]},
    liberi:'Limone, spezie.',
    steps:['Cuoci le uova come preferisci: sode, in camicia o à la coque.','Condisci una bella porzione di verdure con l’olio e limone.','Pane integrale o Wasa a parte.'],
    tip:'La cena più rapida della settimana: le uova sode si fanno mentre apparecchi, 8 minuti in tutto.'}}
@@ -428,15 +499,88 @@ const TRUCCHI=[
  'Cuoci pasta, riso, orzo e farro nella stessa pentola durante la settimana: cambia solo il condimento.'
 ];
 
-function chips(a){return '<div class="ing">'+a.map(i=>'<span class="chip">'+i[0]+'<span class="g">'+i[1]+'</span></span>').join('')+'</div>';}
+// Equivalenze indicative da tabelle di sostituzione pubbliche (non prescritte dal medico).
+// Fonti: petrininutrizione.it, educazionenutrizionale.granapadano.it, melarossa.it
+const WEB_RULES=[
+ {re:/pasta|riso|orzo|farro|cous|polenta/i,subs:[
+   ['Altro cereale in chicco',1,'Riso, orzo, farro e cous cous si scambiano 1:1 a crudo'],
+   ['Pane',1.25,'80 g di pasta ≈ 100 g di pane'],
+   ['Patate',4,'50 g di pasta ≈ 210 g di patate']]},
+ {re:/pane|cracker|grissini|bauletto|wasa|biscott|frollini/i,subs:[
+   ['Pasta o riso (a crudo)',.8,'100 g di pane ≈ 80 g di pasta'],
+   ['Patate',3,'50 g di pane ≈ 150 g di patate']]},
+ {re:/patate/i,subs:[
+   ['Pane',.33,'150 g di patate ≈ 50 g di pane'],
+   ['Pasta o riso (a crudo)',.25,'210 g di patate ≈ 50 g di pasta']]},
+ {re:/pollo|tacchino|cavallo|manzo|vitello|carne/i,subs:[
+   ['Tacchino',1.05,'Praticamente equivalente al pollo'],
+   ['Merluzzo o nasello',1.33,'200 g di pollo ≈ 250–280 g di merluzzo'],
+   ['Salmone',.68,'200 g di pollo ≈ 120–150 g di salmone'],
+   ['Ricotta o mozzarella',.55,'Formaggi freschi, a pari proteine'],
+   ['Legumi secchi',.25,'Aggiungono però parecchi carboidrati']]},
+ {re:/merluzzo|nasello|sogliola|pesce|salmone|vongole|cozze|polpo|gamberetti|tonno/i,subs:[
+   ['Pollo o tacchino',.75,'250–280 g di merluzzo ≈ 200 g di pollo'],
+   ['Uova',.5,'A pari proteine, circa 3 uova ogni 300 g di pesce magro'],
+   ['Ricotta o mozzarella',.42,'Formaggi freschi, a pari proteine']]},
+ {re:/uova|uovo/i,subs:[
+   ['Merluzzo o pesce magro',2,'150 g di uova (3) ≈ 300 g di merluzzo'],
+   ['Pollo o tacchino',1.4,'A pari proteine'],
+   ['Ricotta o fiocchi di latte',1.1,'Alternativa vegetariana']]},
+ {re:/latte|kefir|yogurt/i,subs:[
+   ['Yogurt bianco naturale',.75,'200 g di latte ≈ 150 g di yogurt'],
+   ['Bevanda vegetale non zuccherata',1,'Attenzione: ha molte meno proteine del latte']]},
+ {re:/lenticchie|ceci|fagioli|legumi|piselli/i,subs:[
+   ['Altri legumi',1,'Ceci, fagioli, lenticchie e piselli si scambiano a pari peso'],
+   ['Secchi ↔ in scatola',.4,'I secchi pesano circa 2,5 volte meno di quelli in scatola']]},
+ {re:/feta|ricotta|mozzarella|stracchino|formaggio|grana/i,subs:[
+   ['Altro formaggio fresco',1,'Ricotta, fiocchi di latte e mozzarella si equivalgono'],
+   ['Grana o parmigiano',.45,'Stagionati: più proteine e grassi a parità di peso'],
+   ['Pollo o tacchino',1.8,'A pari proteine']]},
+ {re:/frutta secca|oleosa|mandorle|noci/i,subs:[
+   ['Altra frutta oleosa',1,'Mandorle, noci e nocciole si scambiano a pari peso']]},
+ {re:/frutta/i,subs:[
+   ['Altra frutta di stagione',1,'A pari peso, preferendo frutta non troppo zuccherina']]},
+ {re:/verdur|pomodor|insalata/i,subs:[
+   ['Altra verdura a pari peso',1,'Zucchine, melanzane, broccoli, cavolfiore, cavoletti, carote, insalata'],
+   ['Verdure surgelate',1,'Equivalenti alle fresche e già pulite']]}
+];
+
+function sameFood(ing,sub){
+  const a=ing.toLowerCase(),b=sub.toLowerCase();
+  if(/^altr/.test(b)) return false; // "Altro cereale", "Altra frutta"… sono volutamente generici
+  return b.split(/[ ,(]/).filter(w=>w.length>3).some(w=>a.includes(w));
+}
+function webSubsFor(nome,qty){
+  const g=parseGrams(qty);
+  if(!g) return [];
+  const rule=WEB_RULES.find(r=>r.re.test(nome));
+  if(!rule) return [];
+  return rule.subs.filter(s=>!sameFood(nome,s[0]))
+    .map(s=>({nome:s[0],qty:fmtGrams(Math.round(g*s[1]/5)*5),nota:s[2]}));
+}
+function subsFor(m,idx){
+  const ing=m.ing[idx];
+  return {nome:ing[0],qty:ing[1],
+    occhino:((m.sub&&m.sub[ing[0]])||[]).map(s=>({nome:s[0],qty:s[1]})),
+    web:webSubsFor(ing[0],ing[1])};
+}
+
+function chips(m,mi){
+  return '<div class="ing">'+m.ing.map((i,idx)=>{
+    const s=subsFor(m,idx);
+    const label=i[0]+'<span class="g">'+i[1]+'</span>';
+    if(!s.occhino.length&&!s.web.length) return '<span class="chip">'+label+'</span>';
+    return '<button class="chip" type="button" data-m="'+mi+'" data-i="'+idx+'" aria-haspopup="dialog">'+label+'</button>';
+  }).join('')+'</div>';
+}
 function steps(a){return '<ol class="steps">'+a.map(s=>'<li>'+s+'</li>').join('')+'</ol>';}
-function renderMeal(m){
+function renderMeal(m,mi){
   let h='<div class="card'+(m.accent?' accent':'')+'"><div class="meal-top"><div>';
   h+='<div class="kick">'+m.kick+'</div><div class="mtitle">'+m.title+'</div></div>';
   if(m.time) h+='<span class="timepill">'+clock+m.time+'</span>';
-  h+='</div>'+chips(m.ing);
+  h+='</div>'+chips(m,mi);
   if(m.liberi&&m.liberi!=='—') h+='<div class="liberi">Liberi: '+m.liberi+'</div>';
-  if(m.oppure) h+='<div class="oppure"><span>Oppure</span>'+m.oppure+'</div>';
+  if(m.oppure) h+='<div class="oppure"><span>Nota</span>'+m.oppure+'</div>';
   if(m.alts) h+='<div class="alts"><span>'+(m.altsTitle||'Alternative')+'</span><ul>'+m.alts.map(a=>'<li>'+a+'</li>').join('')+'</ul></div>';
   if(m.steps) h+=steps(m.steps);
   if(m.tip) h+='<div class="tip">'+bolt+'<div><b>Veloce.</b> '+m.tip+'</div></div>';
@@ -448,6 +592,7 @@ const content=document.getElementById('content');
 const heroDay=document.getElementById('heroDay');
 const heroDate=document.getElementById('heroDate');
 let currentDay=0;
+let CURRENT_SEQ=[];
 
 function render(i){
   currentDay=i;
@@ -457,6 +602,7 @@ function render(i){
     Object.assign({kick:'Pranzo · veloce',accent:true},d.pranzo),
     PLAN.spPomeriggio,
     Object.assign({kick:'Cena'},d.cena)];
+  CURRENT_SEQ=seq;
   content.innerHTML='<div class="day-label">'+d.full+'</div>'+seq.map(renderMeal).join('');
   content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
   [...rail.children].forEach((b,bi)=>b.setAttribute('aria-selected',bi===i));
@@ -654,6 +800,64 @@ function renderPiano(){
 }
 
 buildRail();
+
+// ---- Popup sostituzioni ----
+const sheetBg=document.getElementById('sheetBg');
+const sheetBody=document.getElementById('sheetBody');
+const sheetTitle=document.getElementById('sheetTitle');
+const tabDoc=document.getElementById('tabDoc');
+const tabWeb=document.getElementById('tabWeb');
+let sheetData=null, lastFocus=null, hideTimer=null;
+
+function subRows(list){
+  return list.map(s=>'<div class="sub"><div class="sn">'+s.nome+(s.nota?'<i>'+s.nota+'</i>':'')+'</div><div class="sq">'+s.qty+'</div></div>').join('');
+}
+function paintSheet(which){
+  const isDoc=which==='doc';
+  tabDoc.setAttribute('aria-selected',isDoc);
+  tabWeb.setAttribute('aria-selected',!isDoc);
+  const list=isDoc?sheetData.occhino:sheetData.web;
+  if(!list.length){
+    sheetBody.innerHTML='<div class="sheet-empty">'+(isDoc
+      ? 'Il piano non indica sostituzioni per questo alimento. Guarda la scheda <b>Alternative</b> per equivalenze indicative.'
+      : 'Nessuna alternativa disponibile per questo alimento.')+'</div>';
+    return;
+  }
+  sheetBody.innerHTML=subRows(list)+(isDoc
+    ? '<div class="sheet-note">Sostituzioni indicate nel piano del <b>Dott. Salvatore Occhino</b>: mantengono i macro previsti.</div>'
+    : '<div class="sheet-note"><b>Non fanno parte del piano.</b> Sono equivalenze indicative da tabelle nutrizionali pubbliche, arrotondate a 5 g: usale come ripiego e verificale con il medico prima di renderle abituali.</div>');
+}
+function openSheet(mi,idx){
+  const meal=CURRENT_SEQ[mi];
+  if(!meal) return;
+  sheetData=subsFor(meal,idx);
+  sheetTitle.innerHTML=sheetData.nome+' <em>'+sheetData.qty+'</em>';
+  paintSheet(sheetData.occhino.length?'doc':'web');
+  lastFocus=document.activeElement;
+  if(hideTimer){clearTimeout(hideTimer);hideTimer=null;} // annulla una chiusura ancora in corso
+  sheetBg.hidden=false;
+  void sheetBg.offsetWidth; // reflow sincrono: non dipende da rAF, che non scatta a tab nascosta
+  sheetBg.classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('sheetX').focus();
+}
+function closeSheet(){
+  if(sheetBg.hidden) return;
+  sheetBg.classList.remove('open');
+  document.body.style.overflow='';
+  if(hideTimer) clearTimeout(hideTimer);
+  hideTimer=setTimeout(()=>{sheetBg.hidden=true;hideTimer=null;},220);
+  if(lastFocus&&lastFocus.focus) lastFocus.focus();
+}
+content.addEventListener('click',e=>{
+  const b=e.target.closest('button.chip');
+  if(b) openSheet(+b.dataset.m,+b.dataset.i);
+});
+tabDoc.addEventListener('click',()=>paintSheet('doc'));
+tabWeb.addEventListener('click',()=>paintSheet('web'));
+document.getElementById('sheetX').addEventListener('click',closeSheet);
+sheetBg.addEventListener('click',e=>{if(e.target===sheetBg) closeSheet();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sheetBg.hidden) closeSheet();});
 
 // Swipe orizzontale tra i giorni (solo quando si sta visualizzando un giorno)
 let tsx=0,tsy=0;
