@@ -81,6 +81,13 @@
   .day-label{font-size:13px;color:var(--ink-3);margin:30px 0 -6px}
   .rgroup{font-family:var(--serif);font-weight:600;font-size:21px;letter-spacing:-.015em;
     margin:34px 0 -10px;padding-top:26px;border-top:2px solid var(--ink)}
+  .rgroup small{display:block;font-family:var(--sans);font-weight:400;font-size:13.5px;
+    color:var(--ink-3);letter-spacing:0;margin-top:5px;line-height:1.5}
+  .swap{margin-top:18px;padding-left:15px;border-left:2px solid var(--accent);
+    font-size:13.5px;color:var(--ink-2);line-height:1.5}
+  .swap b{display:block;font-size:11.5px;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  .swap i{font-style:normal;display:block;padding:2px 0}
 
   .card{padding:28px 0;border-top:1px solid var(--rule)}
   .card:first-of-type{border-top:none;padding-top:26px}
@@ -675,7 +682,88 @@ const RICETTE=[
  {gruppo:'Cene',nome:'Salmone e patate in teglia unica',quando:'Cena di venerdì',tempo:'~35 min',
   ing:[['Patate','400 g'],['Salmone','120 g'],['Olio EVO','10 g'],['Verdure','150 g']],
   steps:['Patate a tocchetti in forno a 200° con metà olio, 20 minuti.','Aggiungi salmone e verdure nella stessa teglia, altri 10 minuti.','Limone e aneto a crudo all’uscita, con l’olio rimasto.'],
-  nota:'Una sola teglia: meno lavoro, e le patate si insaporiscono col grasso che rilascia il salmone.'}
+  nota:'Una sola teglia: meno lavoro, e le patate si insaporiscono col grasso che rilascia il salmone.'},
+
+ {gruppo:'Sgarri fit',nome:'Pizza margherita',quando:'Pranzo di lunedì',tempo:'~25 min + lievitazione',
+  swap:['Pasta di semola 110 g → Farina 110 g (cereali 1:1 a crudo)'],
+  ing:[['Farina','110 g'],['Mozzarella','100 g'],['Passata o pomodori','100 g'],['Olio EVO','5 g']],
+  steps:['Impasta la farina con acqua, un pizzico di sale e poco lievito; lascia lievitare qualche ora.','Stendi sottile su teglia rovente, condisci con la passata e inforna al massimo (250°) per 8–10 minuti.','Aggiungi la mozzarella scolata negli ultimi 3 minuti e l’olio a crudo all’uscita.'],
+  nota:'Forno al massimo e teglia già calda: è così che si ottiene la base croccante, non con più olio.'},
+ {gruppo:'Sgarri fit',nome:'Hamburger nel panino',quando:'Cena di mercoledì',tempo:'~15 min',
+  swap:['Nessuno: gli ingredienti del piano sono già quelli dell’hamburger'],
+  ing:[['Manzo magro macinato','200 g'],['Panino','130 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+  steps:['Forma il burger senza compattarlo troppo e schiaccialo solo una volta, all’inizio.','Padella rovente, 3 minuti per lato, senza mai premerlo: perderebbe i succhi.','Tosta il panino tagliato, monta con insalata, pomodoro, cipolla e un velo di senape.'],
+  nota:'Senape, aceto, cipolla e spezie sono liberi: danno tutto il sapore da fast food senza salse grasse.'},
+ {gruppo:'Sgarri fit',nome:'Hamburger e patatine al forno',quando:'Cena di mercoledì',tempo:'~35 min',
+  swap:['Pane integrale 130 g → Patate 390 g (rapporto pane→patate 1:3)'],
+  ing:[['Manzo magro macinato','200 g'],['Patate','390 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+  steps:['Taglia le patate a bastoncino e tienile 10 minuti in acqua fredda per togliere l’amido, poi asciugale bene.','Forno ventilato a 210° con metà olio e paprika, 25–30 minuti girandole a metà.','Cuoci il burger in padella rovente 3 minuti per lato; verdure a crudo con l’olio rimasto.'],
+  nota:'Ammollo, asciugatura e forno ventilato: croccanti fuori e morbide dentro, senza friggere.'},
+ {gruppo:'Sgarri fit',nome:'Poke bowl al salmone',quando:'Cena di giovedì',tempo:'~12 min',
+  swap:['Cous cous 100 g → Riso 100 g (1:1 a crudo)','Merluzzo 300 g → Salmone affumicato 135 g (scambio indicato nel piano)'],
+  ing:[['Riso','100 g'],['Salmone affumicato','135 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+  steps:['Condisci il riso freddo già cotto con aceto di riso e un pizzico di zenzero.','Taglia le verdure a dadini regolari e disponile a spicchi sopra il riso.','Salmone a striscioline al centro; emulsiona olio, lime e salsa di soia come dressing.'],
+  nota:'Aceto di riso, lime, zenzero e semi di sesamo sono liberi: fanno tutto il sapore del poke.'},
+ {gruppo:'Sgarri fit',nome:'Piadina con pollo speziato',quando:'Cena di sabato',tempo:'~25 min',
+  swap:['Pane integrale 120 g → Farina 84 g (rapporto pane→cereale secco del piano, 0,7)'],
+  ing:[['Farina','84 g'],['Pollo petto','250 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+  steps:['Impasta farina, acqua tiepida, un pizzico di sale e metà dell’olio; riposo 20 minuti.','Stendi sottile e cuoci in padella antiaderente rovente, 1 minuto per lato.','Salta il pollo a straccetti con paprika, aglio e limone; farcisci con verdure crude.'],
+  nota:'La piadina di casa si fa senza strutto: acqua e un filo d’olio bastano, e resta morbida.'},
+ {gruppo:'Sgarri fit',nome:'Wrap di hummus',quando:'Pranzo di venerdì',tempo:'~20 min',
+  swap:['Pasta di semola 100 g → Farina 100 g (cereali 1:1 a crudo)'],
+  ing:[['Farina','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+  steps:['Impasta farina e acqua, stendi sottilissimo e cuoci le tortillas in padella a secco.','Frulla i ceci sciacquati con limone, aglio, cumino e un po’ della loro acqua fino a crema.','Spalma l’hummus, aggiungi verdure crude e l’olio a crudo, poi arrotola stretto. Frutta dopo.'],
+  nota:'L’acqua dei ceci al posto della tahina: stessa cremosità, senza aggiungere grassi.'},
+ {gruppo:'Sgarri fit',nome:'Risotto alla feta e limone',quando:'Pranzo di giovedì',tempo:'~20 min',
+  swap:['Nessuno: stessi ingredienti del piano, cambia la cottura'],
+  ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
+  steps:['Tosta il riso a secco in padella finché è caldo e traslucido.','Aggiungi brodo vegetale un mestolo alla volta, mescolando, con le verdure a dadini.','Fuori dal fuoco manteca con la feta sbriciolata, scorza di limone e l’olio. Niente sale.'],
+  nota:'Mantecare con la feta al posto di burro e panna: cremoso e già sapido.'},
+ {gruppo:'Sgarri fit',nome:'Polpette al sugo',quando:'Pranzo di domenica',tempo:'~25 min',
+  swap:['Nessuno: stessi ingredienti del piano'],
+  ing:[['Pasta all’uovo','130 g'],['Manzo magro tritato','100 g'],['Grana','10 g'],['Frutta','150 g']],
+  steps:['Impasta il macinato con il grana, prezzemolo, aglio e pepe; forma polpettine piccole.','Rosolale in padella antiaderente, poi finisci la cottura in poca passata per 10 minuti.','Cuoci la pasta e mantecala nel sugo delle polpette. Frutta a chiudere.'],
+  nota:'Cuocere le polpette dentro il sugo le tiene morbide e insaporisce il condimento.'},
+ {gruppo:'Sgarri fit',nome:'Club sandwich all’uovo',quando:'Cena di martedì',tempo:'~15 min',
+  swap:['Nessuno: stessi ingredienti del piano'],
+  ing:[['Uova (3)','150 g'],['Pane integrale','130 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+  steps:['Uova sode, poi schiacciale con una forchetta insieme a senape, limone, l’olio e molto pepe.','Tosta il pane finché è ben croccante.','Farcisci con la crema di uova, insalata e pomodoro a fette; taglia in diagonale.'],
+  nota:'Senape e limone al posto della maionese: stessa cremosità acidula, zero grassi aggiunti.'},
+ {gruppo:'Sgarri fit',nome:'Cheesecake in barattolo',quando:'Colazione',tempo:'~10 min + frigo',
+  swap:['Latte 200 g → Yogurt greco 110 g (più denso di proteine)','Cereali 50 g → Frollini 40 g (scambio indicato nel piano)'],
+  ing:[['Yogurt greco','110 g'],['Frollini','40 g'],['Cioccolato fondente','10 g']],
+  steps:['Sbriciola i frollini sul fondo di un barattolo.','Mescola lo yogurt con scorza di limone e vaniglia e versalo sopra.','Grattugia il cioccolato in superficie e lascia in frigo almeno 30 minuti.'],
+  nota:'Vaniglia e scorza di limone aumentano la dolcezza percepita senza un grammo di zucchero.'},
+ {gruppo:'Sgarri fit',nome:'Coppa tiramisù',quando:'Colazione',tempo:'~10 min + frigo',
+  swap:['Latte 200 g → Yogurt greco 110 g','Cereali 50 g → Savoiardi o frollini 40 g','Cioccolato 10 g → Cacao amaro 5 g (più concentrato)'],
+  ing:[['Yogurt greco','110 g'],['Savoiardi','40 g'],['Cacao amaro','5 g']],
+  steps:['Prepara un caffè amaro e lascialo raffreddare.','Bagna velocemente i savoiardi nel caffè e alterna strati con lo yogurt profumato alla vaniglia.','Spolvera di cacao amaro e lascia in frigo un paio d’ore.'],
+  nota:'Il caffè è un condimento libero: dà tutto il carattere del tiramisù senza toccare i macro.'},
+ {gruppo:'Sgarri fit',nome:'Pancake soffici',quando:'Colazione',tempo:'~12 min',
+  swap:['Alternativa già prevista dal piano al posto di latte e cereali'],
+  ing:[['Uovo','1'],['Farina','40 g'],['Latte','q.b.'],['Marmellata o crema cacao','10 g']],
+  steps:['Separa l’albume e montalo a neve ferma.','Mescola tuorlo, farina e latte fino a ottenere una pastella densa, poi incorpora l’albume dal basso.','Cuoci in padella antiaderente a fuoco medio-basso, coperchio, finché si formano le bolle. Marmellata sopra.'],
+  nota:'L’albume montato a neve fa i pancake alti e soffici senza lievito né burro.'},
+ {gruppo:'Sgarri fit',nome:'French toast alla cannella',quando:'Colazione',tempo:'~10 min',
+  swap:['Alternativa già prevista dal piano: 2 uova + 60 g di pane'],
+  ing:[['Uova','2'],['Pane o pan bauletto','60 g']],
+  steps:['Sbatti le uova con un goccio di latte, cannella e vaniglia.','Inzuppa bene le fette di pane da entrambi i lati.','Cuoci in padella antiaderente calda, 2 minuti per lato, finché dorate. Altra cannella sopra.'],
+  nota:'Cannella e vaniglia ingannano il palato: sanno di dolce pur non essendoci zucchero.'},
+ {gruppo:'Sgarri fit',nome:'Gelato di frutta',quando:'Spuntino del mattino',tempo:'~5 min',
+  swap:['Nessuno: stessi ingredienti dello spuntino'],
+  ing:[['Frutta','150 g'],['Frutta secca','30 g']],
+  steps:['Taglia la frutta a pezzi e congelala per almeno 3 ore (banana e mango sono le migliori).','Frulla a intermittenza con pochissima acqua, fermandoti a raschiare i bordi, finché diventa cremosa.','Servi subito con la frutta secca tritata grossolanamente sopra.'],
+  nota:'La frutta congelata frullata prende una consistenza da gelato mantecato, senza panna né zucchero.'},
+ {gruppo:'Sgarri fit',nome:'Barrette datteri e frutta secca',quando:'Spuntino del mattino',tempo:'~10 min + frigo',
+  swap:['Frutta 150 g → Datteri 150 g (altra frutta a pari peso)'],
+  ing:[['Datteri','150 g'],['Frutta secca','30 g']],
+  steps:['Frulla i datteri denocciolati finché formano una pasta appiccicosa.','Aggiungi la frutta secca e frulla a impulsi, lasciandola in pezzi grossolani.','Compatta bene in uno stampo, frigo un’ora, poi taglia a barrette.'],
+  nota:'Compattare con forza è essenziale: se resta aria, le barrette si sbriciolano.'},
+ {gruppo:'Sgarri fit',nome:'Chips di pane speziate',quando:'Spuntino del pomeriggio',tempo:'~12 min',
+  swap:['Crackers 50 g → Pane 50 g (prodotti da forno a pari peso)'],
+  ing:[['Pane','50 g']],
+  steps:['Taglia il pane a triangoli sottili.','Spruzza con succo di limone e condisci con paprika, origano e pepe.','Forno a 180° per 8–10 minuti, finché sono ben croccanti.'],
+  nota:'Il limone spruzzato fa aderire le spezie: sostituisce l’olio che di solito si usa per farle attaccare.'}
 ];
 
 function sameFood(ing,sub){
@@ -812,18 +900,27 @@ function renderRicette(){
   currentDay=-1;
   heroDay.textContent='Ricette';
   let h='<div class="day-label">Varianti che rispettano i macro</div>';
-  h+='<div class="card"><div class="kick">Come funziona</div><div class="mtitle">Stessi grammi, gusto diverso</div>'
-    +'<div class="liberi">Ogni ricetta usa <b>gli stessi ingredienti e le stesse quantità</b> del pasto che sostituisce: '
-    +'cambiano solo la tecnica e gli aromi, quindi i macro restano quelli del piano. '
-    +'Erbe, spezie, limone, aceto, aglio e passata sono condimenti liberi e non spostano nulla.</div></div>';
+  h+='<div class="card"><div class="kick">Come funziona</div><div class="mtitle">Stessi macro, piatti diversi</div>'
+    +'<div class="liberi">Ogni ricetta parte da un pasto preciso del piano e ne mantiene i macro. '
+    +'In <b>Pranzi</b> e <b>Cene</b> gli ingredienti e i grammi sono identici: cambiano solo tecnica e aromi. '
+    +'In <b>Sgarri fit</b> qualche ingrediente è scambiato applicando i rapporti di conversione, '
+    +'che trovi scritti sotto ogni ricetta. Erbe, spezie, limone, aceto, aglio, senape, caffè e passata '
+    +'sono condimenti liberi e non spostano nulla.</div></div>';
 
+  const descr={
+    'Pranzi':'Stessi ingredienti e grammi del piano.',
+    'Cene':'Stessi ingredienti e grammi del piano.',
+    'Sgarri fit':'Quello che ti verrebbe voglia di mangiare fuori dieta, ricostruito con scambi che tengono i macro.'
+  };
   [...new Set(RICETTE.map(r=>r.gruppo))].forEach(g=>{
-    h+='<div class="rgroup">'+g+'</div>';
+    h+='<div class="rgroup">'+g+(descr[g]?'<small>'+descr[g]+'</small>':'')+'</div>';
     RICETTE.filter(r=>r.gruppo===g).forEach(r=>{
       h+='<div class="card"><div class="meal-top"><div>';
       h+='<div class="kick">'+r.quando+'</div><div class="mtitle">'+r.nome+'</div></div>';
       h+='<span class="timepill">'+r.tempo+'</span></div>';
-      h+=ingRows(r.ing)+steps(r.steps);
+      h+=ingRows(r.ing);
+      if(r.swap) h+='<div class="swap"><b>Scambi applicati</b>'+r.swap.map(s=>'<i>'+s+'</i>').join('')+'</div>';
+      h+=steps(r.steps);
       h+='<div class="tip"><div><b>Il trucco.</b> '+r.nota+'</div></div></div>';
     });
   });
