@@ -88,6 +88,15 @@
   .swap b{display:block;font-size:11.5px;font-weight:600;letter-spacing:.09em;
     text-transform:uppercase;color:var(--accent);margin-bottom:6px}
   .swap i{font-style:normal;display:block;padding:2px 0}
+  .filters{display:flex;flex-wrap:wrap;gap:7px;margin:24px 0 -14px}
+  .fchip{font-family:inherit;font-size:13.5px;font-weight:500;padding:8px 14px;border-radius:99px;
+    cursor:pointer;background:none;border:1px solid var(--rule-2);color:var(--ink-2);
+    transition:.15s ease;-webkit-tap-highlight-color:transparent}
+  .fchip:hover{border-color:var(--ink);color:var(--ink)}
+  .fchip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:600}
+  .fchip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .fchip span{font-variant-numeric:tabular-nums;color:var(--ink-3);font-weight:400;margin-left:2px}
+  .fchip[aria-pressed="true"] span{color:var(--paper);opacity:.65}
 
   .card{padding:28px 0;border-top:1px solid var(--rule)}
   .card:first-of-type{border-top:none;padding-top:26px}
@@ -763,7 +772,103 @@ const RICETTE=[
   swap:['Crackers 50 g → Pane 50 g (prodotti da forno a pari peso)'],
   ing:[['Pane','50 g']],
   steps:['Taglia il pane a triangoli sottili.','Spruzza con succo di limone e condisci con paprika, origano e pepe.','Forno a 180° per 8–10 minuti, finché sono ben croccanti.'],
-  nota:'Il limone spruzzato fa aderire le spezie: sostituisce l’olio che di solito si usa per farle attaccare.'}
+  nota:'Il limone spruzzato fa aderire le spezie: sostituisce l’olio che di solito si usa per farle attaccare.'},
+
+ {gruppo:'Dolci',nome:'Porridge al cioccolato',quando:'Colazione',tempo:'~8 min',
+  swap:['Cereali 50 g → Avena 40 g (scambio indicato nel piano)'],
+  ing:[['Latte p.s.','200 g'],['Avena','40 g'],['Cioccolato fondente','10 g']],
+  steps:['Scalda il latte con l’avena a fuoco basso, mescolando, finché si addensa: 5–6 minuti.','Spegni e sciogli dentro metà del cioccolato tritato: colora tutto il porridge.','Completa con il resto a scaglie e un pizzico di cannella.'],
+  nota:'Metà cioccolato sciolto dentro e metà a scaglie sopra: sembra molto più cioccolatoso a parità di grammi.'},
+ {gruppo:'Dolci',nome:'Mousse allo yogurt e cacao',quando:'Colazione',tempo:'~10 min + frigo',
+  swap:['Latte 200 g → Yogurt greco 110 g','Cioccolato 10 g → Cacao amaro 5 g','Cereali 50 g → Frollini 40 g'],
+  ing:[['Yogurt greco','110 g'],['Cacao amaro','5 g'],['Frollini','40 g']],
+  steps:['Monta lo yogurt con il cacao e la vaniglia usando le fruste, per due minuti buoni.','Sbriciola i frollini sul fondo del bicchiere.','Versa sopra la mousse e lascia rassodare in frigo 20 minuti.'],
+  nota:'Montare lo yogurt incorpora aria: da denso diventa spumoso, senza aggiungere un solo ingrediente.'},
+ {gruppo:'Dolci',nome:'Pancake al cacao',quando:'Colazione',tempo:'~12 min',
+  swap:['Alternativa pancake già prevista dal piano','Cioccolato 10 g → Cacao amaro 5 g nell’impasto'],
+  ing:[['Uovo','1'],['Farina','40 g'],['Cacao amaro','5 g'],['Latte','q.b.']],
+  steps:['Monta l’albume a neve ferma.','Mescola tuorlo, farina, cacao e latte fino a una pastella densa, poi incorpora l’albume dal basso verso l’alto.','Cuoci in padella antiaderente a fuoco medio-basso, con il coperchio.'],
+  nota:'Il cacao assorbe più liquido della farina: serve un goccio di latte in più, altrimenti restano asciutti.'},
+ {gruppo:'Dolci',nome:'Crumble di frutta e frutta secca',quando:'Spuntino del mattino',tempo:'~25 min',
+  swap:['Nessuno: stessi ingredienti dello spuntino'],
+  ing:[['Frutta','150 g'],['Frutta secca','30 g']],
+  steps:['Taglia la frutta a cubetti — mele e pere sono le migliori — e mettila in pirofila con cannella e succo di limone.','Trita grossolanamente la frutta secca e distribuiscila in superficie.','Forno a 180° per 20 minuti, finché sopra è dorato e croccante.'],
+  nota:'La frutta secca tostata in forno fa da crumble: la croccantezza arriva da lì, non da burro e zucchero.'},
+ {gruppo:'Dolci',nome:'Mele al forno alla cannella',quando:'Spuntino del mattino',tempo:'~35 min',
+  swap:['Nessuno: stessi ingredienti dello spuntino'],
+  ing:[['Frutta (mele)','150 g'],['Frutta secca','30 g']],
+  steps:['Svuota il torsolo lasciando il fondo intero e riempi la mela con la frutta secca tritata.','Spolvera di cannella, bagna con poca acqua e succo di limone.','Forno a 180° per 30 minuti, irrorando ogni tanto con il fondo di cottura.'],
+  nota:'La cottura lunga caramella gli zuccheri della mela: diventa dolcissima senza aggiungere niente.'},
+ {gruppo:'Dolci',nome:'Sorbetto al limone',quando:'Spuntino del mattino',tempo:'~10 min + freezer',
+  swap:['Nessuno: è la frutta dello spuntino, congelata'],
+  ing:[['Frutta','150 g'],['Frutta secca','30 g']],
+  steps:['Congela la frutta a pezzi per almeno tre ore.','Frulla a impulsi con succo e scorza di limone e pochissima acqua.','Rimetti in freezer 20 minuti per farlo rassodare, poi servi con la frutta secca.'],
+  nota:'La scorza porta il profumo e il succo l’acidità: insieme fanno percepire dolcezza che non c’è.'},
+ {gruppo:'Dolci',nome:'Pere grigliate',quando:'Spuntino del mattino',tempo:'~8 min',
+  swap:['Nessuno: stessi ingredienti dello spuntino'],
+  ing:[['Frutta (pere)','150 g'],['Frutta secca','30 g']],
+  steps:['Taglia le pere a spicchi spessi, senza sbucciarle.','Piastra ben calda, due minuti per lato, finché prendono le righe scure.','Cannella e granella di frutta secca a chiudere, ancora calde.'],
+  nota:'La griglia caramella la superficie della frutta: stesso effetto dello zucchero, senza zucchero.'},
+ {gruppo:'Dolci',nome:'Macedonia al lime e menta',quando:'Spuntino del mattino',tempo:'~8 min',
+  swap:['Nessuno: stessi ingredienti dello spuntino'],
+  ing:[['Frutta','150 g'],['Frutta secca','30 g']],
+  steps:['Taglia la frutta a cubetti piccoli e regolari.','Condisci con succo e scorza di lime e menta spezzata a mano.','Riposo in frigo 15 minuti; frutta secca solo al momento di servire, per non ammorbidirla.'],
+  nota:'La menta va spezzata con le dita, non tagliata: il coltello la ossida e le porta via il profumo.'},
+
+ {gruppo:'Fuori casa',nome:'Pizzeria',quando:'Al posto di una cena',
+  swapLabel:'Da tenere a mente',
+  swap:['Una margherita da pizzeria vale circa il doppio dei carboidrati di una cena del piano','Se aggiungi fritti, birra o dolce, contala come il pasto libero della settimana'],
+  ing:[['Pizza margherita','1 normale'],['Verdure di contorno','150 g']],
+  steps:['Scegli margherita o marinara: le farcite raddoppiano grassi e sale senza saziare di più.','Salta supplì, crocchè e patatine: è lì che si accumula il grosso.','Acqua invece di birra o bibite, e niente doppia mozzarella.'],
+  nota:'Se sai già che andrai in pizzeria, mettila in conto come pasto libero settimanale invece di rincorrere i grammi.'},
+ {gruppo:'Fuori casa',nome:'Ristorante o trattoria',quando:'Al posto di una cena',
+  swapLabel:'Da tenere a mente',
+  swap:['Secondo alla griglia + verdure + pane ricalca la struttura delle cene del piano','L’olio usato al ristorante è quasi sempre più dei 10 g previsti'],
+  ing:[['Carne o pesce alla griglia','200–250 g'],['Verdure di contorno','150 g'],['Pane','100 g']],
+  steps:['Ordina il secondo alla griglia e chiedi l’olio a parte, così lo dosi tu.','Contorno di verdure al posto delle patatine; se prendi le patate, salta il pane.','Primo o secondo, non entrambi: nel piano non stanno insieme.'],
+  nota:'Chiedere il condimento a parte è la richiesta che sposta di più i macro, e nessun ristorante si offende.'},
+ {gruppo:'Fuori casa',nome:'Sushi',quando:'Al posto della cena di giovedì',
+  swapLabel:'Da tenere a mente',
+  swap:['Ricalca bene la cena di giovedì: cous cous 100 g → riso, merluzzo 300 g → pesce crudo'],
+  ing:[['Nigiri o sashimi','10–12 pezzi'],['Edamame o insalata','150 g']],
+  steps:['Punta su nigiri, sashimi e maki semplici; evita tempura e tutto ciò che è "crispy".','Salta le salse dolci e cremose (teriyaki, salsa rosa): sono zucchero e grassi aggiunti.','Salsa di soia con misura per il sale; zenzero e wasabi sono liberi.'],
+  nota:'Il pesce crudo in sé è perfetto per il piano: sono il fritto e le salse a trasformarlo in una cena molto grassa.'},
+ {gruppo:'Fuori casa',nome:'Hamburger o fast food',quando:'Al posto della cena di mercoledì',
+  swapLabel:'Da tenere a mente',
+  swap:['Un hamburger singolo corrisponde bene alla cena di mercoledì (manzo 200 g + pane 130 g)','Menù completo con patatine grandi e bibita: contalo come pasto libero'],
+  ing:[['Hamburger semplice','1'],['Insalata di contorno','150 g']],
+  steps:['Panino singolo, non doppio, e senza salse cremose: ketchup e senape pesano poco.','Niente menù: se proprio, patatine piccole, e acqua al posto della bibita.','Aggiungi un contorno di insalata per arrivare alle verdure previste.'],
+  nota:'Nel fast food il grosso delle calorie sta in salse, patatine grandi e bibite, non nella carne.'},
+ {gruppo:'Fuori casa',nome:'Bar a pranzo',quando:'Al posto di un pranzo',
+  swapLabel:'Da tenere a mente',
+  swap:['Il pane sostituisce il cereale, l’affettato magro la proteina del pranzo'],
+  ing:[['Panino con pollo, bresaola o tonno','~130 g di pane'],['Verdure nel panino','a piacere']],
+  steps:['Pane semplice con pollo, bresaola o tonno; evita salse e formaggi aggiunti.','Chiedi di farcirlo con verdure: pomodoro, insalata, zucchine grigliate.','Se c’è, il poke bowl è ancora meglio: riso, proteina magra e verdure separati.'],
+  nota:'Il poke bowl è il pasto fuori casa più simile al piano: ha già la struttura cereale + proteina + verdure.'},
+ {gruppo:'Fuori casa',nome:'Colazione al bar',quando:'Al posto della colazione',
+  swapLabel:'Da tenere a mente',
+  swap:['Cappuccino e cornetto vuoto stanno vicini alla colazione del piano (latte 200 g + cereali 50 g)','Cornetti farciti a crema o cioccolato: contali come sgarro, non come colazione'],
+  ing:[['Cappuccino','1'],['Cornetto semplice','1']],
+  steps:['Cappuccino normale, senza panna, e cornetto vuoto invece che farcito.','Se hai molta fame, meglio due cornetti vuoti che uno farcito: stesso peso, molto meno zucchero.','In alternativa, yogurt e frutta se il bar li ha.'],
+  nota:'Il ripieno di un cornetto farcito può valere da solo quanto tutta la colazione del piano.'},
+ {gruppo:'Fuori casa',nome:'Aperitivo',quando:'Al posto di uno spuntino',
+  swapLabel:'Da tenere a mente',
+  swap:['L’alcol non rientra nei macro del piano: un calice pesa circa come uno spuntino','Il buffet con fritti e salumi è un pasto intero: contalo come cena o come libero'],
+  ing:[['Verdure crude o olive','a piacere'],['Vino','1 calice']],
+  steps:['Mangia qualcosa prima di uscire: si arriva molto meno affamati al tavolo dei fritti.','Punta su crudités, olive, bresaola e formaggi freschi; lascia stare patatine e salatini.','Alterna ogni bicchiere con un bicchiere d’acqua.'],
+  nota:'Non è il calice a rovinare i conti, ma le due ore di stuzzichini che lo accompagnano.'},
+ {gruppo:'Fuori casa',nome:'Cucina cinese, thai o indiana',quando:'Al posto di una cena',
+  swapLabel:'Da tenere a mente',
+  swap:['Riso al vapore + proteina + verdure ricalca la struttura delle cene del piano'],
+  ing:[['Riso al vapore','~100 g a crudo'],['Carne o pesce saltati','200–250 g'],['Verdure saltate','150 g']],
+  steps:['Chiedi riso bianco al vapore, non riso fritto o alla cantonese.','Scegli piatti saltati o al vapore; evita agrodolce, pastelle fritte e curry con panna o latte di cocco.','Salsa di soia a parte e con misura: è molto salata.'],
+  nota:'Le versioni al vapore e saltate ci sono quasi sempre nel menù: basta chiederle esplicitamente.'},
+ {gruppo:'Fuori casa',nome:'Gelateria',quando:'Al posto dello spuntino del mattino',
+  swapLabel:'Da tenere a mente',
+  swap:['Due gusti alla frutta stanno vicini allo spuntino (frutta 150 g + frutta secca 30 g)','Gusti alla crema e panna raddoppiano i grassi: in quel caso salta la frutta secca'],
+  ing:[['Gelato in coppetta','2 gusti alla frutta']],
+  steps:['Coppetta piccola, due gusti, preferendo sorbetti e gusti alla frutta.','Niente panna e niente cono biscottato, se vuoi restare vicino allo spuntino.','Se scegli gusti alla crema, considera che sostituiscono anche la frutta secca della giornata.'],
+  nota:'I sorbetti alla frutta sono in pratica frutta e acqua: sono la scelta più vicina al piano.'}
 ];
 
 function sameFood(ing,sub){
@@ -896,30 +1001,42 @@ function ingRows(list){
   return '<ul class="ing">'+list.map(i=>'<li><span class="chip"><span class="nm">'+i[0]+'</span><span class="g">'+i[1]+'</span></span></li>').join('')+'</ul>';
 }
 
+let ricetteFiltro='Tutte';
 function renderRicette(){
   currentDay=-1;
   heroDay.textContent='Ricette';
+  const gruppi=[...new Set(RICETTE.map(r=>r.gruppo))];
+  if(gruppi.indexOf(ricetteFiltro)<0) ricetteFiltro='Tutte';
+
   let h='<div class="day-label">Varianti che rispettano i macro</div>';
   h+='<div class="card"><div class="kick">Come funziona</div><div class="mtitle">Stessi macro, piatti diversi</div>'
     +'<div class="liberi">Ogni ricetta parte da un pasto preciso del piano e ne mantiene i macro. '
-    +'In <b>Pranzi</b> e <b>Cene</b> gli ingredienti e i grammi sono identici: cambiano solo tecnica e aromi. '
-    +'In <b>Sgarri fit</b> qualche ingrediente è scambiato applicando i rapporti di conversione, '
-    +'che trovi scritti sotto ogni ricetta. Erbe, spezie, limone, aceto, aglio, senape, caffè e passata '
-    +'sono condimenti liberi e non spostano nulla.</div></div>';
+    +'In <b>Pranzi</b> e <b>Cene</b> ingredienti e grammi sono identici: cambiano solo tecnica e aromi. '
+    +'In <b>Sgarri fit</b> e <b>Dolci</b> qualche ingrediente è scambiato applicando i rapporti di conversione, '
+    +'scritti sotto ogni ricetta. <b>Fuori casa</b> non sono ricette ma indicazioni su cosa ordinare. '
+    +'Erbe, spezie, limone, aceto, aglio, senape, caffè e passata sono condimenti liberi e non spostano nulla.</div></div>';
+
+  h+='<div class="filters">'+['Tutte'].concat(gruppi).map(g=>{
+    const n=g==='Tutte'?RICETTE.length:RICETTE.filter(r=>r.gruppo===g).length;
+    return '<button class="fchip" type="button" data-f="'+g+'" aria-pressed="'+(g===ricetteFiltro)+'">'+g+' <span>'+n+'</span></button>';
+  }).join('')+'</div>';
 
   const descr={
     'Pranzi':'Stessi ingredienti e grammi del piano.',
     'Cene':'Stessi ingredienti e grammi del piano.',
-    'Sgarri fit':'Quello che ti verrebbe voglia di mangiare fuori dieta, ricostruito con scambi che tengono i macro.'
+    'Sgarri fit':'Quello che ti verrebbe voglia di mangiare fuori dieta, ricostruito con scambi che tengono i macro.',
+    'Dolci':'Da colazione e spuntini, senza zucchero aggiunto.',
+    'Fuori casa':'Cosa ordinare per restare vicino al piano quando non cucini tu.'
   };
-  [...new Set(RICETTE.map(r=>r.gruppo))].forEach(g=>{
+  gruppi.filter(g=>ricetteFiltro==='Tutte'||g===ricetteFiltro).forEach(g=>{
     h+='<div class="rgroup">'+g+(descr[g]?'<small>'+descr[g]+'</small>':'')+'</div>';
     RICETTE.filter(r=>r.gruppo===g).forEach(r=>{
       h+='<div class="card"><div class="meal-top"><div>';
       h+='<div class="kick">'+r.quando+'</div><div class="mtitle">'+r.nome+'</div></div>';
-      h+='<span class="timepill">'+r.tempo+'</span></div>';
-      h+=ingRows(r.ing);
-      if(r.swap) h+='<div class="swap"><b>Scambi applicati</b>'+r.swap.map(s=>'<i>'+s+'</i>').join('')+'</div>';
+      if(r.tempo) h+='<span class="timepill">'+r.tempo+'</span>';
+      h+='</div>';
+      if(r.ing) h+=ingRows(r.ing);
+      if(r.swap) h+='<div class="swap"><b>'+(r.swapLabel||'Scambi applicati')+'</b>'+r.swap.map(s=>'<i>'+s+'</i>').join('')+'</div>';
       h+=steps(r.steps);
       h+='<div class="tip"><div><b>Il trucco.</b> '+r.nota+'</div></div></div>';
     });
@@ -928,6 +1045,13 @@ function renderRicette(){
   content.innerHTML=h;
   content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
   [...rail.children].forEach(b=>b.setAttribute('aria-selected',b===ricetteBtn));
+
+  content.querySelectorAll('.fchip').forEach(b=>b.addEventListener('click',()=>{
+    ricetteFiltro=b.dataset.f;
+    const y=window.scrollY;
+    renderRicette();
+    window.scrollTo(0,y); // resta dove sei invece di risalire in cima
+  }));
 }
 
 let prepBtn=null, pianoBtn=null, ricetteBtn=null;
