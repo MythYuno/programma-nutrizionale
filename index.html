@@ -23,18 +23,23 @@
 <style>
   :root{
     color-scheme:light dark;
-    --paper:#FCFBF7;--ink:#0B0B0A;--ink-2:#4B4A46;--ink-3:#8B8981;
-    --rule:#0B0B0A;--hair:rgba(11,11,10,.22);
-    --hi:#F2E14C;--hi-ink:#0B0B0A;
-    --lift:rgba(11,11,10,.04);
+    --paper:#FDFAF4;--ink:#241F19;--ink-2:#6B6055;--ink-3:#9C9184;
+    --rule:#241F19;--hair:rgba(36,31,25,.15);
+    --hi:#F5D547;--hi-ink:#241F19;
+    --bar:#241F19;--bar-ink:#FDFAF4;
+    --lift:rgba(36,31,25,.045);
+    /* Un colore per fascia di pasto: è il sistema che tiene insieme griglia e schede */
+    --c1:#E39A18;--c2:#6DAD3C;--c3:#DE4C28;--c4:#0FA69D;--c5:#8B4FC4;
     --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;
-    --cond:84%;
+    --cond:88%;
   }
   @media (prefers-color-scheme:dark){
     :root{
-      --paper:#0C0C0B;--ink:#F4F2EA;--ink-2:#A8A69C;--ink-3:#78766E;
-      --rule:#F4F2EA;--hair:rgba(244,242,234,.24);
-      --hi:#E8D634;--lift:rgba(244,242,234,.05);
+      --paper:#17140F;--ink:#F3EEE4;--ink-2:#A79C8D;--ink-3:#7A7063;
+      --rule:#F3EEE4;--hair:rgba(243,238,228,.2);
+      --hi:#E8C93B;--lift:rgba(243,238,228,.06);
+      --bar:#0E0C09;--bar-ink:#F3EEE4;
+      --c1:#F0B143;--c2:#8AC85A;--c3:#EE6647;--c4:#2BC0B6;--c5:#A76CDC;
     }
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -48,43 +53,61 @@
   .wrap{max-width:620px;margin:0 auto;padding:0 20px}
 
   /* Testata: blocco pieno, come la fascia scura di una confezione */
-  .topbar{position:sticky;top:0;z-index:30;background:var(--rule);
+  .topbar{position:sticky;top:0;z-index:30;background:var(--bar);
     padding:calc(env(safe-area-inset-top) + 12px) 0 11px}
   .topbar-inner{max-width:620px;margin:0 auto;padding:0 20px;display:flex;align-items:baseline;gap:7px}
   .brand{display:flex;align-items:baseline;gap:7px}
   .brand b{font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.02em;
-    font-stretch:var(--cond);color:var(--paper)}
+    font-stretch:var(--cond);color:var(--bar-ink)}
   .brand .n{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;
-    color:var(--paper);opacity:.6}
+    color:var(--bar-ink);opacity:.6}
 
-  .hero{padding:24px 0 0}
+  .hero{padding:22px 0 0}
   .hero .ey{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;
-    color:var(--ink-3);margin-bottom:9px}
-  .hero h1{font-weight:900;font-size:clamp(46px,15vw,74px);line-height:.9;text-transform:uppercase;
-    font-stretch:76%;letter-spacing:-.01em;border-top:4px solid var(--rule);padding-top:11px}
-  .hero .date{color:var(--ink-2);font-size:13.5px;margin-top:11px;font-weight:500}
+    color:var(--ink-3);margin-bottom:6px}
+  .hero h1{font-weight:800;font-size:clamp(38px,11vw,54px);line-height:1;font-stretch:88%;letter-spacing:-.03em}
+  .hero .date{color:var(--ink-2);font-size:13.5px;margin-top:8px;font-weight:500}
   .reminders{display:flex;flex-wrap:wrap;gap:5px 18px;margin-top:14px;padding-top:11px;border-top:1px solid var(--hair)}
   .rem{display:inline-flex;align-items:baseline;gap:5px;font-size:11.5px;font-weight:600;
     text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3)}
   .rem .v{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:0}
   .rem i{display:none}
 
-  /* Selettore giorni: blocco pieno per l'attivo, barra pesante sotto */
-  .rail-shell{position:sticky;top:calc(env(safe-area-inset-top) + 50px);z-index:25;
-    background:var(--paper);border-bottom:10px solid var(--rule);margin-top:22px}
-  .rail{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;padding:0 20px;max-width:620px;margin:0 auto;-webkit-overflow-scrolling:touch}
-  .rail::-webkit-scrollbar{display:none}
-  .dchip{flex:0 0 auto;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink-3);
-    background:none;border:none;padding:12px 12px;cursor:pointer;white-space:nowrap;
-    text-transform:uppercase;letter-spacing:.08em;transition:.12s ease;-webkit-tap-highlight-color:transparent}
-  .dchip:hover{color:var(--ink)}
-  .dchip[aria-selected="true"]{background:var(--rule);color:var(--paper);font-weight:800}
-  .dchip:focus-visible{outline:2px solid var(--hi);outline-offset:-3px}
+  /* Selettore di sezione */
+  .seg{display:flex;gap:3px;margin-top:20px;background:var(--lift);padding:4px;border-radius:12px}
+  .seg button{flex:1;font-family:inherit;font-size:12.5px;font-weight:700;padding:9px 5px;border:none;
+    border-radius:9px;background:none;color:var(--ink-3);cursor:pointer;transition:.13s ease;
+    -webkit-tap-highlight-color:transparent}
+  .seg button:hover{color:var(--ink)}
+  .seg button[aria-selected="true"]{background:var(--paper);color:var(--ink);
+    box-shadow:0 1px 3px rgba(36,31,25,.13)}
+  .seg button:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+
+  /* Griglia settimanale: righe = fasce di pasto, colonne = giorni */
+  .gridwrap{padding:20px 0 6px}
+  .grid{display:grid;grid-template-columns:44px repeat(7,1fr);gap:5px;align-items:center}
+  .ghead{font-family:inherit;font-size:10.5px;font-weight:700;color:var(--ink-3);text-align:center;
+    text-transform:uppercase;letter-spacing:.04em;padding:0 0 3px;background:none;border:none;
+    cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .ghead:hover,.ghead.today{color:var(--ink)}
+  .ghead.today{font-weight:800}
+  .grow{font-size:9.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;
+    letter-spacing:.02em;line-height:1.1;padding-right:3px}
+  .cell{aspect-ratio:1;border:none;border-radius:9px;cursor:pointer;padding:0;
+    background:color-mix(in srgb,var(--c) 20%,var(--paper));
+    transition:background .13s ease,transform .1s ease;-webkit-tap-highlight-color:transparent}
+  .cell:hover{background:color-mix(in srgb,var(--c) 45%,var(--paper))}
+  .cell:active{transform:scale(.92)}
+  .cell.today{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 60%,var(--paper))}
+  .cell[aria-selected="true"]{background:var(--c);
+    box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--c)}
+  .cell:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .gridnote{font-size:11.5px;color:var(--ink-3);margin-top:11px;text-align:center}
 
   .day-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;
     color:var(--ink-3);margin:22px 0 14px}
   .rgroup{font-weight:900;font-size:24px;text-transform:uppercase;font-stretch:80%;letter-spacing:-.005em;
-    margin:38px 0 0;padding-top:14px;border-top:10px solid var(--rule);line-height:1.05}
+    margin:38px 0 0;padding-top:14px;border-top:3px solid var(--rule);line-height:1.05}
   .rgroup small{display:block;font-weight:500;font-size:13px;font-stretch:100%;
     color:var(--ink-2);letter-spacing:0;margin-top:6px;line-height:1.45;text-transform:none}
   /* Niente doppia barra: la sezione che segue un titolo non ripete il proprio filetto */
@@ -105,16 +128,16 @@
   .fchip:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
   .fchip span{font-variant-numeric:tabular-nums;opacity:.55;margin-left:3px}
 
-  /* Ogni pasto è una sezione del pannello, separata da una barra media */
-  .card{padding:20px 0 24px;border-top:4px solid var(--rule)}
-  .card:first-of-type{border-top:none;padding-top:22px}
+  /* Ogni pasto porta il colore della sua fascia, come nella griglia */
+  .card{padding:20px 0 24px;border-top:1px solid var(--hair)}
+  .card:first-of-type{border-top:none;padding-top:20px}
   .card .meal-top{display:flex;align-items:baseline;justify-content:space-between;gap:14px}
-  .kick{font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin-bottom:5px;color:var(--ink-3)}
-  .card.accent .kick{color:var(--ink)}
-  .mtitle{font-weight:900;font-size:25px;line-height:1.06;text-transform:uppercase;
-    font-stretch:82%;letter-spacing:-.005em}
-  .timepill{flex:0 0 auto;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;
-    color:var(--ink);border:2px solid var(--rule);padding:3px 7px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .kick{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;
+    letter-spacing:.11em;text-transform:uppercase;margin-bottom:6px;color:var(--c,var(--ink-3))}
+  .kick::before{content:"";width:9px;height:9px;border-radius:3px;background:var(--c,var(--ink-3))}
+  .mtitle{font-weight:800;font-size:25px;line-height:1.1;font-stretch:90%;letter-spacing:-.02em}
+  .timepill{flex:0 0 auto;font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--ink-2);
+    background:var(--lift);border-radius:99px;padding:4px 10px;font-variant-numeric:tabular-nums;white-space:nowrap}
   .timepill svg{display:none}
 
   .ing{list-style:none;margin:16px 0 0;border-top:1px solid var(--hair)}
@@ -180,7 +203,7 @@
   .oppure span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.12em;
     text-transform:uppercase;color:var(--ink);margin-bottom:4px}
 
-  .alts{margin-top:18px;padding-top:14px;border-top:4px solid var(--rule)}
+  .alts{margin-top:18px;padding-top:14px;border-top:1px solid var(--hair)}
   .alts>span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.12em;
     text-transform:uppercase;color:var(--ink);margin-bottom:10px}
   .alts ul{list-style:none}
@@ -246,7 +269,7 @@
   .pi-row span{flex:0 0 92px;font-size:10.5px;font-weight:800;letter-spacing:.09em;
     text-transform:uppercase;color:var(--ink-3);padding-top:3px}
 
-  footer{margin-top:34px;padding-top:18px;border-top:10px solid var(--rule);color:var(--ink-3);font-size:12.5px}
+  footer{margin-top:34px;padding-top:18px;border-top:2px solid var(--rule);color:var(--ink-3);font-size:12.5px}
   footer .lk{display:flex;align-items:flex-start;gap:8px;color:var(--ink-2);margin-bottom:9px;line-height:1.45}
   footer .lk svg{width:13px;height:13px;flex:0 0 auto;margin-top:3px;color:var(--ink-3)}
   footer .mt{font-size:11.5px;line-height:1.45}
@@ -278,11 +301,12 @@
   </section>
 </div>
 
-<div class="rail-shell">
-  <div class="rail" id="rail" role="tablist" aria-label="Giorni"></div>
-</div>
-
 <div class="wrap">
+  <nav class="seg" id="seg" role="tablist" aria-label="Sezioni"></nav>
+  <div class="gridwrap" id="gridWrap">
+    <div class="grid" id="grid" role="grid" aria-label="Settimana"></div>
+    <div class="gridnote">Tocca un pasto, o il nome del giorno per vederlo tutto.</div>
+  </div>
   <main id="content"></main>
   <footer>
     <div class="lk">
@@ -920,8 +944,9 @@ function chips(m,mi){
   }).join('')+'</ul>';
 }
 function steps(a){return '<ol class="steps">'+a.map(s=>'<li>'+s+'</li>').join('')+'</ol>';}
-function renderMeal(m,mi){
-  let h='<div class="card'+(m.accent?' accent':'')+'"><div class="meal-top"><div>';
+function renderMeal(m,mi,col){
+  let h='<div class="card'+(m.accent?' accent':'')+'"'+(col?' style="--c:'+col+'"':'')+'>'
+       +'<div class="meal-top"><div>';
   h+='<div class="kick">'+m.kick+'</div><div class="mtitle">'+m.title+'</div></div>';
   if(m.time) h+='<span class="timepill">'+clock+m.time+'</span>';
   h+='</div>'+chips(m,mi);
@@ -933,45 +958,66 @@ function renderMeal(m,mi){
   return h+'</div>';
 }
 
-const rail=document.getElementById('rail');
+const seg=document.getElementById('seg');
+const grid=document.getElementById('grid');
+const gridWrap=document.getElementById('gridWrap');
 const content=document.getElementById('content');
 const heroDay=document.getElementById('heroDay');
 const heroDate=document.getElementById('heroDate');
 let currentDay=0;
+let currentMeal=null;      // null = tutta la giornata
+let currentSection='sett';
 let CURRENT_SEQ=[];
 
-function render(i){
-  currentDay=i;
+// Le cinque fasce, ognuna col suo colore: è lo stesso sistema in griglia e nelle schede
+const SLOTS=[
+  {lab:'Colaz.',c:'var(--c1)'},{lab:'Spunt.',c:'var(--c2)'},{lab:'Pranzo',c:'var(--c3)'},
+  {lab:'Spunt.',c:'var(--c4)'},{lab:'Cena',c:'var(--c5)'}
+];
+
+function seqFor(i){
   const d=PLAN.days[i];
-  heroDay.textContent=d.full;
-  const seq=[PLAN.colazione,PLAN.spMattino,
+  return [PLAN.colazione,PLAN.spMattino,
     Object.assign({kick:'Pranzo · veloce',accent:true},d.pranzo),
     PLAN.spPomeriggio,
     Object.assign({kick:'Cena'},d.cena)];
-  CURRENT_SEQ=seq;
-  content.innerHTML=seq.map(renderMeal).join(''); // il giorno è già nel titolo in alto
-  content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
-  [...rail.children].forEach((b,bi)=>b.setAttribute('aria-selected',bi===i));
 }
 
-// Centra la scheda nella barra scorrendo SOLO la barra: scrollIntoView su un
-// elemento sticky trascina anche la pagina, saltando l'intestazione.
-function centerChip(el,smooth){
-  if(!el) return;
-  const r=rail.getBoundingClientRect(), e=el.getBoundingClientRect();
-  rail.scrollTo({left:rail.scrollLeft+(e.left-r.left)-(r.width-e.width)/2,
-                 behavior:smooth===false?'auto':'smooth'});
+function fade(){content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');}
+
+function renderDay(i){
+  currentDay=i;currentMeal=null;
+  heroDay.textContent=PLAN.days[i].full;
+  const seq=seqFor(i);CURRENT_SEQ=seq;
+  content.innerHTML=seq.map((m,mi)=>renderMeal(m,mi,SLOTS[mi].c)).join('');
+  paintGrid();fade();
+}
+
+function renderPasto(i,m){
+  currentDay=i;currentMeal=m;
+  heroDay.textContent=PLAN.days[i].full;
+  const seq=seqFor(i);CURRENT_SEQ=[seq[m]];
+  content.innerHTML=renderMeal(seq[m],0,SLOTS[m].c);
+  paintGrid();fade();
+}
+
+function paintGrid(){
+  grid.querySelectorAll('.cell').forEach(c=>{
+    const d=+c.dataset.d, m=+c.dataset.m;
+    const on=currentSection==='sett'&&d===currentDay&&(currentMeal===null||currentMeal===m);
+    c.setAttribute('aria-selected',on);
+  });
+  grid.querySelectorAll('.ghead').forEach(h=>{
+    h.classList.toggle('today',+h.dataset.d===TODAY);
+  });
 }
 
 function selectDay(i){
   i=Math.max(0,Math.min(PLAN.days.length-1,i));
-  render(i);
-  const chip=rail.children[i];
-  centerChip(chip);
+  currentMeal===null?renderDay(i):renderPasto(i,currentMeal);
 }
 
 function renderPrep(){
-  currentDay=-1;
   heroDay.textContent='Organizza';
   const checked=loadChecked();
   let h='<div class="day-label">Organizzazione settimanale</div>';
@@ -998,7 +1044,6 @@ function renderPrep(){
 
   content.innerHTML=h;
   content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
-  [...rail.children].forEach(b=>b.setAttribute('aria-selected',b===prepBtn));
 
   content.querySelectorAll('.shop li').forEach(li=>{
     li.addEventListener('click',()=>{
@@ -1021,7 +1066,6 @@ function ingRows(list){
 
 let ricetteFiltro='Tutte';
 function renderRicette(){
-  currentDay=-1;
   heroDay.textContent='Ricette';
   const gruppi=[...new Set(RICETTE.map(r=>r.gruppo))];
   if(gruppi.indexOf(ricetteFiltro)<0) ricetteFiltro='Tutte';
@@ -1062,7 +1106,6 @@ function renderRicette(){
 
   content.innerHTML=h;
   content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
-  [...rail.children].forEach(b=>b.setAttribute('aria-selected',b===ricetteBtn));
 
   content.querySelectorAll('.fchip').forEach(b=>b.addEventListener('click',()=>{
     ricetteFiltro=b.dataset.f;
@@ -1072,34 +1115,51 @@ function renderRicette(){
   }));
 }
 
-let prepBtn=null, pianoBtn=null, ricetteBtn=null;
+const SEZIONI=[['sett','Settimana'],['ric','Ricette'],['prep','Prep'],['piano','Piano']];
+
+function setSection(s){
+  currentSection=s;
+  gridWrap.hidden=(s!=='sett');
+  [...seg.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.s===s));
+  if(s==='sett') currentMeal===null?renderDay(currentDay):renderPasto(currentDay,currentMeal);
+  else if(s==='ric') renderRicette();
+  else if(s==='prep') renderPrep();
+  else if(s==='piano') renderPiano();
+  paintGrid();
+}
+
 function buildRail(){
-  rail.innerHTML='';
-  PLAN.days.forEach((d,i)=>{
+  seg.innerHTML='';
+  SEZIONI.forEach(([id,lab])=>{
     const b=document.createElement('button');
-    b.className='dchip';b.textContent=d.name;b.setAttribute('role','tab');
-    b.setAttribute('aria-selected',i===0);
-    b.addEventListener('click',()=>selectDay(i));
-    rail.appendChild(b);
+    b.type='button';b.dataset.s=id;b.textContent=lab;b.setAttribute('role','tab');
+    b.setAttribute('aria-selected',id===currentSection);
+    b.addEventListener('click',()=>setSection(id));
+    seg.appendChild(b);
   });
 
-  ricetteBtn=document.createElement('button');
-  ricetteBtn.className='dchip';ricetteBtn.textContent='Ricette';ricetteBtn.setAttribute('role','tab');
-  ricetteBtn.setAttribute('aria-selected','false');
-  ricetteBtn.addEventListener('click',()=>{renderRicette();centerChip(ricetteBtn);});
-  rail.appendChild(ricetteBtn);
-
-  prepBtn=document.createElement('button');
-  prepBtn.className='dchip';prepBtn.textContent='Prep';prepBtn.setAttribute('role','tab');
-  prepBtn.setAttribute('aria-selected','false');
-  prepBtn.addEventListener('click',()=>{renderPrep();centerChip(prepBtn);});
-  rail.appendChild(prepBtn);
-
-  pianoBtn=document.createElement('button');
-  pianoBtn.className='dchip';pianoBtn.textContent='Piano';pianoBtn.setAttribute('role','tab');
-  pianoBtn.setAttribute('aria-selected','false');
-  pianoBtn.addEventListener('click',()=>{renderPiano();centerChip(pianoBtn);});
-  rail.appendChild(pianoBtn);
+  grid.innerHTML='';
+  const corner=document.createElement('div');grid.appendChild(corner);
+  PLAN.days.forEach((d,i)=>{
+    const h=document.createElement('button');
+    h.type='button';h.className='ghead';h.dataset.d=i;h.textContent=d.name;
+    h.title='Tutta la giornata di '+d.full;
+    h.addEventListener('click',()=>{setSection('sett');renderDay(i);});
+    grid.appendChild(h);
+  });
+  SLOTS.forEach((sl,m)=>{
+    const rh=document.createElement('div');rh.className='grow';rh.textContent=sl.lab;grid.appendChild(rh);
+    PLAN.days.forEach((d,i)=>{
+      const c=document.createElement('button');
+      c.type='button';c.className='cell'+(i===TODAY?' today':'');
+      c.style.setProperty('--c',sl.c);
+      c.dataset.d=i;c.dataset.m=m;
+      c.setAttribute('aria-label',sl.lab+' di '+d.full);
+      c.addEventListener('click',()=>{setSection('sett');renderPasto(i,m);});
+      grid.appendChild(c);
+    });
+  });
+  paintGrid();
 }
 
 function planJsonString(){return JSON.stringify(PLAN,null,2);}
@@ -1130,7 +1190,6 @@ async function extractPdfText(file){
 }
 
 function renderPiano(){
-  currentDay=-1;
   heroDay.textContent='Piano';
   let h='<div class="day-label">Cambia il piano alimentare</div>';
 
@@ -1155,7 +1214,6 @@ function renderPiano(){
 
   content.innerHTML=h;
   content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
-  [...rail.children].forEach(b=>b.setAttribute('aria-selected',b===pianoBtn));
 
   const pdfMsg=document.getElementById('pdfMsg');
   const pdfText=document.getElementById('pdfText');
@@ -1187,8 +1245,7 @@ function renderPiano(){
     try{localStorage.setItem(PLAN_KEY,JSON.stringify(PLAN));}catch(e){}
     planMsg.innerHTML='<div class="msg ok">Piano applicato e salvato su questo dispositivo. Tocca un giorno per vederlo.</div>';
     buildRail();
-    [...rail.children].forEach(b=>b.setAttribute('aria-selected',b===pianoBtn));
-  });
+    });
 
   document.getElementById('exportBtn').addEventListener('click',()=>{
     const blob=new Blob([planJsonString()],{type:'application/json'});
@@ -1217,7 +1274,7 @@ function renderPiano(){
   });
 }
 
-buildRail();
+// buildRail() viene chiamata in fondo, quando TODAY è definito
 
 // ---- Popup sostituzioni ----
 const sheetBg=document.getElementById('sheetBg');
@@ -1277,33 +1334,38 @@ document.getElementById('sheetX').addEventListener('click',closeSheet);
 sheetBg.addEventListener('click',e=>{if(e.target===sheetBg) closeSheet();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sheetBg.hidden) closeSheet();});
 
-// Swipe orizzontale tra i giorni (solo quando si sta visualizzando un giorno)
+// Swipe orizzontale tra i giorni, solo dentro la Settimana
 let tsx=0,tsy=0;
 content.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tsx=t.clientX;tsy=t.clientY;},{passive:true});
 content.addEventListener('touchend',e=>{
-  if(currentDay<0) return;
+  if(currentSection!=='sett') return;
   const t=e.changedTouches[0];
   const dx=t.clientX-tsx, dy=t.clientY-tsy;
   if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.6) selectDay(currentDay+(dx<0?1:-1));
 },{passive:true});
 
-// Frecce tastiera per spostarsi tra le schede
-rail.addEventListener('keydown',e=>{
-  if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft') return;
-  const items=[...rail.children];
-  let idx=items.findIndex(b=>b.getAttribute('aria-selected')==='true');
-  if(idx<0) idx=0;
-  idx=(idx+(e.key==='ArrowRight'?1:-1)+items.length)%items.length;
-  items[idx].click();items[idx].focus();
+// Frecce: orizzontali cambiano giorno, verticali cambiano fascia di pasto
+grid.addEventListener('keydown',e=>{
+  const k=e.key;
+  if(k!=='ArrowRight'&&k!=='ArrowLeft'&&k!=='ArrowUp'&&k!=='ArrowDown') return;
   e.preventDefault();
+  if(k==='ArrowRight'||k==='ArrowLeft') selectDay(currentDay+(k==='ArrowRight'?1:-1));
+  else{
+    const m=currentMeal===null?(k==='ArrowDown'?0:SLOTS.length-1)
+                              :Math.max(0,Math.min(SLOTS.length-1,currentMeal+(k==='ArrowDown'?1:-1)));
+    renderPasto(currentDay,m);
+  }
+  const sel=grid.querySelector('.cell[aria-selected="true"]');
+  if(sel) sel.focus();
 });
 
 const now=new Date();
 heroDate.textContent=now.getDate()+' '+MESI[now.getMonth()]+' '+now.getFullYear();
 const map={1:0,2:1,3:2,4:3,5:4,6:5,0:6};
-const start=map[now.getDay()]??0;
-render(start);
-centerChip(rail.children[start],false);
+const TODAY=map[now.getDay()]??0;
+currentDay=TODAY;
+buildRail();
+renderDay(TODAY);
 
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}
 </script>
