@@ -102,7 +102,28 @@
   .cell[aria-selected="true"]{background:var(--c);
     box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--c)}
   .cell:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  /* Pasto fatto: spunta nel colore della fascia, leggibile sia su tinta sia su pieno */
+  .cell.done{position:relative}
+  .cell.done::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:11px;
+    margin:-7px 0 0 -3px;transform:rotate(45deg);
+    border:solid color-mix(in srgb,var(--c) 78%,var(--ink));border-width:0 2.5px 2.5px 0}
+  .cell.done[aria-selected="true"]::after{border-color:var(--paper)}
   .gridnote{font-size:11.5px;color:var(--ink-3);margin-top:11px;text-align:center}
+  .gridnote b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+  .linkbtn{font-family:inherit;font-size:11.5px;color:var(--ink-3);background:none;border:none;
+    padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+  .linkbtn:hover{color:var(--ink)}
+
+  .donebtn{margin-top:20px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
+    padding:10px 16px;border-radius:99px;border:2px solid var(--hair);background:none;
+    color:var(--ink-2);transition:.13s ease;-webkit-tap-highlight-color:transparent}
+  .donebtn:hover{border-color:var(--c,var(--ink));color:var(--ink)}
+  /* Pieno neutro, non nel colore della fascia: su ambra o verde chiaro il bianco non si legge */
+  .donebtn.on{background:var(--ink);border-color:var(--ink);color:var(--paper);
+    padding-left:34px;position:relative}
+  .donebtn.on::before{content:"";position:absolute;left:16px;top:50%;width:5px;height:10px;
+    margin-top:-6px;transform:rotate(45deg);border:solid var(--paper);border-width:0 2.5px 2.5px 0}
+  .donebtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
   .day-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;
     color:var(--ink-3);margin:22px 0 14px}
@@ -305,7 +326,7 @@
   <nav class="seg" id="seg" role="tablist" aria-label="Sezioni"></nav>
   <div class="gridwrap" id="gridWrap">
     <div class="grid" id="grid" role="grid" aria-label="Settimana"></div>
-    <div class="gridnote">Tocca un pasto, o il nome del giorno per vederlo tutto.</div>
+    <div class="gridnote" id="gridNote">Tocca un pasto, o il nome del giorno per vederlo tutto.</div>
   </div>
   <main id="content"></main>
   <footer>
@@ -944,7 +965,7 @@ function chips(m,mi){
   }).join('')+'</ul>';
 }
 function steps(a){return '<ol class="steps">'+a.map(s=>'<li>'+s+'</li>').join('')+'</ol>';}
-function renderMeal(m,mi,col){
+function renderMeal(m,mi,col,slot){
   let h='<div class="card'+(m.accent?' accent':'')+'"'+(col?' style="--c:'+col+'"':'')+'>'
        +'<div class="meal-top"><div>';
   h+='<div class="kick">'+m.kick+'</div><div class="mtitle">'+m.title+'</div></div>';
@@ -955,6 +976,11 @@ function renderMeal(m,mi,col){
   if(m.alts) h+='<div class="alts"><span>'+(m.altsTitle||'Alternative')+'</span><ul>'+m.alts.map(a=>'<li>'+a+'</li>').join('')+'</ul></div>';
   if(m.steps) h+=steps(m.steps);
   if(m.tip) h+='<div class="tip">'+bolt+'<div><b>Veloce.</b> '+m.tip+'</div></div>';
+  if(slot){
+    const fatto=DONE.has(slot);
+    h+='<button class="donebtn'+(fatto?' on':'')+'" type="button" data-slot="'+slot+'" aria-pressed="'+fatto+'">'
+      +(fatto?'Fatto':'Segna come fatto')+'</button>';
+  }
   return h+'</div>';
 }
 
@@ -975,6 +1001,27 @@ const SLOTS=[
   {lab:'Spunt.',c:'var(--c4)'},{lab:'Cena',c:'var(--c5)'}
 ];
 
+// Pasti fatti. Sono legati alla settimana ISO, così il lunedì si riparte da zero
+// senza doverli azzerare a mano.
+function settimanaISO(d){
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));
+  const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));
+  return t.getUTCFullYear()+'-W'+Math.ceil(((t-y0)/864e5+1)/7);
+}
+const DONE_KEY='piano11-fatti';
+const SETTIMANA=settimanaISO(new Date());
+function loadDone(){
+  try{
+    const o=JSON.parse(localStorage.getItem(DONE_KEY)||'{}');
+    return new Set(o.w===SETTIMANA?(o.d||[]):[]);
+  }catch(e){return new Set();}
+}
+function saveDone(){
+  try{localStorage.setItem(DONE_KEY,JSON.stringify({w:SETTIMANA,d:[...DONE]}));}catch(e){}
+}
+let DONE=loadDone();
+
 function seqFor(i){
   const d=PLAN.days[i];
   return [PLAN.colazione,PLAN.spMattino,
@@ -989,7 +1036,7 @@ function renderDay(i){
   currentDay=i;currentMeal=null;
   heroDay.textContent=PLAN.days[i].full;
   const seq=seqFor(i);CURRENT_SEQ=seq;
-  content.innerHTML=seq.map((m,mi)=>renderMeal(m,mi,SLOTS[mi].c)).join('');
+  content.innerHTML=seq.map((m,mi)=>renderMeal(m,mi,SLOTS[mi].c,i+'-'+mi)).join('');
   paintGrid();fade();
 }
 
@@ -997,7 +1044,7 @@ function renderPasto(i,m){
   currentDay=i;currentMeal=m;
   heroDay.textContent=PLAN.days[i].full;
   const seq=seqFor(i);CURRENT_SEQ=[seq[m]];
-  content.innerHTML=renderMeal(seq[m],0,SLOTS[m].c);
+  content.innerHTML=renderMeal(seq[m],0,SLOTS[m].c,i+'-'+m);
   paintGrid();fade();
 }
 
@@ -1006,10 +1053,21 @@ function paintGrid(){
     const d=+c.dataset.d, m=+c.dataset.m;
     const on=currentSection==='sett'&&d===currentDay&&(currentMeal===null||currentMeal===m);
     c.setAttribute('aria-selected',on);
+    c.classList.toggle('done',DONE.has(d+'-'+m));
   });
   grid.querySelectorAll('.ghead').forEach(h=>{
     h.classList.toggle('today',+h.dataset.d===TODAY);
   });
+  const oggi=SLOTS.filter((_,m)=>DONE.has(TODAY+'-'+m)).length;
+  const tot=PLAN.days.length*SLOTS.length;
+  const nota=document.getElementById('gridNote');
+  if(nota) nota.innerHTML=DONE.size
+    ? '<b>'+oggi+'/'+SLOTS.length+'</b> pasti di oggi · <b>'+DONE.size+'/'+tot+'</b> in settimana'
+      +' · <button class="linkbtn" type="button" id="resetDone">azzera</button>'
+    : 'Tocca un pasto, o il nome del giorno per vederlo tutto.';
+  const rb=document.getElementById('resetDone');
+  if(rb) rb.addEventListener('click',()=>{DONE=new Set();saveDone();paintGrid();
+    currentMeal===null?renderDay(currentDay):renderPasto(currentDay,currentMeal);});
 }
 
 function selectDay(i){
@@ -1326,7 +1384,17 @@ function closeSheet(){
 }
 content.addEventListener('click',e=>{
   const b=e.target.closest('button.chip');
-  if(b) openSheet(+b.dataset.m,+b.dataset.i);
+  if(b){openSheet(+b.dataset.m,+b.dataset.i);return;}
+  const f=e.target.closest('.donebtn');
+  if(f){
+    const s=f.dataset.slot;
+    DONE.has(s)?DONE.delete(s):DONE.add(s);
+    saveDone();
+    f.classList.toggle('on',DONE.has(s));
+    f.setAttribute('aria-pressed',DONE.has(s));
+    f.textContent=DONE.has(s)?'Fatto':'Segna come fatto';
+    paintGrid();
+  }
 });
 tabDoc.addEventListener('click',()=>paintSheet('doc'));
 tabWeb.addEventListener('click',()=>paintSheet('web'));
