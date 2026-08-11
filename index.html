@@ -30,6 +30,7 @@
     --lift:rgba(36,31,25,.045);
     /* Un colore per fascia di pasto: è il sistema che tiene insieme griglia e schede */
     --c1:#E39A18;--c2:#6DAD3C;--c3:#DE4C28;--c4:#0FA69D;--c5:#8B4FC4;
+    --mP:#0FA69D;--mC:#E39A18;--mG:#8B4FC4;
     --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;
     --cond:88%;
   }
@@ -40,6 +41,7 @@
       --hi:#E8C93B;--lift:rgba(243,238,228,.06);
       --bar:#0E0C09;--bar-ink:#F3EEE4;
       --c1:#F0B143;--c2:#8AC85A;--c3:#EE6647;--c4:#2BC0B6;--c5:#A76CDC;
+      --mP:#2BC0B6;--mC:#F0B143;--mG:#A76CDC;
     }
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -125,6 +127,37 @@
     margin-top:-6px;transform:rotate(45deg);border:solid var(--paper);border-width:0 2.5px 2.5px 0}
   .donebtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
+  /* Macro: gli stessi tre colori ovunque, così si riconoscono senza legenda */
+  .chip .kc{flex:0 0 auto;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;
+    text-align:right;white-space:nowrap}
+  .mtot{margin-top:13px;padding:11px 13px;background:var(--lift);border-radius:9px}
+  .mtot.vuoto{font-size:12.5px;color:var(--ink-3);background:none;padding:8px 0}
+  .mtot-r{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .mtot-r b{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+  .mtot-r span{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .mtot-r em{font-style:normal;font-weight:800;color:var(--m);margin-left:6px}
+  .mbar{display:flex;height:6px;border-radius:99px;overflow:hidden;margin-top:9px;background:var(--hair)}
+  .mbar i{display:block}
+  .mnote{font-size:11.5px;color:var(--ink-3);margin-top:7px}
+
+  .recap{margin-top:16px;padding:15px 16px;border:1px solid var(--hair);border-radius:13px}
+  .rc-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;margin-bottom:13px}
+  .rc-n{font-weight:600;color:var(--ink-3);letter-spacing:.03em;text-transform:none;font-size:11.5px}
+  .rc-r{display:flex;align-items:center;gap:10px;padding:4px 0}
+  .rc-l{flex:0 0 62px;font-size:12px;font-weight:600;color:var(--ink-2)}
+  .rc-bar{flex:1;height:8px;border-radius:99px;background:var(--hair);overflow:hidden}
+  .rc-bar i{display:block;height:100%;background:var(--ink);border-radius:99px;transition:width .25s ease}
+  .rc-r:nth-child(2) .rc-bar i{background:var(--ink)}
+  .rc-r:nth-child(3) .rc-bar i{background:var(--mP)}
+  .rc-r:nth-child(4) .rc-bar i{background:var(--mC)}
+  .rc-r:nth-child(5) .rc-bar i{background:var(--mG)}
+  .rc-v{flex:0 0 82px;text-align:right;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .rc-v b{color:var(--ink);font-weight:700}
+  .rc-rest{margin-top:12px;padding-top:11px;border-top:1px solid var(--hair);font-size:13px;color:var(--ink-2)}
+  .rc-rest b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+  .rc-note{margin-top:8px;font-size:11px;color:var(--ink-3);line-height:1.4}
+
   .day-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;
     color:var(--ink-3);margin:22px 0 14px}
   .rgroup{font-weight:900;font-size:24px;text-transform:uppercase;font-stretch:80%;letter-spacing:-.005em;
@@ -165,8 +198,8 @@
   .ing li{border-bottom:1px solid var(--hair)}
   .chip{display:flex;width:100%;align-items:baseline;gap:12px;padding:9px 0;font-size:15px;
     color:var(--ink);font-family:inherit;text-align:left;background:none;border:none;line-height:1.35}
-  .chip .nm{flex:1}
-  .chip .g{flex:0 0 auto;font-variant-numeric:tabular-nums;font-size:14.5px;font-weight:700}
+  .chip .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+  .chip .g{flex:0 0 auto;font-variant-numeric:tabular-nums;font-size:14.5px;font-weight:700;white-space:nowrap}
   /* Il giallo non marca "toccabile" (lo fa la freccia) ma "il medico ha previsto un cambio" */
   button.chip{cursor:pointer;position:relative;padding-right:17px;-webkit-tap-highlight-color:transparent}
   button.chip .g{font-weight:800}
@@ -327,6 +360,7 @@
   <div class="gridwrap" id="gridWrap">
     <div class="grid" id="grid" role="grid" aria-label="Settimana"></div>
     <div class="gridnote" id="gridNote">Tocca un pasto, o il nome del giorno per vederlo tutto.</div>
+    <div id="recap"></div>
   </div>
   <main id="content"></main>
   <footer>
@@ -550,6 +584,108 @@ function roundPractical(g){
   if(g<=0) return 0;
   const step=g>=1000?100:50;
   return Math.ceil(g/step)*step;
+}
+
+// ---- Valori nutrizionali ----
+// Per 100 g: [kcal, proteine, carboidrati, grassi]. Sono STIME da tabelle di
+// composizione pubbliche (CREA e equivalenti): non sono i calcoli del medico e
+// variano con marca, taglio e cottura. L'ordine conta: le voci più specifiche
+// stanno prima (es. "salmone affumicato" prima di "salmone").
+const NUTRI=[
+ [/pasta all|pasta all’uovo/i,[366,13,71,3.5]],
+ [/frutta secca|oleosa|mandorl|noci|nocciol|pistacch|anacard|semi /i,[600,18,8,55]],
+ [/yogurt greco|skyr/i,[59,10,4,.4]],
+ [/salmone affumicato/i,[147,25,0,4.5]],
+ [/lenticchie scatola|ceci scatola|fagioli scatola|legumi scatola/i,[100,7,14,1.5]],
+ [/^latte|kefir|bevanda vegetale/i,[46,3.3,5,1.5]],
+ [/yogurt|fiocchi di latte/i,[66,3.8,4.3,3.9]],
+ [/cereali|corn flakes|muesli/i,[370,8,80,2.5]],
+ [/avena|porridge/i,[367,12.6,63,7]],
+ [/cioccolat/i,[515,5,50,33]],
+ [/cacao/i,[355,20,11,22]],
+ [/datteri/i,[253,2,63,.4]],
+ [/frutta|mele|pere|banana|frutti di bosco/i,[45,.6,10,.2]],
+ [/cracker|grissini|gallette/i,[428,10,80,8]],
+ [/frollini|biscott|savoiard/i,[416,7,73,11]],
+ [/pasta|farina|semola|polenta/i,[353,11,74,1.4]],
+ [/pane|panino|bauletto|wasa|piadina/i,[224,7.5,48.5,1.3]],
+ [/cous ?cous|bulgur/i,[358,12,72,1.5]],
+ [/orzo/i,[319,10.4,71,1.4]],
+ [/farro/i,[335,15,67,2.5]],
+ [/riso|quinoa|miglio|amaranto|grano saraceno/i,[332,6.7,80,.4]],
+ [/patate/i,[85,2.1,18,1]],
+ [/mozzarella|caciotta|primo sale/i,[253,18.7,.7,19.5]],
+ [/feta/i,[250,14,4,21]],
+ [/grana|parmigian|pecorino/i,[384,33,0,28]],
+ [/ricotta/i,[146,8.8,3.5,10.9]],
+ [/stracchino|formaggio molle|formaggio fresco/i,[300,18,1,25]],
+ [/uov/i,[128,12.4,0,8.7]],
+ [/pollo|tacchino/i,[100,23.3,0,.8]],
+ [/manzo|cavallo|vitello|macinato|tritato|hamburger/i,[122,21,0,4]],
+ [/bresaola|prosciutto|affettato/i,[151,32,0,2.6]],
+ [/merluzzo|nasello|platessa|sogliola|orata/i,[71,17,0,.3]],
+ [/salmone/i,[185,20,0,12]],
+ [/tonno/i,[192,25.2,0,10]],
+ [/gamberetti|gamberi|vongole|cozze|polpo|calamari/i,[71,15,1,.8]],
+ [/pesce azzurro|sgombro|alici|sardine/i,[170,19,0,10]],
+ [/tofu/i,[76,8,1.9,4.8]],
+ [/tempeh/i,[193,19,9,11]],
+ [/seitan/i,[121,25,4,1]],
+ [/lenticchie|ceci|fagioli|legumi|piselli/i,[291,23,51,2]],
+ [/pesto/i,[450,5,6,45]],
+ [/olio/i,[899,0,0,99.9]],
+ [/passata|pomodor/i,[19,1,3.5,.2]],
+ [/marmellata|crema cacao/i,[222,.5,55,.1]],
+ [/verdur|insalata|zucchine|melanzane|broccoli|cavolfiore|carote|cetriol|edamame/i,[25,2,3.5,.3]]
+];
+function nutriDi(nome){const r=NUTRI.find(x=>x[0].test(nome));return r?r[1]:null;}
+
+// Solo quantità in peso. "1 normale", "2 gusti", "q.b." non sono calcolabili.
+// Unica eccezione: le uova a pezzi, contate a 55 g l'una (uovo medio).
+function grammiDi(q,nome){
+  const s=String(q).trim();
+  if(!/\d/.test(s)) return null;
+  if(/\bkg\b/i.test(s)) return parseGrams(s)*1000;
+  if(/\bg\b/i.test(s)) return parseGrams(s);
+  if(nome&&/uov/i.test(nome)&&/^\d+$/.test(s)) return parseGrams(s)*55;
+  return null;
+}
+
+// Somma i macro di un pasto, segnalando le voci che non ha saputo contare
+function macroPasto(m){
+  let k=0,p=0,c=0,g=0;const fuori=[];
+  (m&&m.ing||[]).forEach(i=>{
+    const gr=grammiDi(i[1],i[0]), n=nutriDi(i[0]);
+    if(gr===null||!n){fuori.push(i[0]);return;}
+    k+=n[0]*gr/100;p+=n[1]*gr/100;c+=n[2]*gr/100;g+=n[3]*gr/100;
+  });
+  return {k:Math.round(k),p:Math.round(p),c:Math.round(c),g:Math.round(g),fuori};
+}
+function macroSomma(list){
+  return list.reduce((a,m)=>{const t=macroPasto(m);
+    return {k:a.k+t.k,p:a.p+t.p,c:a.c+t.c,g:a.g+t.g,fuori:a.fuori.concat(t.fuori)};},
+    {k:0,p:0,c:0,g:0,fuori:[]});
+}
+function kcalDi(nome,qta){
+  const gr=grammiDi(qta,nome), n=nutriDi(nome);
+  return (gr===null||!n)?null:Math.round(n[0]*gr/100);
+}
+function barraMacro(t){
+  const kp=t.p*4,kc=t.c*4,kg=t.g*9,tot=kp+kc+kg;
+  if(!tot) return '';
+  const w=x=>(x/tot*100).toFixed(1)+'%';
+  return '<div class="mbar"><i style="width:'+w(kp)+';background:var(--mP)"></i>'
+    +'<i style="width:'+w(kc)+';background:var(--mC)"></i>'
+    +'<i style="width:'+w(kg)+';background:var(--mG)"></i></div>';
+}
+function bloccoMacro(t){
+  // Se anche una sola voce non è pesabile il totale sarebbe fuorviante
+  // (la pizzeria mostrava "38 kcal" contando solo il contorno): meglio nulla.
+  if(t.fuori.length) return '<div class="mtot vuoto">Macro non calcolabili: '
+    +[...new Set(t.fuori)].join(', ')+'.</div>';
+  return '<div class="mtot"><div class="mtot-r"><b>'+t.k+' kcal</b>'
+    +'<span><em style="--m:var(--mP)">P</em> '+t.p+' g <em style="--m:var(--mC)">C</em> '+t.c
+    +' g <em style="--m:var(--mG)">G</em> '+t.g+' g</span></div>'+barraMacro(t)+'</div>';
 }
 // Accorpa i doppioni del piano in una voce di spesa unica
 function normNome(name){
@@ -957,12 +1093,15 @@ function subsFor(m,idx){
 function chips(m,mi){
   return '<ul class="ing">'+m.ing.map((i,idx)=>{
     const s=subsFor(m,idx);
-    const label='<span class="nm">'+i[0]+'</span><span class="g">'+i[1]+'</span>';
+    const kc=kcalDi(i[0],i[1]);
+    const label='<span class="nm">'+i[0]+'</span>'
+      +'<span class="kc">'+(kc===null?'':kc+' kcal')+'</span>'
+      +'<span class="g">'+i[1]+'</span>';
     const row=(!s.occhino.length&&!s.web.length)
       ? '<span class="chip">'+label+'</span>'
       : '<button class="chip'+(s.occhino.length?' doc':'')+'" type="button" data-m="'+mi+'" data-i="'+idx+'" aria-haspopup="dialog">'+label+'</button>';
     return '<li>'+row+'</li>';
-  }).join('')+'</ul>';
+  }).join('')+'</ul>'+bloccoMacro(macroPasto(m));
 }
 function steps(a){return '<ol class="steps">'+a.map(s=>'<li>'+s+'</li>').join('')+'</ol>';}
 function renderMeal(m,mi,col,slot){
@@ -1048,6 +1187,40 @@ function renderPasto(i,m){
   paintGrid();fade();
 }
 
+// Previsto dal piano per quel giorno, contro quanto risulta dai pasti segnati.
+// Il "previsto" non è un obiettivo del medico: è la somma di ciò che il piano
+// prevede quel giorno, calcolata con le stesse stime.
+function renderRecap(i){
+  const box=document.getElementById('recap');
+  if(!box) return;
+  const seq=seqFor(i);
+  const prev=macroSomma(seq);
+  const fatti=seq.filter((_,m)=>DONE.has(i+'-'+m));
+  const mang=macroSomma(fatti);
+  const resta={k:Math.max(0,prev.k-mang.k),p:Math.max(0,prev.p-mang.p),
+               c:Math.max(0,prev.c-mang.c),g:Math.max(0,prev.g-mang.g)};
+  const riga=(et,f,p,u)=>{
+    const perc=p?Math.min(100,f/p*100):0;
+    return '<div class="rc-r"><span class="rc-l">'+et+'</span>'
+      +'<div class="rc-bar"><i style="width:'+perc.toFixed(1)+'%"></i></div>'
+      +'<span class="rc-v"><b>'+f+'</b>/'+p+' '+u+'</span></div>';
+  };
+  box.innerHTML='<div class="recap"><div class="rc-h">'
+    +'<span>'+PLAN.days[i].full+(i===TODAY?' · oggi':'')+'</span>'
+    +'<span class="rc-n">'+fatti.length+'/'+seq.length+' pasti segnati</span></div>'
+    +riga('kcal',mang.k,prev.k,'')
+    +riga('Proteine',mang.p,prev.p,'g')
+    +riga('Carbo',mang.c,prev.c,'g')
+    +riga('Grassi',mang.g,prev.g,'g')
+    +(fatti.length&&fatti.length<seq.length
+      ? '<div class="rc-rest">Restano <b>'+resta.k+' kcal</b> · P '+resta.p+' g · C '+resta.c+' g · G '+resta.g+' g</div>'
+      : fatti.length===seq.length
+        ? '<div class="rc-rest">Giornata completata.</div>'
+        : '<div class="rc-rest">Segna i pasti fatti per vedere cosa manca.</div>')
+    +'<div class="rc-note">Stime da tabelle di composizione pubbliche, non i calcoli del medico.</div>'
+    +'</div>';
+}
+
 function paintGrid(){
   grid.querySelectorAll('.cell').forEach(c=>{
     const d=+c.dataset.d, m=+c.dataset.m;
@@ -1068,6 +1241,7 @@ function paintGrid(){
   const rb=document.getElementById('resetDone');
   if(rb) rb.addEventListener('click',()=>{DONE=new Set();saveDone();paintGrid();
     currentMeal===null?renderDay(currentDay):renderPasto(currentDay,currentMeal);});
+  renderRecap(currentDay);
 }
 
 function selectDay(i){
@@ -1119,7 +1293,13 @@ function renderPrep(){
 }
 
 function ingRows(list){
-  return '<ul class="ing">'+list.map(i=>'<li><span class="chip"><span class="nm">'+i[0]+'</span><span class="g">'+i[1]+'</span></span></li>').join('')+'</ul>';
+  const righe=list.map(i=>{
+    const kc=kcalDi(i[0],i[1]);
+    return '<li><span class="chip"><span class="nm">'+i[0]+'</span>'
+      +'<span class="kc">'+(kc===null?'':kc+' kcal')+'</span>'
+      +'<span class="g">'+i[1]+'</span></span></li>';
+  }).join('');
+  return '<ul class="ing">'+righe+'</ul>'+bloccoMacro(macroPasto({ing:list}));
 }
 
 let ricetteFiltro='Tutte';
