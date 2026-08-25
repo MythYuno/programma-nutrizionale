@@ -231,6 +231,24 @@
   .sg-chip b{font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink-3);margin-left:3px}
   .sg-chip:hover{border-color:var(--ink);background:none}
   .sg-chip:active{transform:scale(.96)}
+  .sg-chip.mio{background:none;border-color:var(--hair);border-style:dashed}
+  .sg-chip.mio:hover{border-style:solid;border-color:var(--ink)}
+
+  .sg-new{margin-top:16px;padding-top:14px;border-top:1px solid var(--hair)}
+  .sg-new summary{list-style:none;cursor:pointer;font-size:12.5px;font-weight:700;
+    color:var(--ink-2);-webkit-tap-highlight-color:transparent}
+  .sg-new summary::-webkit-details-marker{display:none}
+  .sg-new summary::before{content:"+ ";font-weight:800}
+  .sg-new summary:hover{color:var(--ink)}
+  .sg-form{margin-top:12px}
+  .fin{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:var(--lift);
+    border:1px solid var(--hair);border-radius:8px;padding:10px 12px}
+  .fin:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+  .sg-num{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}
+  .sg-num label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;font-weight:700;
+    letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+  .sg-num .fin{padding:9px 8px;text-align:center;font-variant-numeric:tabular-nums}
+  .sg-help{font-size:11.5px;color:var(--ink-3);margin-top:9px;line-height:1.45}
 
   .comp-btns{display:flex;align-items:center;gap:6px}
   .comp-n{font-size:12.5px;color:var(--ink-3);margin-top:9px}
@@ -1427,21 +1445,56 @@ const SGARRO_BY_ID=(function(){const m={};
   Object.keys(SGARRI).forEach(c=>SGARRI[c].forEach(v=>{m[v[0]]={cat:c,id:v[0],n:v[1],k:v[2],p:v[3],c:v[4],g:v[5],alc:!!v[6]};}));
   return m;})();
 
-function sgarriDiOggi(){return (OGGI.sgarri||[]).map(id=>SGARRO_BY_ID[id]).filter(Boolean);}
+// Voci aggiunte a mano: restano salvate e riutilizzabili, non sono per un giorno solo.
+const MIEI_KEY='piano11-miei';
+function loadMiei(){
+  try{const a=JSON.parse(localStorage.getItem(MIEI_KEY)||'[]');return Array.isArray(a)?a:[];}
+  catch(e){return [];}
+}
+function saveMiei(){try{localStorage.setItem(MIEI_KEY,JSON.stringify(MIEI));}catch(e){}}
+let MIEI=loadMiei();
+function sgarroById(id){return SGARRO_BY_ID[id]||MIEI.find(m=>m.id===id)||null;}
+
+function sgarriDiOggi(){return (OGGI.sgarri||[]).map(sgarroById).filter(Boolean);}
 function totaleSgarri(){
-  return sgarriDiOggi().reduce((a,s)=>({k:a.k+s.k,p:a.p+s.p,c:a.c+s.c,g:a.g+s.g,alc:a.alc||s.alc}),
-    {k:0,p:0,c:0,g:0,alc:false});
+  return sgarriDiOggi().reduce((a,s)=>({k:a.k+s.k,p:a.p+s.p,c:a.c+s.c,g:a.g+s.g}),
+    {k:0,p:0,c:0,g:0});
 }
 
 // Le voci ancora disponibili oggi, dalle quali si può togliere per rientrare
 // dopo uno sgarro. Solo kcal reali degli ingredienti: nessuna stima inventata.
 let TOLTI=new Set();
+let PICKER_APERTO=false, FORM_APERTO=false;
 function pickerSgarri(){
-  return '<details class="sg-pick"><summary>Aggiungi uno sgarro</summary><div class="sg-body">'
-    +Object.keys(SGARRI).map(cat=>'<div class="sg-cat">'+cat+'</div><div class="sg-row">'
+  let h='<details class="sg-pick"'+(PICKER_APERTO?' open':'')+'>'
+   +'<summary>Aggiungi uno sgarro</summary><div class="sg-body">';
+  h+=Object.keys(SGARRI).map(cat=>'<div class="sg-cat">'+cat+'</div><div class="sg-row">'
       +SGARRI[cat].map(v=>'<button class="sg-chip" type="button" data-add="'+v[0]+'">'
-        +v[1]+' <b>'+v[2]+'</b></button>').join('')+'</div>').join('')
-    +'</div></details>';
+        +v[1]+' <b>'+v[2]+'</b></button>').join('')+'</div>').join('');
+  if(MIEI.length)
+    h+='<div class="sg-cat">Tue voci</div><div class="sg-row">'
+      +MIEI.map(m=>'<button class="sg-chip mio" type="button" data-add="'+m.id+'">'
+        +m.n+' <b>'+m.k+'</b></button>').join('')+'</div>';
+
+  h+='<details class="sg-new"'+(FORM_APERTO?' open':'')+'><summary>Aggiungi una voce tua</summary>'
+   +'<div class="sg-form">'
+   +'<input class="fin" id="mioN" type="text" placeholder="Nome — es. Birra del pub" maxlength="42">'
+   +'<div class="sg-num">'
+     +'<label>kcal<input class="fin" id="mioK" type="text" inputmode="numeric" placeholder="0"></label>'
+     +'<label>Prot.<input class="fin" id="mioP" type="text" inputmode="decimal" placeholder="0"></label>'
+     +'<label>Carbo<input class="fin" id="mioC" type="text" inputmode="decimal" placeholder="0"></label>'
+     +'<label>Grassi<input class="fin" id="mioG" type="text" inputmode="decimal" placeholder="0"></label>'
+   +'</div>'
+   +'<div class="sg-help">Le kcal bastano. I macro, se li sai, rendono più preciso il riepilogo.</div>'
+   +'<div class="btnrow"><button class="btn primary" type="button" id="salvaMio">Salva la voce</button></div>'
+   +'<div id="mioMsg"></div>';
+  if(MIEI.length)
+    h+='<div class="sg-cat">Le tue voci salvate</div><ul class="sg-list">'
+      +MIEI.map(m=>'<li><span>'+m.n+'</span><b>'+m.k+' kcal</b>'
+        +'<button class="sg-x" type="button" data-delmio="'+m.id+'" aria-label="Elimina '+m.n+'">×</button></li>').join('')
+      +'</ul>';
+  h+='</div></details>';
+  return h+'</div></details>';
 }
 
 function bloccoCompensa(i){
@@ -1487,8 +1540,10 @@ function renderRecap(i){
   const fatti=seq.filter((_,m)=>DONE.has(i+'-'+m));
   const mang=macroSomma(fatti);
   // Gli sgarri scelti dal catalogo portano anche i loro macro
-  const sg=(i===TODAY?totaleSgarri():{k:0,p:0,c:0,g:0,alc:false});
+  const sg=(i===TODAY?totaleSgarri():{k:0,p:0,c:0,g:0});
   const extra=sg.k;
+  // calorie del fuori piano che i macro non spiegano: alcol, o voci senza macro
+  const scartoSg=sg.k-(sg.p*4+sg.c*4+sg.g*9);
   // i macro del catalogo hanno decimali: arrotondo qui, non nei dati
   mang.k=Math.round(mang.k+sg.k);mang.p=Math.round(mang.p+sg.p);
   mang.c=Math.round(mang.c+sg.c);mang.g=Math.round(mang.g+sg.g);
@@ -1514,8 +1569,10 @@ function renderRecap(i){
         : '<div class="rc-rest">Segna i pasti fatti per vedere cosa manca.</div>')
     +bloccoCompensa(i)
     +'<div class="rc-note">Stime da tabelle di composizione pubbliche, non i calcoli del medico.'
-    +(sg.alc?' Negli alcolici le calorie vengono soprattutto dall’alcol, che non rientra in P/C/G: '
-      +'per questo le kcal non tornano con i tre macro.':'')+'</div>'
+    +(scartoSg>Math.max(40,sg.k*0.15)
+      ? ' Di '+Math.round(scartoSg)+' kcal del fuori piano non si sa da quali macro vengano: '
+       +'negli alcolici è l’alcol, che non rientra in P/C/G; nelle voci senza macro è ignoto.'
+      : '')+'</div>'
     +'</div>';
 
   const az=document.getElementById('azzeraExtra');
@@ -1527,6 +1584,38 @@ function renderRecap(i){
     const a=(OGGI.sgarri||[]).slice();a.splice(+b.dataset.del,1);
     OGGI.sgarri=a;if(!a.length) TOLTI=new Set();
     saveOggi();renderRecap(i);
+  }));
+
+  // ricordo quali pannelli erano aperti: il render li ricostruisce da zero
+  const pick=box.querySelector('.sg-pick'), form=box.querySelector('.sg-new');
+  if(pick) pick.addEventListener('toggle',()=>{PICKER_APERTO=pick.open;});
+  if(form) form.addEventListener('toggle',()=>{FORM_APERTO=form.open;});
+
+  const salva=document.getElementById('salvaMio');
+  if(salva) salva.addEventListener('click',()=>{
+    const msg=document.getElementById('mioMsg');
+    // accetto sia la virgola sia il punto, e tengo un decimale
+    const num=id=>{const v=parseFloat((document.getElementById(id).value||'').replace(',','.'));
+                   return isFinite(v)&&v>0?Math.min(5000,Math.round(v*10)/10):0;};
+    const n=(document.getElementById('mioN').value||'').trim();
+    const k=num('mioK');
+    if(!n){msg.innerHTML='<div class="msg err">Serve un nome.</div>';return;}
+    if(!(k>0)){msg.innerHTML='<div class="msg err">Servono le kcal della porzione.</div>';return;}
+    if(MIEI.length>=40){msg.innerHTML='<div class="msg err">Hai già 40 voci: eliminane una.</div>';return;}
+    MIEI.push({id:'mio'+Date.now(),n:n,k:Math.round(k),p:num('mioP'),c:num('mioC'),g:num('mioG')});
+    saveMiei();
+    PICKER_APERTO=true;FORM_APERTO=true;
+    renderRecap(i);
+    const m2=document.getElementById('mioMsg');
+    if(m2) m2.innerHTML='<div class="msg ok">Voce salvata: la trovi in “Tue voci”.</div>';
+  });
+  box.querySelectorAll('[data-delmio]').forEach(b=>b.addEventListener('click',()=>{
+    const id=b.dataset.delmio;
+    const usata=(OGGI.sgarri||[]).indexOf(id)>=0;
+    if(!confirm('Eliminare questa voce?'+(usata?' L’hai usata oggi: verrà tolta anche dal conteggio.':''))) return;
+    if(usata) OGGI.sgarri=(OGGI.sgarri||[]).filter(x=>x!==id),saveOggi();
+    MIEI=MIEI.filter(m=>m.id!==id);saveMiei();
+    PICKER_APERTO=true;FORM_APERTO=true;renderRecap(i);
   }));
   box.querySelectorAll('.comp-i').forEach(b=>b.addEventListener('click',()=>{
     const k=b.dataset.t;
