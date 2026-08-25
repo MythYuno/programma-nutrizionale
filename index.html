@@ -69,11 +69,39 @@
     color:var(--ink-3);margin-bottom:6px}
   .hero h1{font-weight:800;font-size:clamp(38px,11vw,54px);line-height:1;font-stretch:88%;letter-spacing:-.03em}
   .hero .date{color:var(--ink-2);font-size:13.5px;margin-top:8px;font-weight:500}
-  .reminders{display:flex;flex-wrap:wrap;gap:5px 18px;margin-top:14px;padding-top:11px;border-top:1px solid var(--hair)}
-  .rem{display:inline-flex;align-items:baseline;gap:5px;font-size:11.5px;font-weight:600;
-    text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3)}
-  .rem .v{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:0}
+  /* Le prescrizioni giornaliere non sono piu' testo inerte: si toccano.
+     Valgono sempre per oggi, anche mentre sfogli un altro giorno. */
+  .oggi-wrap{margin-top:14px;padding-top:11px;border-top:1px solid var(--hair)}
+  .oggi-h{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-3);margin-bottom:8px}
+  .reminders{display:flex;flex-wrap:wrap;gap:6px}
+  .rem{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+    color:var(--ink-2);background:var(--lift);border:1px solid transparent;border-radius:99px;
+    padding:6px 11px;font-family:inherit;position:relative;overflow:hidden;
+    -webkit-tap-highlight-color:transparent}
+  .rem .v{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:800}
   .rem i{display:none}
+  button.rem{cursor:pointer;transition:.13s ease}
+  button.rem:hover{border-color:var(--ink-3)}
+  button.rem:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .rem.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .rem.on .v{color:var(--paper);opacity:.7}
+  .rem.on::before{content:"";width:4.5px;height:8.5px;flex:0 0 auto;margin-right:1px;
+    border:solid var(--paper);border-width:0 2px 2px 0;transform:rotate(45deg) translateY(-1px)}
+  /* Acqua: il riempimento e' dietro al testo, cosi' il progresso si vede a colpo d'occhio */
+  .rem.acqua{padding-right:4px;gap:5px}
+  .rem.acqua .fill{position:absolute;left:0;top:0;bottom:0;background:var(--c4);opacity:.22;
+    transition:width .2s ease;pointer-events:none}
+  .rem.acqua.full .fill{opacity:.34}
+  .rem.acqua>span{position:relative;z-index:1}
+  .mini{position:relative;z-index:1;width:22px;height:22px;border-radius:99px;flex:0 0 auto;
+    border:none;background:rgba(0,0,0,.06);color:var(--ink);font:700 14px/1 inherit;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+  .mini:hover{background:rgba(0,0,0,.14)}
+  @media (prefers-color-scheme:dark){
+    .mini{background:rgba(255,255,255,.12)}
+    .mini:hover{background:rgba(255,255,255,.22)}
+  }
 
   /* Selettore di sezione */
   .seg{display:flex;gap:3px;margin-top:20px;background:var(--lift);padding:4px;border-radius:12px}
@@ -98,7 +126,13 @@
   .cell{aspect-ratio:1;border:none;border-radius:9px;cursor:pointer;padding:0;
     background:color-mix(in srgb,var(--c) 20%,var(--paper));
     transition:background .13s ease,transform .1s ease;-webkit-tap-highlight-color:transparent}
+  /* Righe fisse: piu' basse e piu' tenui. Restano toccabili per le spunte,
+     ma smettono di gridare quanto pranzo e cena. */
+  .cell.fisso{aspect-ratio:auto;height:26px;border-radius:7px;
+    background:color-mix(in srgb,var(--c) 13%,var(--paper))}
+  .grow.fisso{opacity:.62;font-size:9px}
   .cell:hover{background:color-mix(in srgb,var(--c) 45%,var(--paper))}
+  .cell.fisso:hover{background:color-mix(in srgb,var(--c) 34%,var(--paper))}
   .cell:active{transform:scale(.92)}
   .cell.today{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 60%,var(--paper))}
   .cell[aria-selected="true"]{background:var(--c);
@@ -372,11 +406,9 @@
     <div class="ey">Ricette · macro bloccate</div>
     <h1 id="heroDay">Lunedì</h1>
     <div class="date" id="heroDate"></div>
-    <div class="reminders">
-      <span class="rem"><i></i>Acqua <span class="v">3–3,5 L</span></span>
-      <span class="rem"><i></i>Creatina <span class="v">5 g</span></span>
-      <span class="rem"><i></i>Omega-3 <span class="v">1 g</span></span>
-      <span class="rem"><i></i>Libero <span class="v">1/sett</span></span>
+    <div class="oggi-wrap">
+      <div class="oggi-h">Oggi</div>
+      <div class="reminders" id="oggi"></div>
     </div>
   </section>
 </div>
@@ -1168,9 +1200,12 @@ let currentSection='sett';
 let CURRENT_SEQ=[];
 
 // Le cinque fasce, ognuna col suo colore: è lo stesso sistema in griglia e nelle schede
+// "fisso" = uguale tutti i giorni (colazione e spuntini): nella griglia pesa
+// meno, così pranzo e cena — le uniche che cambiano — restano protagoniste.
 const SLOTS=[
-  {lab:'Colaz.',c:'var(--c1)'},{lab:'Spunt.',c:'var(--c2)'},{lab:'Pranzo',c:'var(--c3)'},
-  {lab:'Spunt.',c:'var(--c4)'},{lab:'Cena',c:'var(--c5)'}
+  {lab:'Colaz.',c:'var(--c1)',fisso:true},{lab:'Spunt.',c:'var(--c2)',fisso:true},
+  {lab:'Pranzo',c:'var(--c3)'},
+  {lab:'Spunt.',c:'var(--c4)',fisso:true},{lab:'Cena',c:'var(--c5)'}
 ];
 
 // Pasti fatti. Sono legati alla settimana ISO, così il lunedì si riparte da zero
@@ -1193,6 +1228,54 @@ function saveDone(){
   try{localStorage.setItem(DONE_KEY,JSON.stringify({w:SETTIMANA,d:[...DONE]}));}catch(e){}
 }
 let DONE=loadDone();
+
+// ---- Prescrizioni giornaliere ----
+// Acqua e integratori valgono per OGGI e si azzerano al cambio di data; il
+// pasto libero e' settimanale come le spunte dei pasti.
+const OGGI_KEY='piano11-oggi', LIBERO_KEY='piano11-libero';
+const ACQUA_OBIETTIVO=12;              // bicchieri da 250 ml ≈ 3 L
+function dataOggi(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function nuovoOggi(){return {d:dataOggi(),acqua:0,creatina:false,omega:false};}
+function loadOggi(){
+  try{const o=JSON.parse(localStorage.getItem(OGGI_KEY)||'{}');
+      return o.d===dataOggi()?Object.assign(nuovoOggi(),o):nuovoOggi();}
+  catch(e){return nuovoOggi();}
+}
+function saveOggi(){try{localStorage.setItem(OGGI_KEY,JSON.stringify(OGGI));}catch(e){}}
+function loadLibero(){
+  try{const o=JSON.parse(localStorage.getItem(LIBERO_KEY)||'{}');return o.w===SETTIMANA&&!!o.u;}
+  catch(e){return false;}
+}
+function saveLibero(){try{localStorage.setItem(LIBERO_KEY,JSON.stringify({w:SETTIMANA,u:LIBERO}));}catch(e){}}
+let OGGI=loadOggi(), LIBERO=loadLibero();
+
+function renderOggi(){
+  const box=document.getElementById('oggi');
+  if(!box) return;
+  const a=OGGI.acqua, perc=Math.min(100,a/ACQUA_OBIETTIVO*100);
+  const litri=(a*0.25).toString().replace('.',',');
+  box.innerHTML=
+    '<div class="rem acqua'+(a>=ACQUA_OBIETTIVO?' full':'')+'">'
+     +'<span class="fill" style="width:'+perc+'%"></span>'
+     +'<span>Acqua</span><span class="v">'+litri+' L</span>'
+     +'<button class="mini" type="button" data-a="-1" aria-label="Un bicchiere in meno">−</button>'
+     +'<button class="mini" type="button" data-a="1" aria-label="Un bicchiere in più">+</button>'
+    +'</div>'
+    +'<button class="rem'+(OGGI.creatina?' on':'')+'" type="button" data-k="creatina" aria-pressed="'+OGGI.creatina+'">Creatina <span class="v">5 g</span></button>'
+    +'<button class="rem'+(OGGI.omega?' on':'')+'" type="button" data-k="omega" aria-pressed="'+OGGI.omega+'">Omega-3 <span class="v">1 g</span></button>'
+    +'<button class="rem'+(LIBERO?' on':'')+'" type="button" data-k="libero" aria-pressed="'+LIBERO+'">Pasto libero <span class="v">'+(LIBERO?'usato':'1/sett')+'</span></button>';
+
+  box.querySelectorAll('.mini').forEach(b=>b.addEventListener('click',()=>{
+    OGGI.acqua=Math.max(0,Math.min(ACQUA_OBIETTIVO,OGGI.acqua+ +b.dataset.a));
+    saveOggi();renderOggi();
+  }));
+  box.querySelectorAll('button.rem').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.k;
+    if(k==='libero'){LIBERO=!LIBERO;saveLibero();}
+    else{OGGI[k]=!OGGI[k];saveOggi();}
+    renderOggi();
+  }));
+}
 
 function seqFor(i){
   const d=PLAN.days[i];
@@ -1419,10 +1502,13 @@ function buildRail(){
     grid.appendChild(h);
   });
   SLOTS.forEach((sl,m)=>{
-    const rh=document.createElement('div');rh.className='grow';rh.textContent=sl.lab;grid.appendChild(rh);
+    const rh=document.createElement('div');rh.className='grow'+(sl.fisso?' fisso':'');
+    rh.textContent=sl.lab;
+    if(sl.fisso) rh.title='Uguale tutti i giorni';
+    grid.appendChild(rh);
     PLAN.days.forEach((d,i)=>{
       const c=document.createElement('button');
-      c.type='button';c.className='cell'+(i===TODAY?' today':'');
+      c.type='button';c.className='cell'+(sl.fisso?' fisso':'')+(i===TODAY?' today':'');
       c.style.setProperty('--c',sl.c);
       c.dataset.d=i;c.dataset.m=m;
       const pasto=seqFor(i)[m];
@@ -1648,6 +1734,7 @@ const map={1:0,2:1,3:2,4:3,5:4,6:5,0:6};
 const TODAY=map[now.getDay()]??0;
 currentDay=TODAY;
 buildRail();
+renderOggi();
 renderDay(TODAY);
 
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}
