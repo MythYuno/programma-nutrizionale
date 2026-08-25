@@ -1,4 +1,4 @@
-const C = 'piano11-v23';
+const C = 'piano11-v24';
 const ASSETS = ['./','./index.html','./manifest.json','./icon-180.png','./icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

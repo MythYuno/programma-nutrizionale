@@ -199,6 +199,39 @@
   .comp-h{display:flex;align-items:center;justify-content:space-between;gap:10px;
     font-size:13px;color:var(--ink-2);flex-wrap:wrap}
   .comp-h b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+  .sg-list{list-style:none;margin-top:9px}
+  .sg-list li{display:flex;align-items:baseline;gap:9px;padding:7px 0;
+    border-bottom:1px solid var(--hair);font-size:13.5px}
+  .sg-list li:last-child{border-bottom:none}
+  .sg-list li span{flex:1}
+  .sg-list li b{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+  .sg-x{flex:0 0 auto;width:22px;height:22px;border-radius:99px;border:none;cursor:pointer;
+    background:var(--lift);color:var(--ink-2);font:400 15px/1 inherit;
+    display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+  .sg-x:hover{background:var(--c3);color:#fff}
+
+  .sg-pick{margin-top:10px}
+  .sg-pick summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+    font-size:12.5px;font-weight:700;color:var(--ink-2);padding:8px 13px;border-radius:99px;
+    border:1px solid var(--hair);-webkit-tap-highlight-color:transparent;transition:.13s ease}
+  .sg-pick summary::-webkit-details-marker{display:none}
+  .sg-pick summary::before{content:"+";font-size:15px;font-weight:700;line-height:1;
+    display:inline-block;transition:transform .16s ease}
+  .sg-pick summary:hover{border-color:var(--ink-3);color:var(--ink)}
+  .sg-pick[open] summary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .sg-pick[open] summary::before{transform:rotate(45deg)}
+  .sg-body{margin-top:12px}
+  .sg-cat{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-3);margin:12px 0 7px}
+  .sg-cat:first-child{margin-top:0}
+  .sg-row{display:flex;flex-wrap:wrap;gap:6px}
+  .sg-chip{font-family:inherit;font-size:12.5px;font-weight:500;color:var(--ink);cursor:pointer;
+    background:var(--lift);border:1px solid transparent;border-radius:99px;padding:7px 12px;
+    transition:.13s ease;-webkit-tap-highlight-color:transparent}
+  .sg-chip b{font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink-3);margin-left:3px}
+  .sg-chip:hover{border-color:var(--ink);background:none}
+  .sg-chip:active{transform:scale(.96)}
+
   .comp-btns{display:flex;align-items:center;gap:6px}
   .comp-n{font-size:12.5px;color:var(--ink-3);margin-top:9px}
   .comp-n b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
@@ -1281,11 +1314,19 @@ let DONE=loadDone();
 const OGGI_KEY='piano11-oggi', LIBERO_KEY='piano11-libero';
 const ACQUA_OBIETTIVO=12;              // bicchieri da 250 ml ≈ 3 L
 function dataOggi(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
-function nuovoOggi(){return {d:dataOggi(),acqua:0,creatina:false,omega:false,extra:0};}
+function nuovoOggi(){return {d:dataOggi(),acqua:0,creatina:false,omega:false,sgarri:[]};}
 function loadOggi(){
-  try{const o=JSON.parse(localStorage.getItem(OGGI_KEY)||'{}');
-      return o.d===dataOggi()?Object.assign(nuovoOggi(),o):nuovoOggi();}
-  catch(e){return nuovoOggi();}
+  try{
+    const o=JSON.parse(localStorage.getItem(OGGI_KEY)||'{}');
+    if(o.d!==dataOggi()) return nuovoOggi();
+    const v=Object.assign(nuovoOggi(),o);
+    if(!Array.isArray(v.sgarri)) v.sgarri=[];
+    // vecchio formato: un totale libero in kcal, lo converto in voci "altro"
+    if(o.extra>0&&!v.sgarri.length)
+      v.sgarri=new Array(Math.round(o.extra/100)).fill('altro');
+    delete v.extra;
+    return v;
+  }catch(e){return nuovoOggi();}
 }
 function saveOggi(){try{localStorage.setItem(OGGI_KEY,JSON.stringify(OGGI));}catch(e){}}
 function loadLibero(){
@@ -1352,14 +1393,61 @@ function renderPasto(i,m){
 // Previsto dal piano per quel giorno, contro quanto risulta dai pasti segnati.
 // Il "previsto" non è un obiettivo del medico: è la somma di ciò che il piano
 // prevede quel giorno, calcolata con le stesse stime.
+// Catalogo degli sgarri più comuni: [kcal, prot, carbo, grassi] a porzione.
+// Negli alcolici le calorie vengono quasi tutte dall'alcol, che non è nessuno
+// dei tre macro: per quelli kcal e P/C/G non tornano, ed è corretto così.
+const SGARRI={
+ 'Alcolici':[
+  ['birra33','Birra chiara 33 cl',110,1,9,0,true],
+  ['birra40','Birra media 40 cl',135,1.2,11,0,true],
+  ['birradm','Birra doppio malto 33 cl',280,2,22,0,true],
+  ['vino','Bicchiere di vino 125 ml',90,0,1,0,true],
+  ['spritz','Spritz',170,0,16,0,true],
+  ['amaro','Amaro o superalcolico 40 ml',95,0,4,0,true]],
+ 'Dolci':[
+  ['gelato','Gelato in coppetta, 2 gusti',260,4,32,12],
+  ['cono','Cono gelato',300,5,36,15],
+  ['tiramisu','Tiramisù, una porzione',350,6,32,21],
+  ['torta','Fetta di torta',320,4,42,15],
+  ['ciocc','Cioccolato 25 g',130,1,12,8],
+  ['cornetto','Cornetto semplice',300,6,40,13],
+  ['cornettof','Cornetto farcito',400,6,50,19]],
+ 'Salato':[
+  ['pizza','Pizza margherita intera',900,35,120,30],
+  ['trancio','Trancio di pizza',300,12,40,10],
+  ['patatine','Patatine fritte, porzione',470,5,55,25],
+  ['burger','Hamburger semplice',500,25,40,25],
+  ['panino','Panino con salumi',450,20,45,21],
+  ['busta','Patatine in busta 50 g',270,3,25,17],
+  ['aperitivo','Aperitivo con stuzzichini',450,10,45,25]],
+ 'Altro':[
+  ['altro','Qualcos’altro, circa 100 kcal',100,0,0,0]]
+};
+const SGARRO_BY_ID=(function(){const m={};
+  Object.keys(SGARRI).forEach(c=>SGARRI[c].forEach(v=>{m[v[0]]={cat:c,id:v[0],n:v[1],k:v[2],p:v[3],c:v[4],g:v[5],alc:!!v[6]};}));
+  return m;})();
+
+function sgarriDiOggi(){return (OGGI.sgarri||[]).map(id=>SGARRO_BY_ID[id]).filter(Boolean);}
+function totaleSgarri(){
+  return sgarriDiOggi().reduce((a,s)=>({k:a.k+s.k,p:a.p+s.p,c:a.c+s.c,g:a.g+s.g,alc:a.alc||s.alc}),
+    {k:0,p:0,c:0,g:0,alc:false});
+}
+
 // Le voci ancora disponibili oggi, dalle quali si può togliere per rientrare
 // dopo uno sgarro. Solo kcal reali degli ingredienti: nessuna stima inventata.
 let TOLTI=new Set();
+function pickerSgarri(){
+  return '<details class="sg-pick"><summary>Aggiungi uno sgarro</summary><div class="sg-body">'
+    +Object.keys(SGARRI).map(cat=>'<div class="sg-cat">'+cat+'</div><div class="sg-row">'
+      +SGARRI[cat].map(v=>'<button class="sg-chip" type="button" data-add="'+v[0]+'">'
+        +v[1]+' <b>'+v[2]+'</b></button>').join('')+'</div>').join('')
+    +'</div></details>';
+}
+
 function bloccoCompensa(i){
   if(i!==TODAY) return '';
-  const extra=OGGI.extra||0;
-  if(!extra) return '<div class="comp"><button class="linkbtn" type="button" id="apriExtra">'
-    +'Ho mangiato qualcosa fuori piano</button></div>';
+  const scelti=sgarriDiOggi(), tot=totaleSgarri(), extra=tot.k;
+  if(!extra) return '<div class="comp">'+pickerSgarri()+'</div>';
 
   const rest=[];
   seqFor(i).forEach((m,mi)=>{
@@ -1373,9 +1461,11 @@ function bloccoCompensa(i){
   const tolto=rest.filter(r=>TOLTI.has(r.key)).reduce((a,r)=>a+r.k,0);
 
   let h='<div class="comp"><div class="comp-h"><span>Fuori piano <b>'+extra+' kcal</b></span>'
-   +'<span class="comp-btns"><button class="mini" type="button" data-e="-100" aria-label="Cento in meno">−</button>'
-   +'<button class="mini" type="button" data-e="100" aria-label="Cento in più">+</button>'
-   +'<button class="linkbtn" type="button" id="azzeraExtra">azzera</button></span></div>';
+   +'<button class="linkbtn" type="button" id="azzeraExtra">azzera</button></div>'
+   +'<ul class="sg-list">'+scelti.map((s,idx)=>
+      '<li><span>'+s.n+'</span><b>'+s.k+' kcal</b>'
+      +'<button class="sg-x" type="button" data-del="'+idx+'" aria-label="Togli '+s.n+'">×</button></li>').join('')
+   +'</ul>'+pickerSgarri();
   if(!rest.length){
     h+='<div class="comp-n">Non restano pasti da alleggerire oggi.</div>';
   }else{
@@ -1396,8 +1486,12 @@ function renderRecap(i){
   const prev=macroSomma(seq);
   const fatti=seq.filter((_,m)=>DONE.has(i+'-'+m));
   const mang=macroSomma(fatti);
-  const extra=(i===TODAY?(OGGI.extra||0):0);
-  mang.k+=extra;                      // gli extra li conto solo nelle kcal
+  // Gli sgarri scelti dal catalogo portano anche i loro macro
+  const sg=(i===TODAY?totaleSgarri():{k:0,p:0,c:0,g:0,alc:false});
+  const extra=sg.k;
+  // i macro del catalogo hanno decimali: arrotondo qui, non nei dati
+  mang.k=Math.round(mang.k+sg.k);mang.p=Math.round(mang.p+sg.p);
+  mang.c=Math.round(mang.c+sg.c);mang.g=Math.round(mang.g+sg.g);
   const resta={k:Math.max(0,prev.k-mang.k),p:Math.max(0,prev.p-mang.p),
                c:Math.max(0,prev.c-mang.c),g:Math.max(0,prev.g-mang.g)};
   const riga=(et,f,p,u)=>{
@@ -1420,16 +1514,18 @@ function renderRecap(i){
         : '<div class="rc-rest">Segna i pasti fatti per vedere cosa manca.</div>')
     +bloccoCompensa(i)
     +'<div class="rc-note">Stime da tabelle di composizione pubbliche, non i calcoli del medico.'
-    +(extra?' Il fuori piano conta solo nelle kcal: i suoi macro non sono stimabili.':'')+'</div>'
+    +(sg.alc?' Negli alcolici le calorie vengono soprattutto dall’alcol, che non rientra in P/C/G: '
+      +'per questo le kcal non tornano con i tre macro.':'')+'</div>'
     +'</div>';
 
-  const ap=document.getElementById('apriExtra');
-  if(ap) ap.addEventListener('click',()=>{OGGI.extra=300;saveOggi();renderRecap(i);});
   const az=document.getElementById('azzeraExtra');
-  if(az) az.addEventListener('click',()=>{OGGI.extra=0;TOLTI=new Set();saveOggi();renderRecap(i);});
-  box.querySelectorAll('.comp-btns .mini').forEach(b=>b.addEventListener('click',()=>{
-    OGGI.extra=Math.max(0,(OGGI.extra||0)+ +b.dataset.e);
-    if(!OGGI.extra) TOLTI=new Set();
+  if(az) az.addEventListener('click',()=>{OGGI.sgarri=[];TOLTI=new Set();saveOggi();renderRecap(i);});
+  box.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{
+    OGGI.sgarri=(OGGI.sgarri||[]).concat([b.dataset.add]);saveOggi();renderRecap(i);
+  }));
+  box.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+    const a=(OGGI.sgarri||[]).slice();a.splice(+b.dataset.del,1);
+    OGGI.sgarri=a;if(!a.length) TOLTI=new Set();
     saveOggi();renderRecap(i);
   }));
   box.querySelectorAll('.comp-i').forEach(b=>b.addEventListener('click',()=>{
