@@ -65,8 +65,6 @@
     color:var(--bar-ink);opacity:.6}
 
   .hero{padding:22px 0 0}
-  .hero .ey{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;
-    color:var(--ink-3);margin-bottom:6px}
   .hero h1{font-weight:800;font-size:clamp(38px,11vw,54px);line-height:1;font-stretch:88%;letter-spacing:-.03em}
   .hero .date{color:var(--ink-2);font-size:13.5px;margin-top:8px;font-weight:500}
   /* Le prescrizioni giornaliere non sono piu' testo inerte: si toccano.
@@ -196,6 +194,14 @@
   .rc-rest{margin-top:12px;padding-top:11px;border-top:1px solid var(--hair);font-size:13px;color:var(--ink-2)}
   .rc-rest b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
   .rc-note{margin-top:8px;font-size:11px;color:var(--ink-3);line-height:1.4}
+
+  .aderenza{margin-top:14px}
+  .ad-r{display:flex;align-items:center;gap:10px;padding:5px 0}
+  .ad-w{flex:0 0 96px;font-size:11.5px;font-weight:600;color:var(--ink-2)}
+  .ad-bar{flex:1;height:8px;border-radius:99px;background:var(--hair);overflow:hidden}
+  .ad-bar i{display:block;height:100%;border-radius:99px;background:var(--c2)}
+  .ad-v{flex:0 0 72px;text-align:right;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .ad-v b{color:var(--ink);font-weight:800}
 
   .day-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;
     color:var(--ink-3);margin:22px 0 14px}
@@ -403,7 +409,6 @@
 
 <div class="wrap">
   <section class="hero">
-    <div class="ey">Ricette · macro bloccate</div>
     <h1 id="heroDay">Lunedì</h1>
     <div class="date" id="heroDate"></div>
     <div class="oggi-wrap">
@@ -1218,10 +1223,30 @@ function settimanaISO(d){
 }
 const DONE_KEY='piano11-fatti';
 const SETTIMANA=settimanaISO(new Date());
+// Prima di azzerare una settimana la si archivia: e' il dato che serve per
+// dire al medico quanto si e' seguito il piano, e prima veniva buttato.
+const STORICO_KEY='piano11-storico';
+function loadStorico(){
+  try{const s=JSON.parse(localStorage.getItem(STORICO_KEY)||'[]');return Array.isArray(s)?s:[];}
+  catch(e){return [];}
+}
+function archiviaSettimana(w,arr){
+  try{
+    const st=loadStorico();
+    if(!w||!arr.length||st.some(x=>x.w===w)) return;
+    const per=[0,0,0,0,0];
+    arr.forEach(k=>{const m=+String(k).split('-')[1];if(per[m]!==undefined)per[m]++;});
+    st.push({w:w,n:arr.length,tot:35,per:per});
+    while(st.length>26) st.shift();          // circa sei mesi
+    localStorage.setItem(STORICO_KEY,JSON.stringify(st));
+  }catch(e){}
+}
 function loadDone(){
   try{
     const o=JSON.parse(localStorage.getItem(DONE_KEY)||'{}');
-    return new Set(o.w===SETTIMANA?(o.d||[]):[]);
+    if(o.w===SETTIMANA) return new Set(o.d||[]);
+    archiviaSettimana(o.w,o.d||[]);
+    return new Set();
   }catch(e){return new Set();}
 }
 function saveDone(){
@@ -1365,6 +1390,56 @@ function selectDay(i){
   currentMeal===null?renderDay(i):renderPasto(i,currentMeal);
 }
 
+// Settimane archiviate + quella in corso, con il pasto piu' saltato:
+// e' quello che serve portare al controllo dal medico.
+// L'API moderna richiede contesto sicuro e gesto dell'utente: se viene negata
+// si ripiega sulla vecchia execCommand, che funziona anche li'.
+async function copiaTesto(t){
+  try{await navigator.clipboard.writeText(t);return true;}catch(e){}
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=t;ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:-1000px;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    const ok=document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  }catch(e){return false;}
+}
+
+function bloccoAderenza(){
+  const st=loadStorico().slice();
+  const perOra=[0,0,0,0,0];
+  DONE.forEach(k=>{const m=+String(k).split('-')[1];if(perOra[m]!==undefined)perOra[m]++;});
+  const righe=st.concat([{w:SETTIMANA,n:DONE.size,tot:35,per:perOra,ora:true}]);
+  if(righe.length===1&&!DONE.size)
+    return '<div class="card"><div class="kick">Aderenza</div>'
+      +'<div class="mtitle">Quanto stai seguendo il piano</div>'
+      +'<div class="liberi">Da qui in avanti ogni settimana viene archiviata: segna i pasti fatti e '
+      +'fra qualche settimana avrai un quadro da mostrare al medico.</div></div>';
+
+  const ultime=righe.slice(-8);
+  const media=Math.round(righe.reduce((a,r)=>a+r.n/r.tot,0)/righe.length*100);
+  // il piu' saltato: confronto i mancati per fascia sul totale delle settimane
+  const mancati=[0,0,0,0,0];
+  righe.forEach(r=>r.per.forEach((c,m)=>{mancati[m]+=7-c;}));
+  const peggio=mancati.indexOf(Math.max.apply(null,mancati));
+  const nomiFascia=['la colazione','lo spuntino del mattino','il pranzo','lo spuntino del pomeriggio','la cena'];
+
+  let h='<div class="card"><div class="kick">Aderenza</div>'
+   +'<div class="mtitle">Quanto stai seguendo il piano</div><div class="aderenza">';
+  ultime.forEach(r=>{
+    const p=Math.round(r.n/r.tot*100);
+    h+='<div class="ad-r"><span class="ad-w">'+r.w.replace(/^\d+-W/,'sett. ')+(r.ora?' · in corso':'')+'</span>'
+      +'<div class="ad-bar"><i style="width:'+p+'%"></i></div>'
+      +'<span class="ad-v"><b>'+p+'%</b> '+r.n+'/'+r.tot+'</span></div>';
+  });
+  h+='</div><div class="liberi">Media <b>'+media+'%</b> su '+righe.length
+    +(righe.length===1?' settimana':' settimane')+'. Il pasto che salti più spesso è <b>'+nomiFascia[peggio]+'</b>.</div>';
+  h+='<div class="btnrow"><button class="btn" type="button" id="copiaAderenza">Copia il riepilogo</button></div>';
+  return h+'</div>';
+}
+
 function renderPrep(){
   heroDay.textContent='Organizza';
   const checked=loadChecked();
@@ -1388,6 +1463,8 @@ function renderPrep(){
     }).join('')+'</ul></div>').join('');
   h+='<div class="liberi">Quantità per 7 giorni, arrotondate per eccesso (colazione e spuntini contati × 7). Tocca un alimento per spuntarlo: le spunte restano salvate.</div></div>';
 
+  h+=bloccoAderenza();
+
   h+='<div class="card accent"><div class="kick">Trucchi</div><div class="mtitle">Per fare tutto più in fretta</div>'+stepsList(TRUCCHI)+'</div>';
 
   content.innerHTML=h;
@@ -1405,6 +1482,16 @@ function renderPrep(){
   if(clear) clear.addEventListener('click',()=>{
     saveChecked(new Set());
     content.querySelectorAll('.shop li.on').forEach(li=>li.classList.remove('on'));
+  });
+
+  const cp=document.getElementById('copiaAderenza');
+  if(cp) cp.addEventListener('click',async ()=>{
+    const righe=[...content.querySelectorAll('.ad-r')]
+      .map(r=>r.querySelector('.ad-w').textContent+': '+r.querySelector('.ad-v').textContent.trim());
+    const testo='Aderenza al piano\n'+righe.join('\n')+'\n'
+      +content.querySelector('.aderenza').parentNode.querySelector('.liberi').textContent;
+    cp.textContent=(await copiaTesto(testo))?'Copiato':'Copia non riuscita';
+    setTimeout(()=>{cp.textContent='Copia il riepilogo';},1600);
   });
 }
 
