@@ -195,6 +195,27 @@
   .rc-rest b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
   .rc-note{margin-top:8px;font-size:11px;color:var(--ink-3);line-height:1.4}
 
+  .comp{margin-top:12px;padding-top:11px;border-top:1px solid var(--hair)}
+  .comp-h{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-size:13px;color:var(--ink-2);flex-wrap:wrap}
+  .comp-h b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+  .comp-btns{display:flex;align-items:center;gap:6px}
+  .comp-n{font-size:12.5px;color:var(--ink-3);margin-top:9px}
+  .comp-n b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+  .comp-n b.ok{color:var(--c2)}
+  .comp-l{list-style:none;margin-top:6px}
+  .comp-i{display:flex;width:100%;align-items:baseline;gap:10px;padding:8px 0;background:none;
+    border:none;border-bottom:1px solid var(--hair);font-family:inherit;font-size:13.5px;
+    color:var(--ink);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .comp-i span{flex:1}
+  .comp-i em{font-style:normal;font-size:11px;color:var(--ink-3);text-transform:uppercase;
+    letter-spacing:.06em;margin-left:5px}
+  .comp-i b{flex:0 0 auto;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+  .comp-i.on{color:var(--ink-3)}
+  .comp-i.on span{text-decoration:line-through}
+  .comp-i.on b{color:var(--c2)}
+  .comp-l li:last-child .comp-i{border-bottom:none}
+
   .aderenza{margin-top:14px}
   .ad-r{display:flex;align-items:center;gap:10px;padding:5px 0}
   .ad-w{flex:0 0 96px;font-size:11.5px;font-weight:600;color:var(--ink-2)}
@@ -1260,7 +1281,7 @@ let DONE=loadDone();
 const OGGI_KEY='piano11-oggi', LIBERO_KEY='piano11-libero';
 const ACQUA_OBIETTIVO=12;              // bicchieri da 250 ml ≈ 3 L
 function dataOggi(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
-function nuovoOggi(){return {d:dataOggi(),acqua:0,creatina:false,omega:false};}
+function nuovoOggi(){return {d:dataOggi(),acqua:0,creatina:false,omega:false,extra:0};}
 function loadOggi(){
   try{const o=JSON.parse(localStorage.getItem(OGGI_KEY)||'{}');
       return o.d===dataOggi()?Object.assign(nuovoOggi(),o):nuovoOggi();}
@@ -1331,6 +1352,43 @@ function renderPasto(i,m){
 // Previsto dal piano per quel giorno, contro quanto risulta dai pasti segnati.
 // Il "previsto" non è un obiettivo del medico: è la somma di ciò che il piano
 // prevede quel giorno, calcolata con le stesse stime.
+// Le voci ancora disponibili oggi, dalle quali si può togliere per rientrare
+// dopo uno sgarro. Solo kcal reali degli ingredienti: nessuna stima inventata.
+let TOLTI=new Set();
+function bloccoCompensa(i){
+  if(i!==TODAY) return '';
+  const extra=OGGI.extra||0;
+  if(!extra) return '<div class="comp"><button class="linkbtn" type="button" id="apriExtra">'
+    +'Ho mangiato qualcosa fuori piano</button></div>';
+
+  const rest=[];
+  seqFor(i).forEach((m,mi)=>{
+    if(DONE.has(i+'-'+mi)) return;
+    (m.ing||[]).forEach((ing,ii)=>{
+      const k=kcalDi(ing[0],ing[1]);
+      if(k) rest.push({key:mi+'-'+ii,nome:ing[0],k:k,pasto:SLOTS[mi].lab});
+    });
+  });
+  rest.sort((a,b)=>b.k-a.k);
+  const tolto=rest.filter(r=>TOLTI.has(r.key)).reduce((a,r)=>a+r.k,0);
+
+  let h='<div class="comp"><div class="comp-h"><span>Fuori piano <b>'+extra+' kcal</b></span>'
+   +'<span class="comp-btns"><button class="mini" type="button" data-e="-100" aria-label="Cento in meno">−</button>'
+   +'<button class="mini" type="button" data-e="100" aria-label="Cento in più">+</button>'
+   +'<button class="linkbtn" type="button" id="azzeraExtra">azzera</button></span></div>';
+  if(!rest.length){
+    h+='<div class="comp-n">Non restano pasti da alleggerire oggi.</div>';
+  }else{
+    h+='<div class="comp-n">Tocca cosa togli dai pasti che restano: <b class="'
+      +(tolto>=extra?'ok':'')+'">'+tolto+'</b> di '+extra+' kcal</div>'
+      +'<ul class="comp-l">'+rest.slice(0,8).map(r=>
+        '<li><button class="comp-i'+(TOLTI.has(r.key)?' on':'')+'" type="button" data-t="'+r.key+'">'
+        +'<span>'+r.nome+' <em>'+r.pasto+'</em></span><b>'+r.k+' kcal</b></button></li>').join('')
+      +'</ul>';
+  }
+  return h+'</div>';
+}
+
 function renderRecap(i){
   const box=document.getElementById('recap');
   if(!box) return;
@@ -1338,6 +1396,8 @@ function renderRecap(i){
   const prev=macroSomma(seq);
   const fatti=seq.filter((_,m)=>DONE.has(i+'-'+m));
   const mang=macroSomma(fatti);
+  const extra=(i===TODAY?(OGGI.extra||0):0);
+  mang.k+=extra;                      // gli extra li conto solo nelle kcal
   const resta={k:Math.max(0,prev.k-mang.k),p:Math.max(0,prev.p-mang.p),
                c:Math.max(0,prev.c-mang.c),g:Math.max(0,prev.g-mang.g)};
   const riga=(et,f,p,u)=>{
@@ -1353,13 +1413,30 @@ function renderRecap(i){
     +riga('Proteine',mang.p,prev.p,'g')
     +riga('Carbo',mang.c,prev.c,'g')
     +riga('Grassi',mang.g,prev.g,'g')
-    +(fatti.length&&fatti.length<seq.length
+    +((fatti.length||extra)&&fatti.length<seq.length
       ? '<div class="rc-rest">Restano <b>'+resta.k+' kcal</b> · P '+resta.p+' g · C '+resta.c+' g · G '+resta.g+' g</div>'
       : fatti.length===seq.length
         ? '<div class="rc-rest">Giornata completata.</div>'
         : '<div class="rc-rest">Segna i pasti fatti per vedere cosa manca.</div>')
-    +'<div class="rc-note">Stime da tabelle di composizione pubbliche, non i calcoli del medico.</div>'
+    +bloccoCompensa(i)
+    +'<div class="rc-note">Stime da tabelle di composizione pubbliche, non i calcoli del medico.'
+    +(extra?' Il fuori piano conta solo nelle kcal: i suoi macro non sono stimabili.':'')+'</div>'
     +'</div>';
+
+  const ap=document.getElementById('apriExtra');
+  if(ap) ap.addEventListener('click',()=>{OGGI.extra=300;saveOggi();renderRecap(i);});
+  const az=document.getElementById('azzeraExtra');
+  if(az) az.addEventListener('click',()=>{OGGI.extra=0;TOLTI=new Set();saveOggi();renderRecap(i);});
+  box.querySelectorAll('.comp-btns .mini').forEach(b=>b.addEventListener('click',()=>{
+    OGGI.extra=Math.max(0,(OGGI.extra||0)+ +b.dataset.e);
+    if(!OGGI.extra) TOLTI=new Set();
+    saveOggi();renderRecap(i);
+  }));
+  box.querySelectorAll('.comp-i').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.t;
+    TOLTI.has(k)?TOLTI.delete(k):TOLTI.add(k);
+    renderRecap(i);
+  }));
 }
 
 function paintGrid(){
