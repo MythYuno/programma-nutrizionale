@@ -272,6 +272,22 @@
   .alts li b{color:var(--ink);font-weight:700}
 
   /* Passi: numero in un quadrato pieno, come i riquadri di una confezione */
+  .prep-steps{margin-top:16px}
+  .prep-steps summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;
+    padding:11px 0;border-top:1px solid var(--hair);font-size:11.5px;font-weight:800;
+    letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2);
+    transition:color .13s ease;-webkit-tap-highlight-color:transparent}
+  .prep-steps summary::-webkit-details-marker{display:none}
+  .prep-steps summary::after{content:"";width:6px;height:6px;margin-left:auto;
+    border:solid var(--ink-3);border-width:0 1.6px 1.6px 0;transform:rotate(45deg);
+    transition:transform .16s ease}
+  .prep-steps[open] summary::after{transform:rotate(-135deg)}
+  .prep-steps summary:hover{color:var(--ink)}
+  .prep-steps summary span{font-weight:500;font-size:11.5px;letter-spacing:.02em;
+    text-transform:none;color:var(--ink-3)}
+  .prep-steps summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .prep-steps ol.steps{margin-top:4px;padding-bottom:4px}
+
   ol.steps{list-style:none;counter-reset:s;margin-top:18px}
   ol.steps li{counter-increment:s;position:relative;padding:0 0 13px 32px;font-size:15px;line-height:1.5}
   ol.steps li:last-child{padding-bottom:0}
@@ -1113,7 +1129,14 @@ function chips(m,mi){
     return '<li>'+row+'</li>';
   }).join('')+'</ul>'+bloccoMacro(macroPasto(m));
 }
-function steps(a){return '<ol class="steps">'+a.map(s=>'<li>'+s+'</li>').join('')+'</ol>';}
+function stepsList(a){return '<ol class="steps">'+a.map(s=>'<li>'+s+'</li>').join('')+'</ol>';}
+// Chiusi di default: quasi sempre si guardano grammi e macro, i passaggi
+// servono solo quando si cucina davvero. <details> perche' funziona anche
+// senza JS ed e' gia' accessibile da tastiera.
+function steps(a,label){
+  return '<details class="prep-steps"><summary>'+(label||'Preparazione')
+    +'<span>'+a.length+' passaggi</span></summary>'+stepsList(a)+'</details>';
+}
 function renderMeal(m,mi,col,slot){
   let h='<div class="card'+(m.accent?' accent':'')+'"'+(col?' style="--c:'+col+'"':'')+'>'
        +'<div class="meal-top"><div>';
@@ -1282,7 +1305,7 @@ function renderPrep(){
     }).join('')+'</ul></div>').join('');
   h+='<div class="liberi">Quantità per 7 giorni, arrotondate per eccesso (colazione e spuntini contati × 7). Tocca un alimento per spuntarlo: le spunte restano salvate.</div></div>';
 
-  h+='<div class="card accent"><div class="kick">Trucchi</div><div class="mtitle">Per fare tutto più in fretta</div>'+steps(TRUCCHI)+'</div>';
+  h+='<div class="card accent"><div class="kick">Trucchi</div><div class="mtitle">Per fare tutto più in fretta</div>'+stepsList(TRUCCHI)+'</div>';
 
   content.innerHTML=h;
   content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
@@ -1347,7 +1370,7 @@ function renderRicette(){
       h+='</div>';
       if(r.ing) h+=ingRows(r.ing);
       if(r.swap) h+='<div class="swap"><b>'+(r.swapLabel||'Scambi applicati')+'</b>'+r.swap.map(s=>'<i>'+s+'</i>').join('')+'</div>';
-      h+=steps(r.steps);
+      h+=steps(r.steps,g==='Fuori casa'?'Come ordinare':'Preparazione');
       h+='<div class="tip"><div><b>Il trucco.</b> '+r.nota+'</div></div></div>';
     });
   });
