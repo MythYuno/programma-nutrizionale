@@ -110,6 +110,11 @@
     margin:-7px 0 0 -3px;transform:rotate(45deg);
     border:solid color-mix(in srgb,var(--c) 78%,var(--ink));border-width:0 2.5px 2.5px 0}
   .cell.done[aria-selected="true"]::after{border-color:var(--paper)}
+  /* Puntino d'angolo: questo pasto vuole un cereale gia' cotto */
+  .cell.prep::before{content:"";position:absolute;top:5px;right:5px;width:5px;height:5px;
+    border-radius:99px;background:color-mix(in srgb,var(--c) 85%,var(--ink))}
+  .cell.prep{position:relative}
+  .cell.prep[aria-selected="true"]::before{background:var(--paper)}
   .gridnote{font-size:11.5px;color:var(--ink-3);margin-top:11px;text-align:center}
   .gridnote b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
   .linkbtn{font-family:inherit;font-size:11.5px;color:var(--ink-3);background:none;border:none;
@@ -429,7 +434,7 @@ const DAYS=[
    tip:'Cuoci una porzione di pollo in più: la coscia avanzata diventa proteina già pronta per un pranzo extra in settimana.'}},
 
  {id:'mar',name:'Mar',full:'Martedì',
-  pranzo:{title:'Insalata di orzo e tonno',time:'~5 min',
+  pranzo:{title:'Insalata di orzo e tonno',time:'~5 min',prep:true,
    ing:[['Orzo','100 g'],['Tonno sgocciolato','50 g'],['Verdure','200 g'],['Olio EVO','5 g']],
    liberi:'Limone e spezie — <b>no sale</b> (c’è il tonno).',
    sub:{'Orzo':[['Riso','100 g']]},
@@ -445,23 +450,23 @@ const DAYS=[
    tip:'Usa le verdure già lavate e tagliate per il pranzo di domani (vedi tip orzo): frittata pronta in 8 minuti.'}},
 
  {id:'mer',name:'Mer',full:'Mercoledì',
-  pranzo:{title:'Farro e lenticchie tiepido',time:'~4 min',
-   ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Grana','10 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+  pranzo:{title:'Farro e lenticchie tiepido',time:'~4 min',prep:true,
+   ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Olio EVO','5 g']],
    sub:{'Farro':[['Riso','101 g']],
         'Lenticchie scatola':[['Lenticchie secche','70 g']]},
    liberi:'Spezie, prezzemolo.',
-   steps:['Sciacqua le lenticchie in scatola per togliere il sale in eccesso.','Usa il farro già cotto, unisci lenticchie e verdure.','Condisci con olio e spezie, grana sopra. Frutta a chiudere.'],
+   steps:['Sciacqua le lenticchie in scatola per togliere il sale in eccesso.','Usa il farro già cotto, unisci lenticchie e verdure.','Condisci con olio e spezie.'],
    tip:'Farro <b>batch-cooked</b> + lenticchie in vetro = piatto freddo o tiepido in 3–4 minuti.'},
   cena:{title:'Manzo magro alla griglia',
-   ing:[['Manzo magro','200 g'],['Pane integrale','130 g'],['Verdure','150 g'],['Olio EVO','10 g']],
-   sub:{'Manzo magro':[['Pollo','230 g'],['Pesce azzurro','200 g'],['Cavallo','225 g'],['Feta','102 g']],
+   ing:[['Manzo magro','220 g'],['Pane integrale','130 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Frutta','150 g']],
+   sub:{'Manzo magro':[['Pollo','253 g'],['Pesce azzurro','220 g'],['Cavallo','248 g'],['Feta','112 g']],
         'Pane integrale':[['Patate','380 g']]},
    liberi:'Rosmarino, pepe.',
-   steps:['Scalda bene una piastra o padella.','Cuoci la carne 2–3 min per lato secondo lo spessore; sala dopo la cottura.','Verdure grigliate o crude con l’olio; pane a parte.'],
+   steps:['Scalda bene una piastra o padella.','Cuoci la carne 2–3 min per lato secondo lo spessore; sala dopo la cottura.','Verdure grigliate o crude con l’olio; pane a parte. Frutta a chiudere.'],
    tip:'Non serve marinare: bastano 2–3 minuti per lato a fuoco alto. Sala solo a fine cottura per non far perdere succosità.'}},
 
  {id:'gio',name:'Gio',full:'Giovedì',
-  pranzo:{title:'Riso freddo con feta e verdure',time:'~4 min',
+  pranzo:{title:'Riso freddo con feta e verdure',time:'~4 min',prep:true,
    ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
    liberi:'Menta, limone, spezie — <b>no sale</b> (c’è la feta).',
    sub:{'Feta':[['Formaggio molle','40 g'],['Ricotta','80 g']]},
@@ -478,16 +483,16 @@ const DAYS=[
 
  {id:'ven',name:'Ven',full:'Venerdì',
   pranzo:{title:'Pasta e ceci',time:'~12 min',
-   ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+   ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g']],
    sub:{'Ceci scatola':[['Ceci secchi','60 g'],['Fagioli scatola','160 g'],['Fagioli secchi','60 g']]},
    liberi:'Rosmarino, aglio, pepe.',
-   steps:['Sciacqua i ceci. Soffriggi appena aglio e rosmarino nell’olio.','Cuoci la pasta; unisci i ceci (frullane una parte per cremosità, se ti va).','Manteca con un po’ d’acqua di cottura. Frutta dopo.'],
+   steps:['Sciacqua i ceci. Soffriggi appena aglio e rosmarino nell’olio.','Cuoci la pasta; unisci i ceci (frullane una parte per cremosità, se ti va).','Manteca con un po’ d’acqua di cottura.'],
    tip:'Versione fredda: pasta corta cotta prima + ceci in scatola a crudo → <b>4 minuti</b>.'},
   cena:{title:'Salmone al forno, patate e verdure',
-   ing:[['Patate','400 g'],['Salmone','120 g'],['Olio EVO','10 g'],['Verdure','150 g']],
-   sub:{'Salmone':[['Salmone affumicato','100 g'],['Ricotta','120 g'],['Vongole','300 g'],['Cozze','250 g'],['Polpo','400 g']]},
+   ing:[['Patate','400 g'],['Salmone','140 g'],['Olio EVO','10 g'],['Verdure','150 g'],['Frutta','150 g']],
+   sub:{'Salmone':[['Salmone affumicato','117 g'],['Ricotta','140 g'],['Vongole','350 g'],['Cozze','292 g'],['Polpo','467 g']]},
    liberi:'Limone, aglio.',
-   steps:['Patate a tocchetti in forno a 200° con parte dell’olio (~25 min).','A metà cottura aggiungi il salmone con limone (oppure cozze/vongole in padella aglio e olio).','Verdure di contorno; olio a crudo per finire.'],
+   steps:['Patate a tocchetti in forno a 200° con parte dell’olio (~25 min).','A metà cottura aggiungi il salmone con limone (oppure cozze/vongole in padella aglio e olio).','Verdure di contorno; olio a crudo per finire. Frutta a chiudere.'],
    tip:'Un’unica teglia per patate e salmone: meno tempo ai fornelli e meno da lavare.'}},
 
  {id:'sab',name:'Sab',full:'Sabato',
@@ -835,12 +840,12 @@ const RICETTE=[
   steps:['Sciogli mezzo cucchiaino di curry nel succo di limone e nell’olio, come una vinaigrette.','Ripassa le verdure in padella antiaderente senza grassi finché prendono colore.','Unisci orzo, verdure e tonno e condisci con l’emulsione al curry.'],
   nota:'Sciogliere le spezie in un liquido acido le distribuisce molto meglio che spolverarle a secco.'},
  {gruppo:'Pranzi',nome:'Zuppa tiepida di farro e lenticchie',quando:'Pranzo di mercoledì',tempo:'~15 min',
-  ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Grana','10 g'],['Olio EVO','5 g'],['Frutta','150 g']],
-  steps:['Sciacqua le lenticchie. Scalda appena aglio e rosmarino nell’olio.','Unisci le verdure a dadini e un po’ d’acqua calda, cuoci 8 minuti.','Aggiungi farro e lenticchie, scalda e chiudi con il grana. Frutta a fine pasto.'],
+  ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Olio EVO','5 g']],
+  steps:['Sciacqua le lenticchie. Scalda appena aglio e rosmarino nell’olio.','Unisci le verdure a dadini e un po’ d’acqua calda, cuoci 8 minuti.','Aggiungi farro e lenticchie e scalda.'],
   nota:'Frulla due cucchiai di lenticchie e rimettile nella zuppa: diventa cremosa senza panna.'},
  {gruppo:'Pranzi',nome:'Farro speziato al cumino',quando:'Pranzo di mercoledì',tempo:'~10 min',
-  ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Grana','10 g'],['Olio EVO','5 g'],['Frutta','150 g']],
-  steps:['Tosta cumino e coriandolo in padella a secco per 30 secondi, finché profumano.','Unisci verdure e lenticchie sciacquate e salta 5 minuti.','Spegni, aggiungi il farro, poi limone e prezzemolo a crudo con l’olio. Grana sopra.'],
+  ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Olio EVO','5 g']],
+  steps:['Tosta cumino e coriandolo in padella a secco per 30 secondi, finché profumano.','Unisci verdure e lenticchie sciacquate e salta 5 minuti.','Spegni, aggiungi il farro, poi limone e prezzemolo a crudo con l’olio.'],
   nota:'Tostare le spezie prima di usarle moltiplica l’aroma: è il passaggio che manca a quasi tutti i piatti “da dieta”.'},
  {gruppo:'Pranzi',nome:'Riso freddo alla greca',quando:'Pranzo di giovedì',tempo:'~8 min',
   ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
@@ -851,11 +856,11 @@ const RICETTE=[
   steps:['Griglia le verdure finché sono ben segnate.','Sciogli la paprika affumicata nell’olio con qualche goccia di limone.','Condisci il riso, unisci le verdure e chiudi con la feta a scaglie, a crudo.'],
   nota:'La paprika affumicata dà la nota “di brace” che di solito arriva da salumi o formaggi stagionati.'},
  {gruppo:'Pranzi',nome:'Pasta e ceci cremosa',quando:'Pranzo di venerdì',tempo:'~15 min',
-  ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+  ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g']],
   steps:['Sciacqua i ceci e frullane metà con poca acqua.','Scalda aglio e rosmarino nell’olio, unisci la crema e i ceci interi.','Cuoci la pasta molto al dente e finiscila direttamente nella crema con un po’ d’acqua di cottura.'],
   nota:'Finire la pasta nel condimento la rende cremosa senza aggiungere un grammo di grassi.'},
  {gruppo:'Pranzi',nome:'Pasta e ceci al peperoncino',quando:'Pranzo di venerdì',tempo:'~14 min',
-  ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g'],['Frutta','150 g']],
+  ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g']],
   steps:['Scalda aglio, peperoncino e rosmarino nell’olio.','Unisci poca passata e i ceci sciacquati, cuoci 5 minuti.','Manteca la pasta al dente nel sugo con l’acqua di cottura.'],
   nota:'Passata, aglio e spezie sono condimenti liberi: danno sapore senza spostare i macro.'},
  {gruppo:'Pranzi',nome:'Ragù bianco alle erbe',quando:'Pranzo di domenica',tempo:'~18 min',
@@ -880,7 +885,7 @@ const RICETTE=[
   steps:['Sbatti le uova con prezzemolo, erba cipollina, scorza di limone e pepe.','Padella a fuoco medio-basso con parte dell’olio e coperchio: resta morbida.','Verdure condite a crudo con l’olio rimasto e limone. Pane a parte.'],
   nota:'Fuoco basso e coperchio: la frittata resta cremosa invece di diventare gommosa.'},
  {gruppo:'Cene',nome:'Tagliata al rosmarino',quando:'Cena di mercoledì',tempo:'~12 min',
-  ing:[['Manzo magro','200 g'],['Pane integrale','130 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+  ing:[['Manzo magro','220 g'],['Pane integrale','130 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Frutta','150 g']],
   steps:['Carne a temperatura ambiente, piastra rovente: 2–3 minuti per lato.','Falla riposare 5 minuti prima di tagliarla; sala solo adesso.','Affetta controfibra, condisci con rosmarino, pepe, olio a crudo e limone.'],
   nota:'Il riposo prima del taglio trattiene i succhi: è la differenza tra una tagliata tenera e una asciutta.'},
  {gruppo:'Cene',nome:'Merluzzo all’acqua pazza',quando:'Cena di giovedì',tempo:'~18 min',
@@ -888,8 +893,8 @@ const RICETTE=[
   steps:['In padella metti aglio, prezzemolo, pomodorini e poca acqua.','Adagia il merluzzo, coperchio, 8 minuti a fuoco dolce.','Filtra il brodetto di cottura e usalo al posto dell’acqua per idratare il cous cous.'],
   nota:'Usare il liquido di cottura del pesce per il cous cous è il passaggio che cambia davvero il piatto.'},
  {gruppo:'Cene',nome:'Salmone e patate in teglia unica',quando:'Cena di venerdì',tempo:'~35 min',
-  ing:[['Patate','400 g'],['Salmone','120 g'],['Olio EVO','10 g'],['Verdure','150 g']],
-  steps:['Patate a tocchetti in forno a 200° con metà olio, 20 minuti.','Aggiungi salmone e verdure nella stessa teglia, altri 10 minuti.','Limone e aneto a crudo all’uscita, con l’olio rimasto.'],
+  ing:[['Patate','400 g'],['Salmone','140 g'],['Olio EVO','10 g'],['Verdure','150 g'],['Frutta','150 g']],
+  steps:['Patate a tocchetti in forno a 200° con metà olio, 20 minuti.','Aggiungi salmone e verdure nella stessa teglia, altri 10 minuti.','Limone e aneto a crudo all’uscita, con l’olio rimasto. Frutta a chiudere.'],
   nota:'Una sola teglia: meno lavoro, e le patate si insaporiscono col grasso che rilascia il salmone.'},
 
  {gruppo:'Sgarri fit',nome:'Pizza margherita',quando:'Pranzo di lunedì',tempo:'~25 min + lievitazione',
@@ -899,12 +904,12 @@ const RICETTE=[
   nota:'Forno al massimo e teglia già calda: è così che si ottiene la base croccante, non con più olio.'},
  {gruppo:'Sgarri fit',nome:'Hamburger nel panino',quando:'Cena di mercoledì',tempo:'~15 min',
   swap:['Nessuno: gli ingredienti del piano sono già quelli dell’hamburger'],
-  ing:[['Manzo magro macinato','200 g'],['Panino','130 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+  ing:[['Manzo magro macinato','220 g'],['Panino','130 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Frutta','150 g']],
   steps:['Forma il burger senza compattarlo troppo e schiaccialo solo una volta, all’inizio.','Padella rovente, 3 minuti per lato, senza mai premerlo: perderebbe i succhi.','Tosta il panino tagliato, monta con insalata, pomodoro, cipolla e un velo di senape.'],
   nota:'Senape, aceto, cipolla e spezie sono liberi: danno tutto il sapore da fast food senza salse grasse.'},
  {gruppo:'Sgarri fit',nome:'Hamburger e patatine al forno',quando:'Cena di mercoledì',tempo:'~35 min',
   swap:['Pane integrale 130 g → Patate 390 g (rapporto pane→patate 1:3)'],
-  ing:[['Manzo magro macinato','200 g'],['Patate','390 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+  ing:[['Manzo magro macinato','220 g'],['Patate','390 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Frutta','150 g']],
   steps:['Taglia le patate a bastoncino e tienile 10 minuti in acqua fredda per togliere l’amido, poi asciugale bene.','Forno ventilato a 210° con metà olio e paprika, 25–30 minuti girandole a metà.','Cuoci il burger in padella rovente 3 minuti per lato; verdure a crudo con l’olio rimasto.'],
   nota:'Ammollo, asciugatura e forno ventilato: croccanti fuori e morbide dentro, senza friggere.'},
  {gruppo:'Sgarri fit',nome:'Poke bowl al salmone',quando:'Cena di giovedì',tempo:'~12 min',
@@ -919,8 +924,8 @@ const RICETTE=[
   nota:'La piadina di casa si fa senza strutto: acqua e un filo d’olio bastano, e resta morbida.'},
  {gruppo:'Sgarri fit',nome:'Wrap di hummus',quando:'Pranzo di venerdì',tempo:'~20 min',
   swap:['Pasta di semola 100 g → Farina 100 g (cereali 1:1 a crudo)'],
-  ing:[['Farina','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g'],['Frutta','150 g']],
-  steps:['Impasta farina e acqua, stendi sottilissimo e cuoci le tortillas in padella a secco.','Frulla i ceci sciacquati con limone, aglio, cumino e un po’ della loro acqua fino a crema.','Spalma l’hummus, aggiungi verdure crude e l’olio a crudo, poi arrotola stretto. Frutta dopo.'],
+  ing:[['Farina','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g']],
+  steps:['Impasta farina e acqua, stendi sottilissimo e cuoci le tortillas in padella a secco.','Frulla i ceci sciacquati con limone, aglio, cumino e un po’ della loro acqua fino a crema.','Spalma l’hummus, aggiungi verdure crude e l’olio a crudo, poi arrotola stretto.'],
   nota:'L’acqua dei ceci al posto della tahina: stessa cremosità, senza aggiungere grassi.'},
  {gruppo:'Sgarri fit',nome:'Risotto alla feta e limone',quando:'Pranzo di giovedì',tempo:'~20 min',
   swap:['Nessuno: stessi ingredienti del piano, cambia la cottura'],
@@ -1034,7 +1039,7 @@ const RICETTE=[
   nota:'Il pesce crudo in sé è perfetto per il piano: sono il fritto e le salse a trasformarlo in una cena molto grassa.'},
  {gruppo:'Fuori casa',nome:'Hamburger o fast food',quando:'Al posto della cena di mercoledì',
   swapLabel:'Da tenere a mente',
-  swap:['Un hamburger singolo corrisponde bene alla cena di mercoledì (manzo 200 g + pane 130 g)','Menù completo con patatine grandi e bibita: contalo come pasto libero'],
+  swap:['Un hamburger singolo corrisponde bene alla cena di mercoledì (manzo 220 g + pane 130 g)','Menù completo con patatine grandi e bibita: contalo come pasto libero'],
   ing:[['Hamburger semplice','1'],['Insalata di contorno','150 g']],
   steps:['Panino singolo, non doppio, e senza salse cremose: ketchup e senape pesano poco.','Niente menù: se proprio, patatine piccole, e acqua al posto della bibita.','Aggiungi un contorno di insalata per arrivare alle verdure previste.'],
   nota:'Nel fast food il grosso delle calorie sta in salse, patatine grandi e bibite, non nella carne.'},
@@ -1237,7 +1242,7 @@ function paintGrid(){
   if(nota) nota.innerHTML=DONE.size
     ? '<b>'+oggi+'/'+SLOTS.length+'</b> pasti di oggi · <b>'+DONE.size+'/'+tot+'</b> in settimana'
       +' · <button class="linkbtn" type="button" id="resetDone">azzera</button>'
-    : 'Tocca un pasto, o il nome del giorno per vederlo tutto.';
+    : 'Tocca un pasto, o il nome del giorno per vederlo tutto. Il puntino segna i pasti che vogliono un cereale cotto prima.';
   const rb=document.getElementById('resetDone');
   if(rb) rb.addEventListener('click',()=>{DONE=new Set();saveDone();paintGrid();
     currentMeal===null?renderDay(currentDay):renderPasto(currentDay,currentMeal);});
@@ -1392,7 +1397,9 @@ function buildRail(){
       c.type='button';c.className='cell'+(i===TODAY?' today':'');
       c.style.setProperty('--c',sl.c);
       c.dataset.d=i;c.dataset.m=m;
-      c.setAttribute('aria-label',sl.lab+' di '+d.full);
+      const pasto=seqFor(i)[m];
+      if(pasto&&pasto.prep){c.classList.add('prep');c.title='Richiede un cereale cotto in anticipo';}
+      c.setAttribute('aria-label',sl.lab+' di '+d.full+(pasto&&pasto.prep?' — richiede preparazione in anticipo':''));
       c.addEventListener('click',()=>{setSection('sett');renderPasto(i,m);});
       grid.appendChild(c);
     });
