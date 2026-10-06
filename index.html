@@ -10,11 +10,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Programma">
-<meta name="theme-color" content="#0B0B0A" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#111113" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="icon" type="image/png" href="icon-512.png">
+<link rel="apple-touch-icon" href="app-icon-180.png">
+<link rel="icon" type="image/svg+xml" href="app-icon.svg">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -470,34 +470,31 @@
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<script>document.documentElement.dataset.theme="dark";</script>
+<link rel="stylesheet" href="redesign.css">
 </head>
 <body>
+<a class="skip-link" href="#content">Vai ai pasti</a>
 
 <div class="topbar">
   <div class="topbar-inner">
-    <div class="brand"><b>Programma</b><span class="n">Nutrizionale</span></div>
+    <a class="brand" href="./" aria-label="Programma Nutrizionale, pagina iniziale"><img class="brand-symbol" src="app-icon.svg" width="38" height="38" alt=""><span><b>Programma</b><span class="n">NUTRIZIONALE</span></span></a><button class="header-today" id="goToday" type="button">Vai a oggi <span aria-hidden="true">↗</span></button>
   </div>
 </div>
 
 <div class="wrap">
   <section class="hero">
-    <h1 id="heroDay">Lunedì</h1>
-    <div class="date" id="heroDate"></div>
-    <div class="oggi-wrap">
-      <div class="oggi-h">Oggi</div>
-      <div class="reminders" id="oggi"></div>
-    </div>
+    <div class="hero-copy"><h1 id="heroDay">Lunedì</h1><p hidden class="hero-subtitle" id="heroSubtitle">Piccole abitudini. Il tuo equilibrio.</p>
+    <div class="date" id="heroDate"></div></div>
   </section>
 </div>
 
 <div class="wrap">
   <nav class="seg" id="seg" role="tablist" aria-label="Sezioni"></nav>
-  <div class="gridwrap" id="gridWrap">
+  <div class="workspace"><aside class="gridwrap" id="gridWrap"><div class="week-heading"><div><span class="eyebrow">IL TUO PIANO</span><h2>La settimana</h2></div><span class="week-leaf" aria-hidden="true">↗</span></div><div id="dayNav" class="day-nav" aria-label="Scegli il giorno"></div><details class="week-details"><summary>Panoramica dei pasti <span aria-hidden="true">⌄</span></summary>
     <div class="grid" id="grid" role="grid" aria-label="Settimana"></div>
     <div class="gridnote" id="gridNote">Tocca un pasto, o il nome del giorno per vederlo tutto.</div>
-    <div id="recap"></div>
-  </div>
-  <main id="content"></main>
+    </details><div id="recap"></div><div class="side-note"><span aria-hidden="true">✳</span><p>Il tuo piano, a portata di mano.<br><span>Tocca gli ingredienti per scoprire le sostituzioni.</span></p></div></aside><main id="content" tabindex="-1"></main></div>
   <footer>
     <div class="lk">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
@@ -1324,7 +1321,7 @@ function loadDone(){
 function saveDone(){
   try{localStorage.setItem(DONE_KEY,JSON.stringify({w:SETTIMANA,d:[...DONE]}));}catch(e){}
 }
-let DONE=loadDone();
+let DONE=new Set(); // Meal tracking is retired; saved history is left untouched.
 
 // ---- Prescrizioni giornaliere ----
 // Acqua e integratori valgono per OGGI e si azzerano al cambio di data; il
@@ -1467,7 +1464,7 @@ let TOLTI=new Set();
 let PICKER_APERTO=false, FORM_APERTO=false;
 function pickerSgarri(){
   let h='<details class="sg-pick"'+(PICKER_APERTO?' open':'')+'>'
-   +'<summary>Aggiungi uno sgarro</summary><div class="sg-body">';
+   +'<summary>Aggiungi un extra</summary><div class="sg-body">';
   h+=Object.keys(SGARRI).map(cat=>'<div class="sg-cat">'+cat+'</div><div class="sg-row">'
       +SGARRI[cat].map(v=>'<button class="sg-chip" type="button" data-add="'+v[0]+'">'
         +v[1]+' <b>'+v[2]+'</b></button>').join('')+'</div>').join('');
@@ -1657,7 +1654,14 @@ function selectDay(i){
 // L'API moderna richiede contesto sicuro e gesto dell'utente: se viene negata
 // si ripiega sulla vecchia execCommand, che funziona anche li'.
 async function copiaTesto(t){
-  try{await navigator.clipboard.writeText(t);return true;}catch(e){}
+  let copyTimer;
+  try{
+    await Promise.race([
+      navigator.clipboard.writeText(t),
+      new Promise((_,reject)=>{copyTimer=setTimeout(()=>reject(new Error('Clipboard timeout')),1500);})
+    ]);
+    return true;
+  }catch(e){}finally{clearTimeout(copyTimer);} 
   try{
     const ta=document.createElement('textarea');
     ta.value=t;ta.setAttribute('readonly','');
@@ -2082,11 +2086,11 @@ heroDate.textContent=now.getDate()+' '+MESI[now.getMonth()]+' '+now.getFullYear(
 const map={1:0,2:1,3:2,4:3,5:4,6:5,0:6};
 const TODAY=map[now.getDay()]??0;
 currentDay=TODAY;
-buildRail();
-renderOggi();
-renderDay(TODAY);
+// kitchen.js renders the cooking-first interface after the data is ready.
 
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}
 </script>
+<script src="redesign.js"></script>
+<script src="kitchen.js"></script>
 </body>
 </html>
