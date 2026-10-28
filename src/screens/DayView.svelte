@@ -3,7 +3,8 @@
   import { app } from '../state/app.svelte';
   import { router } from '../state/router.svelte';
   import type { PlanItem } from '../domain/types';
-  import { nextMeal, sortMeals, weekdayIndex } from '../domain/schedule';
+  import { nextMeal, skippedMeals, sortMeals, weekdayIndex } from '../domain/schedule';
+  import { SLOT_LABEL } from '../domain/types';
   import { fmtNumber, rounded, sumMacro } from '../domain/nutrition';
   import { longDate, weekdayName } from '../ui/format';
   import DayStrip from '../ui/DayStrip.svelte';
@@ -17,6 +18,7 @@
   const meals = $derived(day ? sortMeals(day.meals) : []);
   const done = $derived(app.done(date));
   const now = $derived(isToday ? nextMeal(day, done) : null);
+  const skipped = $derived(isToday ? skippedMeals(day, done).map((m) => m.slot) : []);
   const planned = $derived(rounded(sumMacro(meals, app.foodIndex)));
   const eaten = $derived(rounded(sumMacro(meals.filter((m) => done.has(m.slot)), app.foodIndex)));
   const rest = $derived(meals.filter((m) => m.slot !== now?.slot));
@@ -42,6 +44,14 @@
   {:else}
     {#if now}
       <MealCard meal={now} done={false} hero onToggle={() => app.toggleMeal(date, now.slot)} onSubs={(it) => (subsItem = it)} />
+    {:else if isToday && skipped.length}
+      <div class="card complete">
+        <h2>Nessun altro pasto in programma</h2>
+        <p class="muted">
+          Non hai segnato {skipped.map((s) => SLOT_LABEL[s].toLowerCase()).join(' e ')}.
+          {skipped.length > 1 ? 'Se li hai mangiati, segnali qui sotto.' : 'Se l’hai mangiato, segnalo qui sotto.'}
+        </p>
+      </div>
     {:else if isToday && meals.length}
       <div class="card complete">
         <h2>Giornata completata</h2>
@@ -66,7 +76,7 @@
     {#if rest.length}
       <h2 class="section-title">{now ? 'Il resto della giornata' : 'Pasti'}</h2>
       {#each rest as m (m.slot)}
-        <MealCard meal={m} done={done.has(m.slot)} onToggle={() => app.toggleMeal(date, m.slot)} onSubs={(it) => (subsItem = it)} />
+        <MealCard meal={m} done={done.has(m.slot)} skipped={skipped.includes(m.slot)} onToggle={() => app.toggleMeal(date, m.slot)} onSubs={(it) => (subsItem = it)} />
       {/each}
     {/if}
     <p class="section-foot">Valori nutrizionali stimati da tabelle pubbliche: indicativi, non i calcoli del medico.</p>

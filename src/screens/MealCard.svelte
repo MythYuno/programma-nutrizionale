@@ -13,10 +13,11 @@
   import { app } from '../state/app.svelte';
   import { SLOT_COLOR } from '../ui/format';
 
-  let { meal, done, hero = false, onToggle, onSubs }: {
+  let { meal, done, hero = false, skipped = false, onToggle, onSubs }: {
     meal: Meal;
     done: boolean;
     hero?: boolean;
+    skipped?: boolean;
     onToggle: () => void;
     onSubs: (item: PlanItem) => void;
   } = $props();
@@ -47,7 +48,7 @@
         {#if done}<CheckCircle size={24} weight="fill" />{:else}<Circle size={24} />{/if}
       </span>
       <span class="grow">
-        <span class="slot">{SLOT_LABEL[meal.slot]}</span>
+        <span class="slot">{SLOT_LABEL[meal.slot]}{#if skipped}<span class="skip">saltato?</span>{/if}</span>
         <span class="title">{meal.title}</span>
       </span>
       <span class="kcal num">{fmtNumber(kcal)} kcal</span>
@@ -80,7 +81,7 @@
       {/if}
 
       <button class="btn" class:tinted={done} onclick={onToggle}>
-        {#if done}Annulla "fatto"{:else}<Check size={20} weight="bold" /> Fatto{/if}
+        {#if done}Annulla «fatto»{:else}<Check size={20} weight="bold" /> Fatto{/if}
       </button>
       {#if hero}<p class="foot num">{fmtNumber(kcal)} kcal stimate</p>{/if}
     </div>
@@ -96,7 +97,7 @@
   .hero { padding: 18px 18px 14px; margin-bottom: 14px; --act: var(--accent); }
   .compact { border-radius: var(--radius-row); background: var(--veil); color: var(--on-hour); transition: background-color 0.3s var(--ease-out); }
   .compact.open { --act: var(--accent); }
-  .compact.done:not(.open) { opacity: 0.66; }
+  .compact.done:not(.open) .title { font-weight: 500; }
 
   .hero-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.025em; margin: 0; color: var(--accent); }
@@ -109,9 +110,12 @@
   .grow { flex: 1; min-width: 0; }
   .slot { display: block; font-size: 13px; font-weight: 700; color: var(--on-hour-2); }
   .open .slot { color: var(--accent); }
+  .skip { margin-left: 8px; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--veil-2); color: var(--on-hour); }
+  .open .skip { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
   .title { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .kcal { font-size: 14px; color: var(--on-hour-2); }
   .open .kcal { color: var(--ink-2); }
+  .open .title { white-space: normal; }
   .caret { color: var(--on-hour-2); display: flex; transition: transform 0.25s var(--ease-out); }
   .open .caret { color: var(--ink-3); }
   .caret.up { transform: rotate(180deg); }
@@ -121,7 +125,7 @@
   .item { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; min-height: 48px; padding: 10px 0; border: 0; background: none; text-align: left; border-top: 1px solid var(--sep); font-size: 17px; color: var(--ink); }
   li:first-child .item { border-top: 0; }
   .name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
-  .item.sub .name { color: var(--accent); font-weight: 600; }
+  .item.sub .name :global(svg) { color: var(--accent); flex: none; }
   .item b { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
   .item b small { font-size: 15px; font-weight: 700; margin-left: 2px; color: var(--ink-2); letter-spacing: 0; }
   .compact .item b { font-size: 21px; }

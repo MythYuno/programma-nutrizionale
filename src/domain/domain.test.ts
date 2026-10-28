@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SEED_FOODS, findSeedFoodId } from './catalog';
 import { fmtGrams, indexFoods, mealMacro, portionMacro, rounded, sumMacro } from './nutrition';
-import { addDays, isoWeek, mondayOf, nextMeal, weekDates, weekdayIndex } from './schedule';
+import { addDays, isoWeek, mondayOf, nextMeal, skippedMeals, weekDates, weekdayIndex } from './schedule';
 import { alternativesFor, roundTo5 } from './substitutions';
 import { inRange, parseKg, trailingAverage, upsertWeight, weeklyChange } from './weight';
 import { validatePlan } from './validate';
@@ -68,6 +68,22 @@ describe('schedule', () => {
     expect(nextMeal(day, new Set())?.title).toBe('A');
     expect(nextMeal(day, new Set(['colazione']))?.title).toBe('B');
     expect(nextMeal(day, new Set(['colazione', 'pranzo', 'cena']))).toBeNull();
+  });
+
+  it('un pasto saltato non blocca "adesso"', () => {
+    const day = { meals: [
+      { slot: 'colazione', title: 'A', note: '', items: [] },
+      { slot: 'spuntinoMattino', title: 'S', note: '', items: [] },
+      { slot: 'pranzo', title: 'B', note: '', items: [] },
+      { slot: 'cena', title: 'C', note: '', items: [] },
+    ] as Meal[] };
+    // Colazione e spuntino saltati, pranzo fatto: adesso è la cena.
+    expect(nextMeal(day, new Set(['pranzo']))?.title).toBe('C');
+    expect(skippedMeals(day, new Set(['pranzo'])).map((m) => m.title)).toEqual(['A', 'S']);
+    // Cena fatta e colazione no: nessun pasto "adesso", la colazione è saltata.
+    expect(nextMeal(day, new Set(['spuntinoMattino', 'pranzo', 'cena']))).toBeNull();
+    expect(skippedMeals(day, new Set(['spuntinoMattino', 'pranzo', 'cena'])).map((m) => m.title)).toEqual(['A']);
+    expect(skippedMeals(day, new Set())).toEqual([]);
   });
 });
 

@@ -51,9 +51,23 @@ export function doneSlots(logs: readonly MealLog[], date: string): Set<Slot> {
   return new Set(logs.filter((l) => l.date === date).map((l) => l.slot));
 }
 
-// Il pasto "adesso" è il primo non ancora fatto, in ordine di giornata.
-// Non si guarda l'ora: se salti lo spuntino, resta lì finché non lo segni.
+// Il pasto "adesso" è il primo non fatto dopo l'ultimo pasto segnato.
+// Non si guarda l'ora: se salti la colazione e segni il pranzo, "adesso"
+// passa allo spuntino del pomeriggio e la colazione risulta saltata.
 export function nextMeal(day: Day | undefined, done: ReadonlySet<Slot>): Meal | null {
   if (!day) return null;
-  return sortMeals(day.meals).find((m) => !done.has(m.slot)) ?? null;
+  const meals = sortMeals(day.meals);
+  return meals.slice(lastDoneIndex(meals, done) + 1).find((m) => !done.has(m.slot)) ?? null;
+}
+
+// Pasti non segnati che vengono prima dell'ultimo pasto fatto.
+export function skippedMeals(day: Day | undefined, done: ReadonlySet<Slot>): Meal[] {
+  if (!day) return [];
+  const meals = sortMeals(day.meals);
+  return meals.slice(0, Math.max(0, lastDoneIndex(meals, done))).filter((m) => !done.has(m.slot));
+}
+
+function lastDoneIndex(meals: readonly Meal[], done: ReadonlySet<Slot>): number {
+  for (let i = meals.length - 1; i >= 0; i--) if (done.has(meals[i]!.slot)) return i;
+  return -1;
 }
