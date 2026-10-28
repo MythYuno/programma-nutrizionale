@@ -1,12 +1,13 @@
 import type { Slot } from '../domain/types';
 import { parseDate } from '../domain/schedule';
 
+// Ogni fascia ha il suo colore: lo stesso del fondo quando è il pasto di adesso.
 export const SLOT_COLOR: Record<Slot, string> = {
-  colazione: 'var(--orange)',
-  spuntinoMattino: 'var(--yellow)',
-  pranzo: 'var(--pink)',
-  spuntinoPomeriggio: 'var(--teal)',
-  cena: 'var(--indigo)',
+  colazione: 'var(--slot-colazione)',
+  spuntinoMattino: 'var(--slot-spuntinoMattino)',
+  pranzo: 'var(--slot-pranzo)',
+  spuntinoPomeriggio: 'var(--slot-spuntinoPomeriggio)',
+  cena: 'var(--slot-cena)',
 };
 
 const fmtLong = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });

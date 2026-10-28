@@ -1,107 +1,184 @@
-/* Palette di sistema iOS, chiara e scura. */
+/*
+  "Colore dell'ora": il fondo dell'app prende il colore del pasto che tocca
+  adesso (data-hour su <html>, impostato da App.svelte). Sopra il colore
+  stanno le schede, con un'ombra tinta dallo stesso colore.
+*/
 :root {
-  --bg: #f2f2f7;
+  /* Superfici e inchiostro delle schede */
   --card: #ffffff;
-  --card-2: #f2f2f7;
-  --text: #000000;
-  --text-2: #8e8e93;
-  --text-3: #c7c7cc;
-  --sep: rgba(60, 60, 67, 0.18);
-  --fill: rgba(118, 118, 128, 0.12);
-  --blue: #007aff;
-  --green: #34c759;
-  --red: #ff3b30;
-  --orange: #ff9500;
-  --yellow: #ffcc00;
-  --teal: #30b0c7;
-  --indigo: #5856d6;
-  --pink: #ff2d55;
-  --tabbar: rgba(249, 249, 249, 0.92);
-  --seg-on: #ffffff;
-  --shadow: 0 -6px 24px rgba(0, 0, 0, 0.12);
-  --radius: 14px;
+  --card-2: #f3f4f8;
+  --ink: #14182a;
+  --ink-2: #5b6072;
+  --ink-3: #9a9ead;
+  --sep: rgba(20, 24, 42, 0.09);
+  --fill: rgba(20, 24, 42, 0.06);
+  --danger: #c8332b;
+  --warn: #b35f00;
+
+  /* Colore di ogni fascia sulle schede (testo, segmenti, accenti) */
+  --slot-colazione: #a86b0e;
+  --slot-spuntinoMattino: #1f7f64;
+  --slot-pranzo: #2f63d6;
+  --slot-spuntinoPomeriggio: #6a4fc4;
+  --slot-cena: #2b3a7a;
+
+  /* Fondo per fascia: ground, testo sul fondo, fondo profondo (tab bar, ombre) */
+  --h-colazione: #f0b040;   --h-colazione-on: #3a2604;   --h-colazione-deep: #d99a2b;
+  --h-spuntinoMattino: #1f7f64; --h-spuntinoMattino-on: #ffffff; --h-spuntinoMattino-deep: #186b54;
+  --h-pranzo: #2f63d6;      --h-pranzo-on: #ffffff;      --h-pranzo-deep: #2554be;
+  --h-spuntinoPomeriggio: #7457cc; --h-spuntinoPomeriggio-on: #ffffff; --h-spuntinoPomeriggio-deep: #6247b6;
+  --h-cena: #1e2a5c;        --h-cena-on: #ffffff;        --h-cena-deep: #172149;
+
+  --radius-card: 24px;
+  --radius-row: 18px;
+  --radius-btn: 16px;
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   color-scheme: light dark;
+
+  --hour: var(--h-pranzo);
+  --on-hour: var(--h-pranzo-on);
+  --hour-deep: var(--h-pranzo-deep);
+  --act: var(--slot-pranzo);
+  --on-act: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #000000;
-    --card: #1c1c1e;
-    --card-2: #2c2c2e;
-    --text: #ffffff;
-    --text-2: #8e8e93;
-    --text-3: #48484a;
-    --sep: rgba(84, 84, 88, 0.6);
-    --fill: rgba(118, 118, 128, 0.24);
-    --blue: #0a84ff;
-    --green: #30d158;
-    --red: #ff453a;
-    --orange: #ff9f0a;
-    --yellow: #ffd60a;
-    --teal: #40c8e0;
-    --indigo: #5e5ce6;
-    --pink: #ff375f;
-    --tabbar: rgba(22, 22, 24, 0.92);
-    --seg-on: #636366;
-    --shadow: 0 -6px 24px rgba(0, 0, 0, 0.5);
+    /* In scuro le schede prendono una punta del colore dell'ora, per non staccare dal fondo. */
+    --card: color-mix(in srgb, var(--hour-deep) 38%, #16181f);
+    --card-2: color-mix(in srgb, var(--hour-deep) 28%, #101217);
+    --ink: #eef0f6;
+    --ink-2: #a3a8b8;
+    --ink-3: #636879;
+    --sep: rgba(238, 240, 246, 0.1);
+    --fill: rgba(238, 240, 246, 0.08);
+    --danger: #ff6b61;
+    --warn: #f0a040;
+
+    --slot-colazione: #f0b95a;
+    --slot-spuntinoMattino: #5ccba5;
+    --slot-pranzo: #7fa4f5;
+    --slot-spuntinoPomeriggio: #a993f0;
+    --slot-cena: #9aa8e8;
+
+    --h-colazione: #6b4a12;   --h-colazione-on: #ffffff;   --h-colazione-deep: #573c0e;
+    --h-spuntinoMattino: #124a3b; --h-spuntinoMattino-on: #ffffff; --h-spuntinoMattino-deep: #0d3a2e;
+    --h-pranzo: #16306b;      --h-pranzo-on: #ffffff;      --h-pranzo-deep: #112656;
+    --h-spuntinoPomeriggio: #33266b; --h-spuntinoPomeriggio-on: #ffffff; --h-spuntinoPomeriggio-deep: #281e56;
+    --h-cena: #0e1430;        --h-cena-on: #ffffff;        --h-cena-deep: #0a0f24;
+    --on-act: #0c1020;
   }
 }
 
+:root[data-hour='colazione'] { --hour: var(--h-colazione); --on-hour: var(--h-colazione-on); --hour-deep: var(--h-colazione-deep); --act: var(--slot-colazione); }
+:root[data-hour='spuntinoMattino'] { --hour: var(--h-spuntinoMattino); --on-hour: var(--h-spuntinoMattino-on); --hour-deep: var(--h-spuntinoMattino-deep); --act: var(--slot-spuntinoMattino); }
+:root[data-hour='pranzo'] { --hour: var(--h-pranzo); --on-hour: var(--h-pranzo-on); --hour-deep: var(--h-pranzo-deep); --act: var(--slot-pranzo); }
+:root[data-hour='spuntinoPomeriggio'] { --hour: var(--h-spuntinoPomeriggio); --on-hour: var(--h-spuntinoPomeriggio-on); --hour-deep: var(--h-spuntinoPomeriggio-deep); --act: var(--slot-spuntinoPomeriggio); }
+:root[data-hour='cena'] { --hour: var(--h-cena); --on-hour: var(--h-cena-on); --hour-deep: var(--h-cena-deep); --act: var(--slot-cena); }
+
+:root {
+  /* Derivati: testo attenuato sul fondo, velature e ombre tinte dal colore dell'ora */
+  --on-hour-2: color-mix(in srgb, var(--on-hour) 80%, var(--hour));
+  --veil: color-mix(in srgb, var(--on-hour) 13%, transparent);
+  --veil-2: color-mix(in srgb, var(--on-hour) 22%, transparent);
+  --shadow-card:
+    0 1px 2px color-mix(in srgb, var(--hour-deep) 30%, transparent),
+    0 22px 44px -18px color-mix(in srgb, var(--hour-deep) 85%, #000 15%);
+  --shadow-row: 0 1px 2px color-mix(in srgb, var(--hour-deep) 35%, transparent);
+  --shadow-btn: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 8px 16px -8px color-mix(in srgb, var(--act) 80%, transparent);
+}
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 17px; line-height: 1.3; -webkit-font-smoothing: antialiased; }
+html, body {
+  margin: 0; min-height: 100%;
+  background: var(--hour); color: var(--on-hour);
+  font-family: var(--font); font-size: 17px; line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.7s var(--ease-out), color 0.7s var(--ease-out);
+}
 body { overscroll-behavior-y: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
+::selection { background: color-mix(in srgb, var(--act) 28%, transparent); }
+input, textarea { caret-color: var(--act); }
+:focus-visible { outline: 2px solid var(--act); outline-offset: 2px; }
+.ground :focus-visible { outline-color: var(--on-hour); }
 
 .screen {
   max-width: 560px;
   margin: 0 auto;
-  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 96px);
+  padding: calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 104px);
 }
 
-.eyebrow { font-size: 13px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.02em; }
-.large-title { font-size: 34px; font-weight: 700; letter-spacing: 0.01em; margin: 2px 0 14px; }
-.section-title { font-size: 13px; font-weight: 400; color: var(--text-2); text-transform: uppercase; margin: 22px 16px 6px; }
-.section-foot { font-size: 13px; color: var(--text-2); margin: 6px 16px 0; }
+/* Testata sul fondo colorato: titolo grande, sotto la riga di contesto */
+.large-title { font-size: 34px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.05; margin: 0; }
+.subtitle { font-size: 15px; font-weight: 600; color: var(--on-hour-2); margin: 4px 0 18px; }
+.head-gap { margin-bottom: 18px; }
+.section-title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--on-hour); margin: 26px 4px 10px; }
+.section-foot { font-size: 13px; line-height: 1.4; color: var(--on-hour-2); margin: 8px 4px 0; }
+.card .section-foot, .sheet-body .section-foot { color: var(--ink-2); }
+.sheet-body .section-title { color: var(--ink); font-size: 15px; margin-top: 20px; }
 
-.card { background: var(--card); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
-.group { background: var(--card); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+.card {
+  background: var(--card); color: var(--ink);
+  border-radius: var(--radius-card); padding: 18px;
+  box-shadow: var(--shadow-card); margin-bottom: 14px;
+}
+.group {
+  background: var(--card); color: var(--ink);
+  border-radius: var(--radius-row); overflow: hidden; margin-bottom: 12px;
+  box-shadow: var(--shadow-row);
+}
 .row {
-  display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 10px 16px; width: 100%;
-  background: none; border: 0; text-align: left; position: relative;
+  display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 12px 16px; width: 100%;
+  background: none; border: 0; text-align: left; position: relative; color: inherit;
 }
-.row + .row::before { content: ''; position: absolute; top: 0; left: 16px; right: 0; border-top: 0.5px solid var(--sep); }
+.row + .row::before { content: ''; position: absolute; top: 0; left: 16px; right: 0; border-top: 1px solid var(--sep); }
 .row .grow { flex: 1; min-width: 0; }
-.row .value { color: var(--text-2); font-variant-numeric: tabular-nums; }
-.row .chev { color: var(--text-3); }
-button.row:active { background: var(--fill); }
+.row .value { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.row .chev { color: var(--ink-3); flex: none; }
+button.row:active, a.row:active { background: var(--fill); }
 
 .btn {
   display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
-  min-height: 50px; border: 0; border-radius: 12px; font-weight: 600; font-size: 17px;
-  background: var(--blue); color: #fff; transition: transform 0.12s ease, opacity 0.12s;
+  min-height: 54px; border: 0; border-radius: var(--radius-btn); font-weight: 700; font-size: 17px;
+  background: var(--act); color: var(--on-act); box-shadow: var(--shadow-btn);
+  text-decoration: none;
+  transition: transform 0.16s var(--ease-out), box-shadow 0.16s var(--ease-out), background-color 0.4s var(--ease-out);
 }
-.btn:active { transform: scale(0.98); opacity: 0.85; }
-.btn.green { background: var(--green); }
-.btn.tinted { background: var(--fill); color: var(--blue); }
-.btn.plain { background: none; color: var(--blue); min-height: 44px; font-weight: 400; }
-.btn.danger { background: none; color: var(--red); font-weight: 400; }
+.btn:active { transform: translateY(1px) scale(0.985); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18); }
+.btn.tinted { background: var(--fill); color: var(--act); box-shadow: none; }
+.btn.plain { background: none; color: var(--act); min-height: 44px; font-weight: 600; box-shadow: none; }
+.btn.danger { background: none; color: var(--danger); font-weight: 600; box-shadow: none; }
 .btn:disabled { opacity: 0.4; }
+/* Pulsante sul fondo colorato (fuori dalle schede) */
+.btn.on-ground { background: var(--card); color: var(--act); box-shadow: var(--shadow-row); }
 
-.link { background: none; border: 0; color: var(--blue); padding: 8px 0; font-size: 17px; }
+.link { background: none; border: 0; color: var(--act); padding: 8px 0; font-size: 17px; font-weight: 600; }
+.ground-link { background: none; border: 0; color: var(--on-hour); padding: 8px 0; font-size: 17px; font-weight: 600; }
 
-.muted { color: var(--text-2); }
+.icon-btn {
+  width: 40px; height: 40px; border-radius: 20px; border: 0; flex: none;
+  background: var(--veil); color: var(--on-hour); display: grid; place-items: center;
+}
+.icon-btn:disabled { opacity: 0.35; }
+
+.muted { color: var(--ink-2); }
 .small { font-size: 13px; }
 .num { font-variant-numeric: tabular-nums; }
 
 .field {
-  width: 100%; border: 0; border-radius: 10px; background: var(--fill); padding: 10px 12px; font-size: 17px;
-  outline: none;
+  width: 100%; border: 0; border-radius: 12px; background: var(--fill); padding: 12px 14px; font-size: 17px;
+  outline: none; color: var(--ink);
 }
-.field:focus { box-shadow: 0 0 0 2px var(--blue); }
+.field:focus { box-shadow: 0 0 0 2px var(--act); }
 
-.notice { background: color-mix(in srgb, var(--orange) 14%, var(--card)); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 12px; font-size: 15px; }
+.notice {
+  background: var(--card); color: var(--ink); border-radius: var(--radius-row);
+  padding: 12px 16px; margin-bottom: 12px; font-size: 15px; line-height: 1.4;
+  box-shadow: var(--shadow-row), inset 0 0 0 2px color-mix(in srgb, var(--warn) 55%, transparent);
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }

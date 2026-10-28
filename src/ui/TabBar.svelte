@@ -25,18 +25,19 @@
 </nav>
 
 <style>
+  /* La barra è un gradino più profondo del fondo: stesso colore, più scuro. */
   nav {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
     display: flex; justify-content: space-around;
-    padding: 6px 8px calc(env(safe-area-inset-bottom) + 4px);
-    background: var(--tabbar);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    border-top: 0.5px solid var(--sep);
+    padding: 8px 8px calc(env(safe-area-inset-bottom) + 6px);
+    background: var(--hour-deep);
+    box-shadow: 0 -1px 0 var(--veil);
+    transition: background-color 0.7s var(--ease-out);
   }
   a {
-    flex: 1; max-width: 120px; display: flex; flex-direction: column; align-items: center; gap: 2px;
-    color: var(--text-2); text-decoration: none; font-size: 10px; font-weight: 500; padding: 2px 0;
+    flex: 1; max-width: 120px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: color-mix(in srgb, var(--on-hour) 62%, var(--hour-deep));
+    text-decoration: none; font-size: 11px; font-weight: 600; padding: 2px 0;
   }
-  a.on { color: var(--blue); }
+  a.on { color: var(--on-hour); }
 </style>
