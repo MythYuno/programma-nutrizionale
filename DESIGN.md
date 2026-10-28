@@ -59,6 +59,12 @@ settimana) va sotto il titolo, in `.subtitle`.
   "Annulla" dopo aver eliminato una pesata).
 - Le note di un pasto nell'editor si modificano dal menu «···», non nella scheda.
 
+## Icona
+«Mela-agenda» in 3D lucido (scelta dell'utente il 28/10/2026): una mela verde
+la cui polpa è una pagina d'agenda ad anelli, con le righe nei colori dei
+pasti, su fondo miele. Sorgente `public/icon.svg`; `icon-180.png` e
+`icon-512.png` si generano da lì (Edge headless, 180 e 512 px).
+
 ## Regole
 - Dentro una scheda di un pasto `--act` diventa il colore di quella fascia.
 - I valori nutrizionali restano etichettati come stime.
