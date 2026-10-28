@@ -39,13 +39,15 @@
     </button>
   {/each}
   <button class="row add" onclick={() => (editing = -1)}><Plus size={18} weight="bold" /> Aggiungi alimento</button>
-
-  <textarea class="note" rows="2" placeholder="Note: condimenti liberi, preparazione, consigli…" bind:value={meal.note} oninput={() => editor.touch()}></textarea>
 </section>
 
 <ItemSheet {meal} bind:index={editing} />
 
 <Sheet bind:open={menu} title={SLOT_LABEL[meal.slot]}>
+  <!-- Le note si modificano da qui: nella scheda del pasto restano solo gli alimenti. -->
+  <label class="lab" for="note-{meal.slot}">Note e preparazione</label>
+  <textarea id="note-{meal.slot}" class="note" rows="4" placeholder="Condimenti liberi, preparazione, consigli…" bind:value={meal.note} oninput={() => editor.touch()}></textarea>
+
   <div class="group">
     <button class="row" onclick={() => { editor.applyMealToAllDays(meal.slot); menu = false; }}>
       <span class="grow">Usa questo pasto in tutti i giorni<br /><span class="muted small">Sostituisce {SLOT_LABEL[meal.slot].toLowerCase()} negli altri 6 giorni</span></span>
@@ -66,5 +68,7 @@
   .row.bad .grow { color: var(--danger); }
   .row.add { color: var(--act); gap: 8px; }
   .row.danger { color: var(--danger); }
-  .note { display: block; width: calc(100% - 24px); margin: 0 12px 12px; border: 0; border-radius: 12px; background: var(--fill); padding: 10px 12px; font-size: 15px; resize: vertical; outline: none; color: var(--ink); }
+  .lab { display: block; font-size: 14px; font-weight: 600; color: var(--ink-2); margin: 4px 4px 6px; }
+  .note { display: block; width: 100%; margin: 0 0 16px; border: 0; border-radius: 14px; background: var(--card); box-shadow: 0 0 0 1px var(--sep); padding: 12px 14px; font-size: 16px; line-height: 1.45; resize: vertical; outline: none; color: var(--ink); }
+  .note:focus { box-shadow: 0 0 0 2px var(--act); }
 </style>
