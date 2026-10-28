@@ -41,15 +41,20 @@ notifiche, più profili, App Store e Capacitor, sincronizzazione tra dispositivi
 
 ## 3. Direzione visiva
 
-Stile **"iOS nativo"** (scelta A nel companion visivo):
-- Sfondo `#F2F2F7`, schede bianche con raggio 14–16 px, separatori sottili.
-- Font di sistema (`-apple-system`, SF Pro); titoli grandi in stile iOS.
-- Tab bar in basso con 4 voci: **Oggi · Settimana · Peso · Piano**.
-- Colori di sistema iOS: verde `#34C759` per "Fatto", blu `#007AFF` per le azioni.
-  Ogni fascia di pasto ha un colore d'accento (per esempio pranzo arancio, cena indaco).
+**Aggiornamento del 28/10/2026:** lo stile "iOS nativo" (schede bianche su
+`#F2F2F7`, colori di sistema) è stato giudicato anonimo e sostituito dalla
+direzione **"Colore dell'ora"**, descritta in `DESIGN.md`:
+- Il fondo di tutta l'app ha il colore del pasto di adesso: miele (colazione),
+  menta (spuntino mattino), blu (pranzo), lavanda (spuntino pomeriggio), notte
+  (cena, e a giornata finita). Con "Fatto" il fondo sfuma nel colore dopo.
+- Sopra il colore, schede con ombra tinta dallo stesso colore; il pasto di
+  adesso è l'unica scheda grande, con i grammi in grande.
+- Font di sistema (`-apple-system`, SF Pro), pesi 600–800, cifre tabulari.
+- Tab bar in basso con 4 voci: **Oggi · Settimana · Peso · Piano**, un gradino
+  più scura del fondo.
 - Icone **Phosphor** (`phosphor-svelte`): peso *regular* per le cose da fare,
   *fill* per quelle fatte.
-- Modalità scura che segue il sistema, con la palette scura di iOS.
+- Modalità scura che segue il sistema, con gli stessi colori più profondi.
 - Rispetto di `safe-area-inset` e di `prefers-reduced-motion`; target di tocco ≥ 44 px.
 - Animazioni brevi: spunta su "Fatto", foglio che sale, cambio di scheda.
 
