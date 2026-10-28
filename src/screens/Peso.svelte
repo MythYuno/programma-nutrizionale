@@ -53,24 +53,23 @@
 </script>
 
 <main class="screen">
-  <h1 class="large-title top">Peso</h1>
+  <h1 class="large-title">Peso</h1>
+  {#if avg !== null}
+    <p class="subtitle">Media degli ultimi 7 giorni</p>
+    <div class="big num">
+      <span>{fmtKg(avg)}<span class="unit">kg</span></span>
+      {#if change !== null && Math.abs(change) >= 0.05}
+        <span class="delta">
+          {#if change < 0}<TrendDown size={16} weight="bold" />{:else}<TrendUp size={16} weight="bold" />{/if}
+          {change < 0 ? '−' : '+'}{fmtKg(Math.abs(change))} kg in una settimana
+        </span>
+      {/if}
+    </div>
+  {:else}
+    <p class="subtitle">Nessuna pesata negli ultimi 7 giorni</p>
+  {/if}
 
   <div class="card">
-    {#if avg !== null}
-      <span class="muted small">Media 7 giorni</span>
-      <div class="big num">
-        {fmtKg(avg)} kg
-        {#if change !== null && Math.abs(change) >= 0.05}
-          <span class="delta" class:down={change < 0}>
-            {#if change < 0}<TrendDown size={16} weight="bold" />{:else}<TrendUp size={16} weight="bold" />{/if}
-            {fmtKg(Math.abs(change))}
-          </span>
-        {/if}
-      </div>
-    {:else}
-      <span class="muted small">Nessuna pesata negli ultimi 7 giorni</span>
-    {/if}
-
     {#if points.length >= 2}
       <WeightChart {points} goal={app.settings.weightGoalKg} />
       <Segmented bind:value={range} options={[{ value: '1M', label: '1M' }, { value: '3M', label: '3M' }, { value: '1A', label: '1A' }, { value: 'Tutto', label: 'Tutto' }]} />
@@ -80,7 +79,7 @@
     {/if}
   </div>
 
-  <button class="btn" onclick={openAdd}><Plus size={20} weight="bold" /> Pesata</button>
+  <button class="btn on-ground" onclick={openAdd}><Plus size={20} weight="bold" /> Pesata</button>
 
   <div class="group goal">
     <button class="row" onclick={openGoal}>
@@ -123,19 +122,19 @@
 </Sheet>
 
 <style>
-  .top { margin-top: 18px; }
-  .big { font-size: 30px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .delta { display: inline-flex; align-items: center; gap: 2px; font-size: 15px; color: var(--orange); }
-  .delta.down { color: var(--green); }
-  .legend { display: flex; align-items: center; gap: 6px; margin: 0; }
+  /* Il numero del peso sta sul fondo colorato; il grafico in scheda. */
+  .big { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; font-size: 48px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; margin: -6px 4px 18px; }
+  .unit { font-size: 20px; font-weight: 700; letter-spacing: 0; margin-left: 4px; color: var(--on-hour-2); }
+  .delta { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; letter-spacing: 0; background: var(--veil); padding: 5px 10px; border-radius: 999px; }
+  .legend { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; }
   .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-left: 6px; }
-  .l-avg { background: var(--blue); }
-  .l-raw { background: var(--text-3); height: 6px !important; width: 6px !important; border-radius: 50% !important; }
-  .l-goal { background: repeating-linear-gradient(90deg, var(--green) 0 4px, transparent 4px 7px); }
+  .l-avg { background: var(--act); }
+  .l-raw { background: var(--ink-3); height: 6px !important; width: 6px !important; border-radius: 50% !important; }
+  .l-goal { background: repeating-linear-gradient(90deg, var(--ink) 0 4px, transparent 4px 7px); }
   .goal { margin-top: 12px; }
-  .del { border: 0; background: none; color: var(--red); padding: 6px; margin-right: -6px; display: flex; }
-  .lab { display: block; font-size: 13px; color: var(--text-2); margin: 10px 4px 6px; text-transform: uppercase; }
-  .big-field { font-size: 28px; font-weight: 600; }
-  .err { color: var(--red); font-size: 15px; }
-  .btn { margin-top: 4px; }
+  .del { border: 0; background: none; color: var(--danger); padding: 8px; margin-right: -8px; display: flex; }
+  .lab { display: block; font-size: 14px; font-weight: 600; color: var(--ink-2); margin: 12px 4px 6px; }
+  .big-field { font-size: 30px; font-weight: 750; }
+  .err { color: var(--danger); font-size: 15px; }
+  .btn { margin-top: 6px; }
 </style>

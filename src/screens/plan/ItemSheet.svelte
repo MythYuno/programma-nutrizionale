@@ -110,11 +110,11 @@
 
 <style>
   .g { width: 80px; border: 0; background: var(--fill); border-radius: 8px; padding: 6px 8px; text-align: right; outline: none; font-size: 17px; }
-  .pick { border: 0; background: none; text-align: left; padding: 0; color: var(--blue); font-size: 17px; }
-  .x { border: 0; background: none; color: var(--text-2); display: flex; padding: 4px; }
-  .add { color: var(--blue); gap: 8px; }
-  .err { color: var(--red); font-size: 15px; }
+  .pick { border: 0; background: none; text-align: left; padding: 0; color: var(--act); font-size: 17px; }
+  .x { border: 0; background: none; color: var(--ink-2); display: flex; padding: 4px; }
+  .add { color: var(--act); gap: 8px; }
+  .err { color: var(--danger); font-size: 15px; }
   .more { display: flex; justify-content: space-between; margin-top: 8px; }
-  .more .link:disabled { color: var(--text-3); }
-  .danger { color: var(--red); }
+  .more .link:disabled { color: var(--ink-3); }
+  .danger { color: var(--danger); }
 </style>

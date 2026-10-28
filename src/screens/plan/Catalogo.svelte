@@ -30,10 +30,10 @@
 </script>
 
 <main class="screen">
-  <button class="back link" onclick={() => router.back('piano')}><CaretLeft size={20} /> Piano</button>
+  <button class="back ground-link" onclick={() => router.back('piano')}><CaretLeft size={20} /> Piano</button>
   <div class="top">
     <h1 class="large-title">Alimenti</h1>
-    <button class="add" aria-label="Nuovo alimento" onclick={() => edit(null)}><Plus size={22} weight="bold" /></button>
+    <button class="icon-btn" aria-label="Nuovo alimento" onclick={() => edit(null)}><Plus size={22} weight="bold" /></button>
   </div>
 
   <label class="search">
@@ -52,7 +52,7 @@
       {/each}
     </div>
   {:else}
-    <p class="muted center">Nessun alimento trovato.</p>
+    <p class="center empty">Nessun alimento trovato.</p>
   {/each}
   <p class="section-foot">Valori per 100 g di parte edibile a crudo. Quelli delle tabelle sono stime indicative: correggili con l'etichetta quando serve.</p>
 </main>
@@ -64,11 +64,11 @@
 </Sheet>
 
 <style>
-  .back { display: flex; align-items: center; gap: 2px; margin-left: -6px; padding: 4px 0 6px; }
-  .top { display: flex; align-items: center; justify-content: space-between; }
-  .add { width: 40px; height: 40px; border-radius: 20px; border: 0; background: var(--fill); color: var(--blue); display: grid; place-items: center; }
-  .search { display: flex; align-items: center; gap: 8px; background: var(--fill); border-radius: 10px; padding: 8px 10px; color: var(--text-2); }
-  .search input { flex: 1; border: 0; background: none; outline: none; font-size: 17px; color: var(--text); }
-  .tag { margin-left: 8px; font-size: 11px; font-weight: 600; color: var(--blue); background: var(--fill); padding: 1px 6px; border-radius: 6px; }
+  .back { display: flex; align-items: center; gap: 4px; margin-left: -4px; padding: 0 0 8px; }
+  .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .empty { color: var(--on-hour-2); }
+  .search { display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 14px; padding: 11px 14px; color: var(--ink-2); box-shadow: var(--shadow-row); }
+  .search input { flex: 1; border: 0; background: none; outline: none; font-size: 17px; color: var(--ink); }
+  .tag { margin-left: 8px; font-size: 11px; font-weight: 600; color: var(--act); background: var(--fill); padding: 1px 6px; border-radius: 6px; }
   .center { text-align: center; }
 </style>

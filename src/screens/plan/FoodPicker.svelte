@@ -36,8 +36,8 @@
 {/if}
 
 <style>
-  .search { display: flex; align-items: center; gap: 8px; background: var(--fill); border-radius: 10px; padding: 8px 10px; margin-bottom: 12px; color: var(--text-2); }
-  .search input { flex: 1; border: 0; background: none; outline: none; font-size: 17px; color: var(--text); }
+  .search { display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; color: var(--ink-2); box-shadow: 0 0 0 1px var(--sep); }
+  .search input { flex: 1; border: 0; background: none; outline: none; font-size: 17px; color: var(--ink); }
   .list { max-height: 50vh; overflow-y: auto; }
   .empty { padding: 16px; text-align: center; }
 </style>

@@ -27,16 +27,16 @@
 
 <svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="Andamento del peso">
   {#each geo.ticks as k (k)}
-    <line x1={PAD.l} x2={W - PAD.r} y1={geo.y(k)} y2={geo.y(k)} stroke="var(--sep)" stroke-width="0.5" />
-    <text x={PAD.l - 6} y={geo.y(k)} text-anchor="end" dominant-baseline="central" font-size="10" fill="var(--text-2)">{fmtKg(k)}</text>
+    <line x1={PAD.l} x2={W - PAD.r} y1={geo.y(k)} y2={geo.y(k)} stroke="var(--sep)" stroke-width="1" />
+    <text x={PAD.l - 6} y={geo.y(k)} text-anchor="end" dominant-baseline="central" font-size="10" fill="var(--ink-2)">{fmtKg(k)}</text>
   {/each}
   {#if goal !== null}
-    <line x1={PAD.l} x2={W - PAD.r} y1={geo.y(goal)} y2={geo.y(goal)} stroke="var(--green)" stroke-width="1.5" stroke-dasharray="4 4" />
+    <line x1={PAD.l} x2={W - PAD.r} y1={geo.y(goal)} y2={geo.y(goal)} stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="4 4" />
   {/if}
-  {#each raw as d, i (i)}<circle cx={d.cx} cy={d.cy} r="2.5" fill="var(--text-3)" />{/each}
-  <path d={avgPath} fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+  {#each raw as d, i (i)}<circle cx={d.cx} cy={d.cy} r="2.5" fill="var(--ink-3)" />{/each}
+  <path d={avgPath} fill="none" stroke="var(--act)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" />
   {#if points.length}
-    <text x={PAD.l} y={H - 4} font-size="10" fill="var(--text-2)">{dayMonth(points[0]!.date)}</text>
-    <text x={W - PAD.r} y={H - 4} font-size="10" fill="var(--text-2)" text-anchor="end">{dayMonth(points[points.length - 1]!.date)}</text>
+    <text x={PAD.l} y={H - 4} font-size="10" fill="var(--ink-2)">{dayMonth(points[0]!.date)}</text>
+    <text x={W - PAD.r} y={H - 4} font-size="10" fill="var(--ink-2)" text-anchor="end">{dayMonth(points[points.length - 1]!.date)}</text>
   {/if}
 </svg>

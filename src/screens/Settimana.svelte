@@ -3,9 +3,10 @@
   import CaretRight from 'phosphor-svelte/lib/CaretRight';
   import { app } from '../state/app.svelte';
   import { router } from '../state/router.svelte';
-  import { addDays, isoWeek, mondayOf, weekDates, weekdayIndex } from '../domain/schedule';
+  import { addDays, isoWeek, mondayOf, sortMeals, weekDates, weekdayIndex } from '../domain/schedule';
   import { fmtNumber, sumMacro } from '../domain/nutrition';
   import { dayMonth, shortDate } from '../ui/format';
+  import DayStrip from '../ui/DayStrip.svelte';
 
   let { week }: { week?: string } = $props();
 
@@ -14,10 +15,11 @@
   const isCurrent = $derived(mondayOf(anchor) === mondayOf(app.today));
 
   const rows = $derived(dates.map((date) => {
-    const meals = app.plan?.days[weekdayIndex(date)]?.meals ?? [];
+    const meals = sortMeals(app.plan?.days[weekdayIndex(date)]?.meals ?? []);
     const done = app.done(date);
     const eaten = sumMacro(meals.filter((m) => done.has(m.slot)), app.foodIndex);
-    return { date, total: meals.length, done: meals.filter((m) => done.has(m.slot)).length, kcal: eaten.kcal };
+    const segments = meals.map((m) => ({ slot: m.slot, done: done.has(m.slot) }));
+    return { date, total: meals.length, done: segments.filter((s) => s.done).length, kcal: eaten.kcal, segments };
   }));
   const past = $derived(rows.filter((r) => r.date <= app.today));
   const doneCount = $derived(past.reduce((s, r) => s + r.done, 0));
@@ -28,32 +30,31 @@
 </script>
 
 <main class="screen">
-  <div class="eyebrow">Settimana {isoWeek(anchor).split('-W')[1]} · {dayMonth(dates[0]!)} – {dayMonth(dates[6]!)}</div>
   <div class="title-row">
     <h1 class="large-title">Settimana</h1>
     <div class="nav">
-      <button class="icon" aria-label="Settimana precedente" onclick={() => goWeek(-1)}><CaretLeft size={22} /></button>
-      <button class="icon" aria-label="Settimana successiva" disabled={isCurrent} onclick={() => goWeek(1)}><CaretRight size={22} /></button>
+      <button class="icon-btn" aria-label="Settimana precedente" onclick={() => goWeek(-1)}><CaretLeft size={22} weight="bold" /></button>
+      <button class="icon-btn" aria-label="Settimana successiva" disabled={isCurrent} onclick={() => goWeek(1)}><CaretRight size={22} weight="bold" /></button>
     </div>
   </div>
+  <p class="subtitle">Settimana {isoWeek(anchor).split('-W')[1]}, dal {dayMonth(dates[0]!)} al {dayMonth(dates[6]!)}</p>
 
-  <div class="card adherence">
-    <span class="muted small">Aderenza {isCurrent ? 'finora' : 'della settimana'}</span>
-    <div class="big num">{doneCount}<small>/{totalCount} pasti</small></div>
+  <div class="adherence">
+    <div class="big num">{doneCount}<span>di {totalCount} pasti {isCurrent ? 'finora' : 'nella settimana'}</span></div>
     <div class="bar"><i style="width:{totalCount ? (doneCount / totalCount) * 100 : 0}%"></i></div>
   </div>
 
   <div class="group">
     {#each rows as r (r.date)}
-      <button class="row" onclick={() => router.go('giorno/' + r.date)}>
-        <span class="grow" class:today={r.date === app.today}>{shortDate(r.date)}{r.date === app.today ? ' · oggi' : ''}</span>
-        {#if r.date <= app.today || r.done}
-          <span class="value">{r.done}/{r.total}{r.done ? ` · ${fmtNumber(r.kcal)} kcal` : ''}</span>
-        {/if}
-        <span class="dots" aria-hidden="true">
-          {#each Array(r.total) as _, i (i)}<i class:on={i < r.done}></i>{/each}
+      <button class="row day" class:today={r.date === app.today} onclick={() => router.go('giorno/' + r.date)}>
+        <span class="grow">
+          <span class="name">{shortDate(r.date)}{#if r.date === app.today}<span class="pill">oggi</span>{/if}</span>
+          {#if r.total}<DayStrip segments={r.segments} size="sm" />{/if}
         </span>
-        <CaretRight size={16} class="chev" />
+        {#if r.date <= app.today || r.done}
+          <span class="value"><b>{r.done}/{r.total}</b>{#if r.done}<br /><span class="small">{fmtNumber(r.kcal)} kcal</span>{/if}</span>
+        {/if}
+        <CaretRight size={16} weight="bold" class="chev" />
       </button>
     {/each}
   </div>
@@ -63,23 +64,25 @@
     <h2 class="section-title">Storico della versione precedente</h2>
     <div class="group">
       {#each legacy as w (w.week)}
-        <div class="row"><span class="grow">Settimana {w.week.split('-W')[1]} · {w.week.slice(0, 4)}</span><span class="value">{w.done}/{w.total}</span></div>
+        <div class="row"><span class="grow">Settimana {w.week.split('-W')[1]} del {w.week.slice(0, 4)}</span><span class="value">{w.done}/{w.total}</span></div>
       {/each}
     </div>
   {/if}
 </main>
 
 <style>
-  .title-row { display: flex; align-items: center; justify-content: space-between; }
-  .nav { display: flex; gap: 4px; }
-  .icon { width: 40px; height: 40px; border-radius: 20px; border: 0; background: var(--fill); color: var(--blue); display: grid; place-items: center; }
-  .icon:disabled { color: var(--text-3); }
-  .big { font-size: 28px; font-weight: 700; }
-  .big small { font-size: 15px; font-weight: 400; color: var(--text-2); }
-  .bar { height: 6px; border-radius: 3px; background: var(--fill); margin-top: 8px; overflow: hidden; }
-  .bar i { display: block; height: 100%; background: var(--green); border-radius: 3px; transition: width 0.4s; }
-  .today { font-weight: 600; color: var(--blue); }
-  .dots { display: flex; gap: 3px; }
-  .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--fill); }
-  .dots i.on { background: var(--green); }
+  .title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .nav { display: flex; gap: 8px; }
+  .adherence { padding: 0 4px 18px; }
+  .big { font-size: 40px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
+  .big span { font-size: 15px; font-weight: 600; letter-spacing: 0; color: var(--on-hour-2); margin-left: 8px; }
+  .bar { height: 8px; border-radius: 4px; background: var(--veil-2); margin-top: 12px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--on-hour); border-radius: 4px; transition: width 0.5s var(--ease-out); }
+  .day { min-height: 64px; }
+  .day .grow { display: flex; flex-direction: column; gap: 8px; }
+  .name { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .today .name { color: var(--act); }
+  .pill { font-size: 12px; font-weight: 700; color: var(--act); background: color-mix(in srgb, var(--act) 12%, transparent); padding: 2px 8px; border-radius: 999px; }
+  .value { text-align: right; line-height: 1.25; }
+  .value b { color: var(--ink); font-weight: 700; }
 </style>

@@ -1,13 +1,12 @@
 <script lang="ts">
   import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
-  import Confetti from 'phosphor-svelte/lib/Confetti';
   import { app } from '../state/app.svelte';
   import { router } from '../state/router.svelte';
   import type { PlanItem } from '../domain/types';
   import { nextMeal, sortMeals, weekdayIndex } from '../domain/schedule';
   import { fmtNumber, rounded, sumMacro } from '../domain/nutrition';
   import { longDate, weekdayName } from '../ui/format';
-  import Ring from '../ui/Ring.svelte';
+  import DayStrip from '../ui/DayStrip.svelte';
   import MealCard from './MealCard.svelte';
   import SubsSheet from './SubsSheet.svelte';
 
@@ -21,16 +20,17 @@
   const planned = $derived(rounded(sumMacro(meals, app.foodIndex)));
   const eaten = $derived(rounded(sumMacro(meals.filter((m) => done.has(m.slot)), app.foodIndex)));
   const rest = $derived(meals.filter((m) => m.slot !== now?.slot));
+  const segments = $derived(meals.map((m) => ({ slot: m.slot, done: done.has(m.slot), current: m.slot === now?.slot })));
 
   let subsItem = $state<PlanItem | null>(null);
 </script>
 
 <main class="screen">
   {#if !isToday}
-    <button class="back link" onclick={() => router.back('settimana')}><CaretLeft size={20} /> Settimana</button>
+    <button class="back ground-link" onclick={() => router.back('settimana')}><CaretLeft size={20} weight="bold" /> Settimana</button>
   {/if}
-  <div class="eyebrow">{longDate(date)}</div>
   <h1 class="large-title">{isToday ? 'Oggi' : weekdayName(date)}</h1>
+  <p class="subtitle">{longDate(date)}</p>
 
   {#each app.notices as n, i (i)}<div class="notice">{n}</div>{/each}
 
@@ -44,20 +44,24 @@
       <MealCard meal={now} done={false} hero onToggle={() => app.toggleMeal(date, now.slot)} onSubs={(it) => (subsItem = it)} />
     {:else if isToday && meals.length}
       <div class="card complete">
-        <Confetti size={32} color="var(--green)" />
-        <div><b>Giornata completata</b><br /><span class="muted small">Tutti i pasti del piano sono segnati.</span></div>
+        <h2>Giornata completata</h2>
+        <p class="muted">Tutti i pasti del piano sono segnati.</p>
       </div>
     {/if}
 
-    <div class="card totals">
-      <Ring value={planned.kcal ? eaten.kcal / planned.kcal : 0} label="{Math.round(planned.kcal ? (eaten.kcal / planned.kcal) * 100 : 0)}%" />
-      <div class="grid">
-        <div><span class="muted small">kcal</span><b class="num">{fmtNumber(eaten.kcal)}<small>/{fmtNumber(planned.kcal)}</small></b></div>
-        <div><span class="muted small">Proteine</span><b class="num">{eaten.p}<small>/{planned.p} g</small></b></div>
-        <div><span class="muted small">Carboidrati</span><b class="num">{eaten.c}<small>/{planned.c} g</small></b></div>
-        <div><span class="muted small">Grassi</span><b class="num">{eaten.f}<small>/{planned.f} g</small></b></div>
+    {#if meals.length}
+      <div class="totals">
+        <DayStrip {segments} ground />
+        <div class="figures">
+          <div class="kcal"><b class="num">{fmtNumber(eaten.kcal)}</b><span class="num">di {fmtNumber(planned.kcal)} kcal</span></div>
+          <dl>
+            <div><dt>Proteine</dt><dd class="num">{eaten.p}<span>/{planned.p} g</span></dd></div>
+            <div><dt>Carboidrati</dt><dd class="num">{eaten.c}<span>/{planned.c} g</span></dd></div>
+            <div><dt>Grassi</dt><dd class="num">{eaten.f}<span>/{planned.f} g</span></dd></div>
+          </dl>
+        </div>
       </div>
-    </div>
+    {/if}
 
     {#if rest.length}
       <h2 class="section-title">{now ? 'Il resto della giornata' : 'Pasti'}</h2>
@@ -72,13 +76,20 @@
 <SubsSheet bind:item={subsItem} />
 
 <style>
-  .back { display: flex; align-items: center; gap: 2px; margin-left: -6px; padding: 4px 0 6px; }
+  .back { display: flex; align-items: center; gap: 4px; margin-left: -4px; padding: 0 0 8px; }
   .empty { text-align: center; }
-  .empty .btn { text-decoration: none; margin-top: 8px; }
-  .complete { display: flex; align-items: center; gap: 14px; }
-  .totals { display: flex; align-items: center; gap: 16px; }
-  .grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
-  .grid div { display: flex; flex-direction: column; }
-  .grid b { font-size: 17px; }
-  .grid small { font-weight: 400; color: var(--text-2); font-size: 13px; }
+  .empty .btn { margin-top: 10px; }
+  .complete h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; color: var(--act); }
+  .complete p { margin: 0; }
+
+  /* I totali stanno sul fondo, senza scheda: la scheda resta solo al pasto di adesso. */
+  .totals { padding: 4px 4px 0; }
+  .figures { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 14px; margin-top: 12px; }
+  .kcal b { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; }
+  .kcal span { font-size: 15px; font-weight: 600; color: var(--on-hour-2); margin-left: 4px; }
+  dl { display: flex; gap: 14px; margin: 0; }
+  dl div { display: flex; flex-direction: column; }
+  dt { font-size: 12px; font-weight: 600; color: var(--on-hour-2); }
+  dd { margin: 0; font-size: 16px; font-weight: 750; }
+  dd span { font-size: 12px; font-weight: 600; color: var(--on-hour-2); }
 </style>

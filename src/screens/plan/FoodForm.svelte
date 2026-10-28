@@ -84,9 +84,9 @@
 {/if}
 
 <style>
-  .lab { width: 92px; color: var(--text-2); }
+  .lab { width: 92px; color: var(--ink-2); }
   .in { border: 0; background: none; outline: none; font-size: 17px; }
   .n { width: 80px; border: 0; background: var(--fill); border-radius: 8px; padding: 6px 8px; text-align: right; outline: none; font-size: 17px; }
-  .u { width: 32px; color: var(--text-2); }
-  .err { color: var(--red); font-size: 15px; }
+  .u { width: 32px; color: var(--ink-2); }
+  .err { color: var(--danger); font-size: 15px; }
 </style>

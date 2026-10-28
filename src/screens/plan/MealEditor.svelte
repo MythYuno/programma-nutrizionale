@@ -55,15 +55,16 @@
 </Sheet>
 
 <style>
-  .group.issue { box-shadow: 0 0 0 2px var(--red); }
-  .head { display: flex; align-items: center; gap: 8px; padding: 10px 8px 0 16px; }
-  .slot { flex: 1; color: var(--accent); font-size: 13px; font-weight: 700; text-transform: uppercase; }
-  .icon { border: 0; background: none; color: var(--blue); width: 36px; height: 32px; display: grid; place-items: center; }
-  .title { width: 100%; border: 0; background: none; outline: none; padding: 4px 16px 8px; font-size: 20px; font-weight: 600; }
-  .title::placeholder { color: var(--text-3); font-weight: 500; }
-  .subs { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; font-size: 12px; color: var(--blue); }
-  .row.bad .grow { color: var(--red); }
-  .row.add { color: var(--blue); gap: 8px; }
-  .row.danger { color: var(--red); }
-  .note { display: block; width: calc(100% - 24px); margin: 0 12px 12px; border: 0; border-radius: 10px; background: var(--fill); padding: 8px 10px; font-size: 15px; resize: vertical; outline: none; }
+  .group { --act: var(--accent); border-radius: var(--radius-card); box-shadow: var(--shadow-card); margin-bottom: 14px; }
+  .group.issue { box-shadow: var(--shadow-card), 0 0 0 2px var(--danger); }
+  .head { display: flex; align-items: center; gap: 8px; padding: 14px 8px 0 16px; }
+  .slot { flex: 1; color: var(--accent); font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+  .icon { border: 0; background: none; color: var(--act); width: 36px; height: 32px; display: grid; place-items: center; }
+  .title { width: 100%; border: 0; background: none; outline: none; padding: 2px 16px 8px; font-size: 19px; font-weight: 650; color: var(--ink); }
+  .title::placeholder { color: var(--ink-3); font-weight: 500; }
+  .subs { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; font-size: 12px; color: var(--act); }
+  .row.bad .grow { color: var(--danger); }
+  .row.add { color: var(--act); gap: 8px; }
+  .row.danger { color: var(--danger); }
+  .note { display: block; width: calc(100% - 24px); margin: 0 12px 12px; border: 0; border-radius: 12px; background: var(--fill); padding: 10px 12px; font-size: 15px; resize: vertical; outline: none; color: var(--ink); }
 </style>

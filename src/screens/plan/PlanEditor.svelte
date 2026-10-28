@@ -36,8 +36,8 @@
     <h1 class="large-title">Piano</h1>
     {#if editor.dirty}
       <div class="actions">
-        <button class="link" onclick={() => editor.reset()}>Annulla</button>
-        <button class="btn save" onclick={save}>Salva</button>
+        <button class="ground-link" onclick={() => editor.reset()}>Annulla</button>
+        <button class="btn on-ground save" onclick={save}>Salva</button>
       </div>
     {:else if saved}
       <span class="ok">Salvato ✓</span>
@@ -60,17 +60,17 @@
       </label>
     </div>
 
-    <Segmented bind:value={() => String(editor.day), (v) => (editor.day = Number(v))} options={dayOptions} />
+    <Segmented ground bind:value={() => String(editor.day), (v) => (editor.day = Number(v))} options={dayOptions} />
 
     <div class="day-head">
-      <span><b>{DAY_NAMES[editor.day]}</b> <span class="muted num">· {fmtNumber(total.kcal)} kcal · P {total.p} · C {total.c} · G {total.f}</span></span>
-      <button class="link small-link" onclick={openCopy}><Copy size={16} /> Copia su…</button>
+      <span class="dh"><b>{DAY_NAMES[editor.day]}</b><span class="tot num">{fmtNumber(total.kcal)} kcal · P {total.p} · C {total.c} · G {total.f}</span></span>
+      <button class="ground-link small-link" onclick={openCopy}><Copy size={16} /> Copia su…</button>
     </div>
 
     {#each editor.meals as meal (meal.slot)}
       <MealEditor slot={meal.slot} />
     {:else}
-      <p class="muted center">Nessun pasto in questo giorno.</p>
+      <p class="center empty">Nessun pasto in questo giorno.</p>
     {/each}
 
     {#if editor.missingSlots().length}
@@ -105,11 +105,15 @@
 </Sheet>
 
 <style>
-  .top { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
-  .top .large-title { margin: 0 0 14px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+
   .actions { display: flex; align-items: center; gap: 14px; }
   .save { width: auto; min-height: 36px; padding: 0 18px; border-radius: 18px; font-size: 15px; }
-  .ok { color: var(--green); font-weight: 600; }
+  .ok { color: var(--on-hour); font-weight: 700; }
+  .dh { display: flex; flex-direction: column; gap: 2px; }
+  .dh b { font-size: 20px; font-weight: 800; letter-spacing: -0.015em; }
+  .tot { color: var(--on-hour-2); font-weight: 600; font-size: 14px; }
+  .empty { color: var(--on-hour-2); }
   .notice ul { margin: 6px 0 0; padding-left: 18px; }
   .inline { border: 0; background: none; outline: none; text-align: right; font-size: 17px; }
   a.row { color: inherit; text-decoration: none; }
@@ -117,6 +121,6 @@
   .small-link { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; white-space: nowrap; }
   .center { text-align: center; }
   .add-meal { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; }
-  .chip { display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 16px; background: var(--fill); color: var(--blue); padding: 8px 12px; font-size: 15px; }
-  .badge { background: var(--orange); color: #fff; border-radius: 10px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 999px; background: var(--veil); color: var(--on-hour); padding: 9px 14px; font-size: 15px; font-weight: 600; }
+  .badge { background: var(--warn); color: #fff; border-radius: 10px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
 </style>

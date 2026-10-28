@@ -64,5 +64,5 @@
 
 <style>
   .empty { padding: 16px; text-align: center; }
-  a { color: var(--blue); }
+  a { color: var(--act); }
 </style>

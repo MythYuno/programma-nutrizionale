@@ -69,15 +69,15 @@
 </script>
 
 <main class="screen">
-  <button class="back link" onclick={() => router.back('piano')}><CaretLeft size={20} /> Piano</button>
+  <button class="back ground-link" onclick={() => router.back('piano')}><CaretLeft size={20} /> Piano</button>
   <h1 class="large-title">Backup</h1>
 
   {#if message}<div class="card ok">{message}</div>{/if}
   {#if error}<div class="notice">{error}</div>{/if}
 
   <div class="group">
-    <button class="row" onclick={doExport}><DownloadSimple size={22} color="var(--blue)" /><span class="grow">Esporta backup</span></button>
-    <button class="row" onclick={() => fileInput.click()}><UploadSimple size={22} color="var(--blue)" /><span class="grow">Importa backup…</span></button>
+    <button class="row" onclick={doExport}><DownloadSimple size={22} color="var(--act)" /><span class="grow">Esporta backup</span></button>
+    <button class="row" onclick={() => fileInput.click()}><UploadSimple size={22} color="var(--act)" /><span class="grow">Importa backup…</span></button>
   </div>
   <input bind:this={fileInput} type="file" accept="application/json,.json" hidden onchange={onFile} />
   <p class="section-foot">
@@ -120,7 +120,8 @@
 </Sheet>
 
 <style>
-  .back { display: flex; align-items: center; gap: 2px; margin-left: -6px; padding: 4px 0 6px; }
-  .ok { color: var(--green); font-weight: 600; }
-  .danger { color: var(--red); }
+  .back { display: flex; align-items: center; gap: 4px; margin-left: -4px; padding: 0 0 8px; }
+  .large-title { margin-bottom: 18px; }
+  .ok { color: var(--act); font-weight: 600; }
+  .danger { color: var(--danger); }
 </style>

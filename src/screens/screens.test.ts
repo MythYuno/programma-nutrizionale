@@ -22,9 +22,9 @@ beforeEach(async () => {
 describe('Oggi', () => {
   it('mostra il primo pasto e lo segna come fatto', async () => {
     render(DayView, { date: DATE });
-    expect(screen.getByText('Adesso · Colazione')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Colazione' })).toBeInTheDocument();
     await fireEvent.click(screen.getByRole('button', { name: 'Fatto' }));
-    await waitFor(() => expect(screen.getByText('Adesso · Spuntino mattino')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Spuntino mattino' })).toBeInTheDocument());
     expect(await db.mealLogs.get([DATE, 'colazione'])).toBeTruthy();
   });
 });
