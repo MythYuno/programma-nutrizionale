@@ -36,7 +36,7 @@
   .grab { width: 38px; height: 5px; border-radius: 3px; background: var(--ink-3); opacity: 0.6; margin: 8px auto 0; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 18px 6px; }
   h2 { font-size: 19px; font-weight: 750; letter-spacing: -0.01em; margin: 0; }
-  .body { overflow-y: auto; padding: 4px 16px 22px; }
+  .body { overflow-y: auto; overscroll-behavior: contain; padding: 4px 16px 22px; }
   /* Nel foglio le righe stanno su un piano già sollevato: niente ombra, solo bordo. */
   .body :global(.group) { box-shadow: 0 0 0 1px var(--sep); }
 </style>

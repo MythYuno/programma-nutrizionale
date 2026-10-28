@@ -90,6 +90,8 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* Niente ritardo del doppio tocco su iOS. */
+html { touch-action: manipulation; }
 html, body {
   margin: 0; min-height: 100%;
   background: var(--hour); color: var(--on-hour);

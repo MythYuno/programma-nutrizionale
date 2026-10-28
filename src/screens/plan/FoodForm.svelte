@@ -55,7 +55,7 @@
 </script>
 
 <div class="group">
-  <label class="row"><span class="lab">Nome</span><input class="grow in" bind:value={name} placeholder="es. Seppia" /></label>
+  <label class="row"><span class="lab">Nome</span><input class="grow in" bind:value={name} placeholder="Per esempio Seppia" /></label>
   <label class="row"><span class="lab">Categoria</span><input class="grow in" list="cats" bind:value={category} /></label>
 </div>
 <datalist id="cats">{#each categories as c (c)}<option value={c}></option>{/each}</datalist>

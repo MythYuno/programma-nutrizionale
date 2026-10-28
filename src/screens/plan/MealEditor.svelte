@@ -29,7 +29,7 @@
     <span class="muted num small">{fmtNumber(kcal)} kcal</span>
     <button class="icon" aria-label="Opzioni {SLOT_LABEL[meal.slot]}" onclick={() => (menu = true)}><DotsThree size={22} weight="bold" /></button>
   </div>
-  <input class="title" placeholder="Nome del pasto (es. Pasta e ceci)" bind:value={meal.title} oninput={() => editor.touch()} />
+  <input class="title" placeholder="Nome del pasto, per esempio Pasta e ceci" bind:value={meal.title} oninput={() => editor.touch()} />
 
   {#each meal.items as it, i (i)}
     <button class="row" class:bad={hasIssue(i)} onclick={() => (editing = i)}>

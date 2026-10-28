@@ -100,7 +100,7 @@
       {/if}
     {/each}
   </div>
-  <p class="section-foot">I pasti dei giorni scelti vengono sostituiti. Le modifiche diventano effettive solo con "Salva".</p>
+  <p class="section-foot">I pasti dei giorni scelti vengono sostituiti. Le modifiche diventano effettive solo con «Salva».</p>
   <button class="btn" disabled={!targets.length} onclick={() => { editor.copyDayTo(targets); copying = false; }}>Copia su {targets.length} {targets.length === 1 ? 'giorno' : 'giorni'}</button>
 </Sheet>
 

@@ -38,7 +38,7 @@
 
   <label class="search">
     <MagnifyingGlass size={18} />
-    <input placeholder="Cerca" bind:value={q} aria-label="Cerca alimento" />
+    <input placeholder="Cerca…" autocomplete="off" bind:value={q} aria-label="Cerca alimento" />
   </label>
 
   {#each groups as [cat, foods] (cat)}

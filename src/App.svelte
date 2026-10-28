@@ -7,6 +7,7 @@
   import Settimana from './screens/Settimana.svelte';
   import Peso from './screens/Peso.svelte';
   import Piano from './screens/Piano.svelte';
+  import { editor } from './state/editor.svelte';
   import { nextMeal, weekdayIndex } from './domain/schedule';
   import type { Slot } from './domain/types';
 
@@ -37,6 +38,9 @@
     return () => dark.removeEventListener('change', sync);
   });
 </script>
+
+<!-- Chiudere o ricaricare con il piano modificato e non salvato chiede conferma. -->
+<svelte:window onbeforeunload={(e) => { if (editor.dirty) e.preventDefault(); }} />
 
 {#if app.ready}
   {#if p[0] === 'giorno' && p[1]}

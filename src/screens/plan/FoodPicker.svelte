@@ -20,7 +20,7 @@
 {:else}
   <label class="search">
     <MagnifyingGlass size={18} />
-    <input placeholder="Cerca alimento" bind:value={q} aria-label="Cerca alimento" />
+    <input placeholder="Cerca alimento…" autocomplete="off" bind:value={q} aria-label="Cerca alimento" />
   </label>
   <div class="group list">
     {#each list as f (f.id)}
@@ -32,7 +32,7 @@
       <p class="muted empty">Nessun alimento trovato.</p>
     {/each}
   </div>
-  <button class="btn tinted" onclick={() => (creating = true)}><Plus size={18} weight="bold" /> Nuovo alimento{q ? ` "${q}"` : ''}</button>
+  <button class="btn tinted" onclick={() => (creating = true)}><Plus size={18} weight="bold" /> Nuovo alimento{q ? ` «${q}»` : ''}</button>
 {/if}
 
 <style>

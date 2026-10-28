@@ -27,9 +27,25 @@
   const legacy = $derived([...app.legacyWeeks].sort((a, b) => b.week.localeCompare(a.week)));
 
   const goWeek = (n: number) => router.go('settimana/' + addDays(mondayOf(anchor), n * 7));
+
+  // Swipe orizzontale per cambiare settimana; le frecce restano per chi non lo usa.
+  let start: { x: number; y: number } | null = null;
+  function onTouchStart(e: TouchEvent) {
+    const t = e.touches[0];
+    start = t ? { x: t.clientX, y: t.clientY } : null;
+  }
+  function onTouchEnd(e: TouchEvent) {
+    const t = e.changedTouches[0];
+    if (!start || !t) return;
+    const dx = t.clientX - start.x, dy = t.clientY - start.y;
+    start = null;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 2) return;
+    if (dx > 0) goWeek(-1);
+    else if (!isCurrent) goWeek(1);
+  }
 </script>
 
-<main class="screen">
+<main class="screen" ontouchstart={onTouchStart} ontouchend={onTouchEnd}>
   <div class="title-row">
     <h1 class="large-title">Settimana</h1>
     <div class="nav">
@@ -58,7 +74,7 @@
       </button>
     {/each}
   </div>
-  <p class="section-foot">Tocca un giorno per vederlo o segnare un pasto dimenticato.</p>
+  <p class="section-foot">Tocca un giorno per vederlo o segnare un pasto dimenticato. Scorri di lato per cambiare settimana.</p>
 
   {#if legacy.length}
     <h2 class="section-title">Storico della versione precedente</h2>
