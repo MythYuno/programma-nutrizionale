@@ -7,6 +7,8 @@
   import { fmtKg, inRange, parseKg, sortByDate, trailingAverage, trend, weeklyChange, type Range } from '../domain/weight';
   import Segmented from '../ui/Segmented.svelte';
   import Sheet from '../ui/Sheet.svelte';
+  import Toast from '../ui/Toast.svelte';
+  import type { Weight } from '../domain/types';
   import { shortDate } from '../ui/format';
   import WeightChart from './WeightChart.svelte';
 
@@ -38,6 +40,24 @@
     await app.addWeight({ date: dateInput, kg });
     adding = false;
   }
+  // Eliminare è immediato, ma per qualche secondo si può annullare.
+  let editingHistory = $state(false);
+  let removed = $state<Weight | null>(null);
+  let undoTimer: ReturnType<typeof setTimeout> | undefined;
+  async function remove(w: Weight) {
+    await app.removeWeight(w.date);
+    removed = w;
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => (removed = null), 5000);
+  }
+  async function undo() {
+    if (!removed) return;
+    const w = removed;
+    removed = null;
+    clearTimeout(undoTimer);
+    await app.addWeight(w);
+  }
+
   function openGoal() {
     goalInput = app.settings.weightGoalKg ? fmtKg(app.settings.weightGoalKg) : '';
     error = '';
@@ -69,6 +89,9 @@
     <p class="subtitle">Nessuna pesata negli ultimi 7 giorni</p>
   {/if}
 
+  <!-- La pesata è l'azione di ogni mattina: sta subito sotto il numero. -->
+  <button class="btn on-ground add" onclick={openAdd}><Plus size={20} weight="bold" /> Pesata</button>
+
   <div class="card">
     {#if points.length >= 2}
       <WeightChart {points} goal={app.settings.weightGoalKg} />
@@ -79,8 +102,6 @@
     {/if}
   </div>
 
-  <button class="btn on-ground" onclick={openAdd}><Plus size={20} weight="bold" /> Pesata</button>
-
   <div class="group goal">
     <button class="row" onclick={openGoal}>
       <span class="grow">Obiettivo</span>
@@ -89,18 +110,25 @@
   </div>
 
   {#if history.length}
-    <h2 class="section-title">Storico</h2>
+    <div class="hist-head">
+      <h2 class="section-title">Storico</h2>
+      <button class="ground-link" aria-pressed={editingHistory} onclick={() => (editingHistory = !editingHistory)}>{editingHistory ? 'Fine' : 'Modifica'}</button>
+    </div>
     <div class="group">
       {#each history as w (w.date)}
         <div class="row">
           <span class="grow">{shortDate(w.date)} <span class="muted small">{w.date.slice(0, 4) !== app.today.slice(0, 4) ? w.date.slice(0, 4) : ''}</span></span>
           <b class="num">{fmtKg(w.kg)} kg</b>
-          <button class="del" aria-label="Elimina pesata del {shortDate(w.date)}" onclick={() => app.removeWeight(w.date)}><Trash size={18} /></button>
+          {#if editingHistory}
+            <button class="del" aria-label="Elimina pesata del {shortDate(w.date)}" onclick={() => remove(w)}><Trash size={18} /></button>
+          {/if}
         </div>
       {/each}
     </div>
   {/if}
 </main>
+
+<Toast message={removed ? `Pesata del ${shortDate(removed.date)} eliminata` : null} action="Annulla" onAction={undo} />
 
 <Sheet bind:open={adding} title="Nuova pesata">
   <label class="lab" for="kg">Peso (kg)</label>
@@ -132,6 +160,9 @@
   .l-raw { background: var(--ink-3); height: 6px !important; width: 6px !important; border-radius: 50% !important; }
   .l-goal { background: repeating-linear-gradient(90deg, var(--ink) 0 4px, transparent 4px 7px); }
   .goal { margin-top: 12px; }
+  .add { margin: 0 0 14px; }
+  .hist-head { display: flex; align-items: baseline; justify-content: space-between; margin-right: 4px; }
+  .hist-head .ground-link { font-size: 15px; }
   .del { border: 0; background: none; color: var(--danger); padding: 8px; margin-right: -8px; display: flex; }
   .lab { display: block; font-size: 14px; font-weight: 600; color: var(--ink-2); margin: 12px 4px 6px; }
   .big-field { font-size: 30px; font-weight: 750; }
