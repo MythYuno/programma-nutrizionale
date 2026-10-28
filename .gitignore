@@ -2,5 +2,7 @@
 Thumbs.db
 desktop.ini
 .claude/
-
 .superpowers/
+node_modules/
+dist/
+coverage/

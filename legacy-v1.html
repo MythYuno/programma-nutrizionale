@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Programma Nutrizionale</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Programma">
+<meta name="theme-color" content="#0B0B0A" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    color-scheme:light dark;
+    --paper:#FDFAF4;--ink:#241F19;--ink-2:#6B6055;--ink-3:#9C9184;
+    --rule:#241F19;--hair:rgba(36,31,25,.15);
+    --hi:#F5D547;--hi-ink:#241F19;
+    --bar:#241F19;--bar-ink:#FDFAF4;
+    --lift:rgba(36,31,25,.045);
+    /* Un colore per fascia di pasto: è il sistema che tiene insieme griglia e schede */
+    --c1:#E39A18;--c2:#6DAD3C;--c3:#DE4C28;--c4:#0FA69D;--c5:#8B4FC4;
+    --mP:#0FA69D;--mC:#E39A18;--mG:#8B4FC4;
+    --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;
+    --cond:88%;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#17140F;--ink:#F3EEE4;--ink-2:#A79C8D;--ink-3:#7A7063;
+      --rule:#F3EEE4;--hair:rgba(243,238,228,.2);
+      --hi:#E8C93B;--lift:rgba(243,238,228,.06);
+      --bar:#0E0C09;--bar-ink:#F3EEE4;
+      --c1:#F0B143;--c2:#8AC85A;--c3:#EE6647;--c4:#2BC0B6;--c5:#A76CDC;
+      --mP:#2BC0B6;--mC:#F0B143;--mG:#A76CDC;
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;
+    line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100dvh;overflow-x:hidden;
+    padding-bottom:calc(40px + env(safe-area-inset-bottom));
+  }
+  ::selection{background:var(--hi);color:var(--hi-ink)}
+  .wrap{max-width:620px;margin:0 auto;padding:0 20px}
+
+  /* Testata: blocco pieno, come la fascia scura di una confezione */
+  .topbar{position:sticky;top:0;z-index:30;background:var(--bar);
+    padding:calc(env(safe-area-inset-top) + 12px) 0 11px}
+  .topbar-inner{max-width:620px;margin:0 auto;padding:0 20px;display:flex;align-items:baseline;gap:7px}
+  .brand{display:flex;align-items:baseline;gap:7px}
+  .brand b{font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.02em;
+    font-stretch:var(--cond);color:var(--bar-ink)}
+  .brand .n{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;
+    color:var(--bar-ink);opacity:.6}
+
+  .hero{padding:22px 0 0}
+  .hero h1{font-weight:800;font-size:clamp(38px,11vw,54px);line-height:1;font-stretch:88%;letter-spacing:-.03em}
+  .hero .date{color:var(--ink-2);font-size:13.5px;margin-top:8px;font-weight:500}
+  /* Le prescrizioni giornaliere non sono piu' testo inerte: si toccano.
+     Valgono sempre per oggi, anche mentre sfogli un altro giorno. */
+  .oggi-wrap{margin-top:14px;padding-top:11px;border-top:1px solid var(--hair)}
+  .oggi-h{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-3);margin-bottom:8px}
+  .reminders{display:flex;flex-wrap:wrap;gap:6px}
+  .rem{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+    color:var(--ink-2);background:var(--lift);border:1px solid transparent;border-radius:99px;
+    padding:6px 11px;font-family:inherit;position:relative;overflow:hidden;
+    -webkit-tap-highlight-color:transparent}
+  .rem .v{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:800}
+  .rem i{display:none}
+  button.rem{cursor:pointer;transition:.13s ease}
+  button.rem:hover{border-color:var(--ink-3)}
+  button.rem:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .rem.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .rem.on .v{color:var(--paper);opacity:.7}
+  .rem.on::before{content:"";width:4.5px;height:8.5px;flex:0 0 auto;margin-right:1px;
+    border:solid var(--paper);border-width:0 2px 2px 0;transform:rotate(45deg) translateY(-1px)}
+  /* Acqua: il riempimento e' dietro al testo, cosi' il progresso si vede a colpo d'occhio */
+  .rem.acqua{padding-right:4px;gap:5px}
+  .rem.acqua .fill{position:absolute;left:0;top:0;bottom:0;background:var(--c4);opacity:.22;
+    transition:width .2s ease;pointer-events:none}
+  .rem.acqua.full .fill{opacity:.34}
+  .rem.acqua>span{position:relative;z-index:1}
+  .mini{position:relative;z-index:1;width:22px;height:22px;border-radius:99px;flex:0 0 auto;
+    border:none;background:rgba(0,0,0,.06);color:var(--ink);font:700 14px/1 inherit;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+  .mini:hover{background:rgba(0,0,0,.14)}
+  @media (prefers-color-scheme:dark){
+    .mini{background:rgba(255,255,255,.12)}
+    .mini:hover{background:rgba(255,255,255,.22)}
+  }
+
+  /* Selettore di sezione */
+  .seg{display:flex;gap:3px;margin-top:20px;background:var(--lift);padding:4px;border-radius:12px}
+  .seg button{flex:1;font-family:inherit;font-size:12.5px;font-weight:700;padding:9px 5px;border:none;
+    border-radius:9px;background:none;color:var(--ink-3);cursor:pointer;transition:.13s ease;
+    -webkit-tap-highlight-color:transparent}
+  .seg button:hover{color:var(--ink)}
+  .seg button[aria-selected="true"]{background:var(--paper);color:var(--ink);
+    box-shadow:0 1px 3px rgba(36,31,25,.13)}
+  .seg button:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+
+  /* Griglia settimanale: righe = fasce di pasto, colonne = giorni */
+  .gridwrap{padding:20px 0 6px}
+  .grid{display:grid;grid-template-columns:44px repeat(7,1fr);gap:5px;align-items:center}
+  .ghead{font-family:inherit;font-size:10.5px;font-weight:700;color:var(--ink-3);text-align:center;
+    text-transform:uppercase;letter-spacing:.04em;padding:0 0 3px;background:none;border:none;
+    cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .ghead:hover,.ghead.today{color:var(--ink)}
+  .ghead.today{font-weight:800}
+  .grow{font-size:9.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;
+    letter-spacing:.02em;line-height:1.1;padding-right:3px}
+  .cell{aspect-ratio:1;border:none;border-radius:9px;cursor:pointer;padding:0;
+    background:color-mix(in srgb,var(--c) 20%,var(--paper));
+    transition:background .13s ease,transform .1s ease;-webkit-tap-highlight-color:transparent}
+  /* Righe fisse: piu' basse e piu' tenui. Restano toccabili per le spunte,
+     ma smettono di gridare quanto pranzo e cena. */
+  .cell.fisso{aspect-ratio:auto;height:26px;border-radius:7px;
+    background:color-mix(in srgb,var(--c) 13%,var(--paper))}
+  .grow.fisso{opacity:.62;font-size:9px}
+  .cell:hover{background:color-mix(in srgb,var(--c) 45%,var(--paper))}
+  .cell.fisso:hover{background:color-mix(in srgb,var(--c) 34%,var(--paper))}
+  .cell:active{transform:scale(.92)}
+  .cell.today{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 60%,var(--paper))}
+  .cell[aria-selected="true"]{background:var(--c);
+    box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--c)}
+  .cell:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  /* Pasto fatto: spunta nel colore della fascia, leggibile sia su tinta sia su pieno */
+  .cell.done{position:relative}
+  .cell.done::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:11px;
+    margin:-7px 0 0 -3px;transform:rotate(45deg);
+    border:solid color-mix(in srgb,var(--c) 78%,var(--ink));border-width:0 2.5px 2.5px 0}
+  .cell.done[aria-selected="true"]::after{border-color:var(--paper)}
+  /* Puntino d'angolo: questo pasto vuole un cereale gia' cotto */
+  .cell.prep::before{content:"";position:absolute;top:5px;right:5px;width:5px;height:5px;
+    border-radius:99px;background:color-mix(in srgb,var(--c) 85%,var(--ink))}
+  .cell.prep{position:relative}
+  .cell.prep[aria-selected="true"]::before{background:var(--paper)}
+  .gridnote{font-size:11.5px;color:var(--ink-3);margin-top:11px;text-align:center}
+  .gridnote b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+  .linkbtn{font-family:inherit;font-size:11.5px;color:var(--ink-3);background:none;border:none;
+    padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+  .linkbtn:hover{color:var(--ink)}
+
+  .donebtn{margin-top:20px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
+    padding:10px 16px;border-radius:99px;border:2px solid var(--hair);background:none;
+    color:var(--ink-2);transition:.13s ease;-webkit-tap-highlight-color:transparent}
+  .donebtn:hover{border-color:var(--c,var(--ink));color:var(--ink)}
+  /* Pieno neutro, non nel colore della fascia: su ambra o verde chiaro il bianco non si legge */
+  .donebtn.on{background:var(--ink);border-color:var(--ink);color:var(--paper);
+    padding-left:34px;position:relative}
+  .donebtn.on::before{content:"";position:absolute;left:16px;top:50%;width:5px;height:10px;
+    margin-top:-6px;transform:rotate(45deg);border:solid var(--paper);border-width:0 2.5px 2.5px 0}
+  .donebtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  /* Macro: gli stessi tre colori ovunque, così si riconoscono senza legenda */
+  .chip .kc{flex:0 0 auto;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;
+    text-align:right;white-space:nowrap}
+  .mtot{margin-top:14px;padding:13px 14px;background:var(--lift);border-radius:10px}
+  .mtot.vuoto{font-size:12.5px;color:var(--ink-3);background:none;padding:8px 0}
+  .mtot-r{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .mtot-r b{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .mtot-r span{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .mtot-r em{font-style:normal;font-weight:800;color:var(--m);margin-left:6px}
+  .mbar{display:flex;height:6px;border-radius:99px;overflow:hidden;margin-top:9px;background:var(--hair)}
+  .mbar i{display:block}
+  .mnote{font-size:11.5px;color:var(--ink-3);margin-top:7px}
+
+  .recap{margin-top:16px;padding:15px 16px;border:1px solid var(--hair);border-radius:13px}
+  .rc-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;margin-bottom:13px}
+  .rc-n{font-weight:600;color:var(--ink-3);letter-spacing:.03em;text-transform:none;font-size:11.5px}
+  .rc-r{display:flex;align-items:center;gap:10px;padding:4px 0}
+  .rc-l{flex:0 0 62px;font-size:12px;font-weight:600;color:var(--ink-2)}
+  .rc-bar{flex:1;height:8px;border-radius:99px;background:var(--hair);overflow:hidden}
+  .rc-bar i{display:block;height:100%;background:var(--ink);border-radius:99px;transition:width .25s ease}
+  .rc-r:nth-child(2) .rc-bar i{background:var(--ink)}
+  .rc-r:nth-child(3) .rc-bar i{background:var(--mP)}
+  .rc-r:nth-child(4) .rc-bar i{background:var(--mC)}
+  .rc-r:nth-child(5) .rc-bar i{background:var(--mG)}
+  .rc-v{flex:0 0 82px;text-align:right;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .rc-v b{color:var(--ink);font-weight:700}
+  .rc-rest{margin-top:12px;padding-top:11px;border-top:1px solid var(--hair);font-size:13px;color:var(--ink-2)}
+  .rc-rest b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+  .rc-note{margin-top:8px;font-size:11px;color:var(--ink-3);line-height:1.4}
+
+  .comp{margin-top:12px;padding-top:11px;border-top:1px solid var(--hair)}
+  .comp-h{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-size:13px;color:var(--ink-2);flex-wrap:wrap}
+  .comp-h b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+  .sg-list{list-style:none;margin-top:9px}
+  .sg-list li{display:flex;align-items:baseline;gap:9px;padding:7px 0;
+    border-bottom:1px solid var(--hair);font-size:13.5px}
+  .sg-list li:last-child{border-bottom:none}
+  .sg-list li span{flex:1}
+  .sg-list li b{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+  .sg-x{flex:0 0 auto;width:22px;height:22px;border-radius:99px;border:none;cursor:pointer;
+    background:var(--lift);color:var(--ink-2);font:400 15px/1 inherit;
+    display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+  .sg-x:hover{background:var(--c3);color:#fff}
+
+  .sg-pick{margin-top:10px}
+  .sg-pick summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+    font-size:12.5px;font-weight:700;color:var(--ink-2);padding:8px 13px;border-radius:99px;
+    border:1px solid var(--hair);-webkit-tap-highlight-color:transparent;transition:.13s ease}
+  .sg-pick summary::-webkit-details-marker{display:none}
+  .sg-pick summary::before{content:"+";font-size:15px;font-weight:700;line-height:1;
+    display:inline-block;transition:transform .16s ease}
+  .sg-pick summary:hover{border-color:var(--ink-3);color:var(--ink)}
+  .sg-pick[open] summary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .sg-pick[open] summary::before{transform:rotate(45deg)}
+  .sg-body{margin-top:12px}
+  .sg-cat{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-3);margin:12px 0 7px}
+  .sg-cat:first-child{margin-top:0}
+  .sg-row{display:flex;flex-wrap:wrap;gap:6px}
+  .sg-chip{font-family:inherit;font-size:12.5px;font-weight:500;color:var(--ink);cursor:pointer;
+    background:var(--lift);border:1px solid transparent;border-radius:99px;padding:7px 12px;
+    transition:.13s ease;-webkit-tap-highlight-color:transparent}
+  .sg-chip b{font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink-3);margin-left:3px}
+  .sg-chip:hover{border-color:var(--ink);background:none}
+  .sg-chip:active{transform:scale(.96)}
+  .sg-chip.mio{background:none;border-color:var(--hair);border-style:dashed}
+  .sg-chip.mio:hover{border-style:solid;border-color:var(--ink)}
+
+  .sg-new{margin-top:16px;padding-top:14px;border-top:1px solid var(--hair)}
+  .sg-new summary{list-style:none;cursor:pointer;font-size:12.5px;font-weight:700;
+    color:var(--ink-2);-webkit-tap-highlight-color:transparent}
+  .sg-new summary::-webkit-details-marker{display:none}
+  .sg-new summary::before{content:"+ ";font-weight:800}
+  .sg-new summary:hover{color:var(--ink)}
+  .sg-form{margin-top:12px}
+  .fin{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:var(--lift);
+    border:1px solid var(--hair);border-radius:8px;padding:10px 12px}
+  .fin:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+  .sg-num{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}
+  .sg-num label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;font-weight:700;
+    letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+  .sg-num .fin{padding:9px 8px;text-align:center;font-variant-numeric:tabular-nums}
+  .sg-help{font-size:11.5px;color:var(--ink-3);margin-top:9px;line-height:1.45}
+
+  .comp-btns{display:flex;align-items:center;gap:6px}
+  .comp-n{font-size:12.5px;color:var(--ink-3);margin-top:9px}
+  .comp-n b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+  .comp-n b.ok{color:var(--c2)}
+  .comp-l{list-style:none;margin-top:6px}
+  .comp-i{display:flex;width:100%;align-items:baseline;gap:10px;padding:8px 0;background:none;
+    border:none;border-bottom:1px solid var(--hair);font-family:inherit;font-size:13.5px;
+    color:var(--ink);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .comp-i span{flex:1}
+  .comp-i em{font-style:normal;font-size:11px;color:var(--ink-3);text-transform:uppercase;
+    letter-spacing:.06em;margin-left:5px}
+  .comp-i b{flex:0 0 auto;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+  .comp-i.on{color:var(--ink-3)}
+  .comp-i.on span{text-decoration:line-through}
+  .comp-i.on b{color:var(--c2)}
+  .comp-l li:last-child .comp-i{border-bottom:none}
+
+  .aderenza{margin-top:14px}
+  .ad-r{display:flex;align-items:center;gap:10px;padding:5px 0}
+  .ad-w{flex:0 0 96px;font-size:11.5px;font-weight:600;color:var(--ink-2)}
+  .ad-bar{flex:1;height:8px;border-radius:99px;background:var(--hair);overflow:hidden}
+  .ad-bar i{display:block;height:100%;border-radius:99px;background:var(--c2)}
+  .ad-v{flex:0 0 72px;text-align:right;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .ad-v b{color:var(--ink);font-weight:800}
+
+  .day-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;
+    color:var(--ink-3);margin:22px 0 14px}
+  .rgroup{font-weight:900;font-size:24px;text-transform:uppercase;font-stretch:80%;letter-spacing:-.005em;
+    margin:38px 0 0;padding-top:14px;border-top:3px solid var(--rule);line-height:1.05}
+  .rgroup small{display:block;font-weight:500;font-size:13px;font-stretch:100%;
+    color:var(--ink-2);letter-spacing:0;margin-top:6px;line-height:1.45;text-transform:none}
+  /* Niente doppia barra: la sezione che segue un titolo non ripete il proprio filetto */
+  .day-label+.card,.rgroup+.card{border-top:none;padding-top:18px}
+
+  .swap{margin-top:18px;padding:13px 15px;background:var(--lift);border-left:4px solid var(--rule);
+    font-size:13px;color:var(--ink-2);line-height:1.45}
+  .swap b{display:block;font-size:10.5px;font-weight:800;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink);margin-bottom:6px}
+  .swap i{font-style:normal;display:block;padding:2px 0}
+
+  .filters{display:flex;flex-wrap:wrap;gap:6px;margin:22px 0 -16px}
+  .fchip{font-family:inherit;font-size:11.5px;font-weight:700;padding:9px 12px;border-radius:0;
+    text-transform:uppercase;letter-spacing:.07em;cursor:pointer;background:none;
+    border:2px solid var(--rule);color:var(--ink);transition:.12s ease;-webkit-tap-highlight-color:transparent}
+  .fchip:hover{background:var(--hi);color:var(--hi-ink)}
+  .fchip[aria-pressed="true"]{background:var(--rule);color:var(--paper)}
+  .fchip:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+  .fchip span{font-variant-numeric:tabular-nums;opacity:.55;margin-left:3px}
+
+  /* Ogni pasto porta il colore della sua fascia, come nella griglia */
+  .card{padding:20px 0 24px;border-top:1px solid var(--hair)}
+  .card:first-of-type{border-top:none;padding-top:20px}
+  .card .meal-top{display:flex;align-items:baseline;justify-content:space-between;gap:14px}
+  .kick{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;
+    letter-spacing:.11em;text-transform:uppercase;margin-bottom:6px;color:var(--c,var(--ink-3))}
+  .kick::before{content:"";width:9px;height:9px;border-radius:3px;background:var(--c,var(--ink-3))}
+  .mtitle{font-weight:800;font-size:25px;line-height:1.1;font-stretch:90%;letter-spacing:-.02em}
+  .timepill{flex:0 0 auto;font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--ink-2);
+    background:var(--lift);border-radius:99px;padding:4px 10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .timepill svg{display:none}
+
+  .ing{list-style:none;margin:16px 0 0;border-top:1px solid var(--hair)}
+  .ing li{border-bottom:1px solid var(--hair)}
+  .chip{display:flex;width:100%;align-items:baseline;gap:12px;padding:9px 0;font-size:15px;
+    color:var(--ink);font-family:inherit;text-align:left;background:none;border:none;line-height:1.35}
+  .chip .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+  .chip .g{flex:0 0 auto;font-variant-numeric:tabular-nums;font-size:14.5px;font-weight:700;white-space:nowrap}
+  /* Il giallo non marca "toccabile" (lo fa la freccia) ma "il medico ha previsto un cambio" */
+  button.chip{cursor:pointer;position:relative;padding-right:17px;-webkit-tap-highlight-color:transparent}
+  button.chip .g{font-weight:800}
+  button.chip.doc .g{background:var(--hi);color:var(--hi-ink);padding:1px 6px}
+  button.chip::after{content:"";position:absolute;right:2px;top:50%;width:6px;height:6px;margin-top:-4px;
+    border:solid var(--ink);border-width:0 2px 2px 0;transform:rotate(-45deg);transition:transform .12s ease}
+  button.chip:hover .nm{text-decoration:underline;text-underline-offset:3px}
+  button.chip:hover::after{transform:rotate(-45deg) translate(2px,-2px)}
+  button.chip:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  .sheet-bg{position:fixed;inset:0;z-index:60;background:rgba(11,11,10,.5);
+    display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s ease}
+  .sheet-bg.open{opacity:1;pointer-events:auto}
+  .sheet{width:100%;max-width:520px;max-height:84dvh;display:flex;flex-direction:column;
+    background:var(--paper);border:3px solid var(--rule);border-bottom:none;border-radius:0;
+    transform:translateY(16px);transition:transform .24s cubic-bezier(.32,.72,0,1);padding-bottom:env(safe-area-inset-bottom)}
+  .sheet-bg.open .sheet{transform:none}
+  @media(min-width:640px){
+    .sheet-bg{align-items:center}
+    .sheet{border-bottom:3px solid var(--rule);max-height:78dvh}
+  }
+  .sheet-grab{width:38px;height:3px;background:var(--hair);margin:9px auto 0;flex:0 0 auto}
+  .sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:15px 20px 0}
+  .sheet-kick{font-size:10.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+  .sheet-title{font-weight:900;font-size:24px;text-transform:uppercase;font-stretch:82%;line-height:1.05;
+    display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .sheet-title em{font-style:normal;font-size:14px;font-weight:800;font-stretch:100%;
+    background:var(--hi);color:var(--hi-ink);padding:1px 6px;font-variant-numeric:tabular-nums}
+  .sheet-x{flex:0 0 auto;width:30px;height:30px;border-radius:0;cursor:pointer;background:none;
+    border:2px solid var(--rule);color:var(--ink);font-size:14px;line-height:1;
+    display:flex;align-items:center;justify-content:center;transition:.12s ease}
+  .sheet-x:hover{background:var(--rule);color:var(--paper)}
+  .sheet-tabs{display:flex;gap:0;padding:15px 20px 0;flex:0 0 auto;border-bottom:4px solid var(--rule)}
+  .sheet-tabs button{flex:1;font-family:inherit;font-weight:700;font-size:11.5px;cursor:pointer;padding:10px 8px;
+    text-transform:uppercase;letter-spacing:.07em;background:none;border:2px solid var(--rule);
+    border-bottom:none;color:var(--ink);transition:.12s ease}
+  .sheet-tabs button+button{border-left:none}
+  .sheet-tabs button:hover{background:var(--hi);color:var(--hi-ink)}
+  .sheet-tabs button[aria-selected="true"]{background:var(--rule);color:var(--paper)}
+  .sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 20px 24px;flex:1 1 auto}
+  .sub{display:flex;align-items:baseline;gap:12px;padding:12px 0;border-bottom:1px solid var(--hair)}
+  .sub:last-child{border-bottom:none}
+  .sub .sn{flex:1;font-size:15px;line-height:1.35;font-weight:600}
+  .sub .sn i{display:block;font-style:normal;font-size:12.5px;font-weight:400;color:var(--ink-2);margin-top:4px;line-height:1.4}
+  .sub .sq{flex:0 0 auto;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+  .sheet-empty{padding:24px 0;font-size:14.5px;color:var(--ink-2);line-height:1.5}
+  .sheet-note{margin-top:16px;padding:12px 14px;background:var(--lift);border-left:4px solid var(--rule);
+    font-size:12.5px;color:var(--ink-2);line-height:1.5}
+  .sheet-note b{color:var(--ink);font-weight:800}
+
+  .liberi{font-size:13.5px;color:var(--ink-2);margin-top:12px;line-height:1.45}
+  .liberi b{color:var(--ink);font-weight:700}
+  .oppure{font-size:13.5px;color:var(--ink-2);margin-top:12px;padding:11px 14px;
+    background:var(--lift);border-left:4px solid var(--rule);line-height:1.45}
+  .oppure span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink);margin-bottom:4px}
+
+  .alts{margin-top:18px;padding-top:14px;border-top:1px solid var(--hair)}
+  .alts>span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink);margin-bottom:10px}
+  .alts ul{list-style:none}
+  .alts li{position:relative;padding:0 0 9px 15px;font-size:14px;color:var(--ink-2);line-height:1.45}
+  .alts li:last-child{padding-bottom:0}
+  .alts li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;background:var(--ink)}
+  .alts li b{color:var(--ink);font-weight:700}
+
+  /* Passi: numero in un quadrato pieno, come i riquadri di una confezione */
+  .prep-steps{margin-top:16px}
+  .prep-steps summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;
+    padding:11px 0;border-top:1px solid var(--hair);font-size:11.5px;font-weight:800;
+    letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2);
+    transition:color .13s ease;-webkit-tap-highlight-color:transparent}
+  .prep-steps summary::-webkit-details-marker{display:none}
+  .prep-steps summary::after{content:"";width:6px;height:6px;margin-left:auto;
+    border:solid var(--ink-3);border-width:0 1.6px 1.6px 0;transform:rotate(45deg);
+    transition:transform .16s ease}
+  .prep-steps[open] summary::after{transform:rotate(-135deg)}
+  .prep-steps summary:hover{color:var(--ink)}
+  .prep-steps summary span{font-weight:500;font-size:11.5px;letter-spacing:.02em;
+    text-transform:none;color:var(--ink-3)}
+  .prep-steps summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .prep-steps ol.steps{margin-top:4px;padding-bottom:4px}
+
+  ol.steps{list-style:none;counter-reset:s;margin-top:18px}
+  ol.steps li{counter-increment:s;position:relative;padding:0 0 13px 32px;font-size:15px;line-height:1.5}
+  ol.steps li:last-child{padding-bottom:0}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;
+    background:var(--rule);color:var(--paper);font-size:11.5px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+
+  /* Il trucco e' una nota a margine, non un titolo: prende il colore della sua
+     fascia e resta in secondo piano. Il giallo torna a significare una cosa
+     sola, cioe' "il medico ha previsto un cambio". */
+  .tip{margin-top:18px;display:block;padding:11px 0 11px 14px;background:none;
+    border-left:3px solid var(--c,var(--hair));color:var(--ink-2);font-size:13.5px;line-height:1.45}
+  .tip svg{display:none}
+  /* Solo la PRIMA b e' l'etichetta: dentro il testo i grassetti restano inline,
+     altrimenti "Farro <b>batch-cooked</b>" diventava un finto titolo a capo. */
+  .tip b{font-weight:700;color:var(--ink)}
+  .tip>div>b:first-child{display:block;font-size:10.5px;font-weight:800;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:3px;color:var(--c,var(--ink-3))}
+
+  .field{width:100%;margin-top:14px;background:var(--lift);border:2px solid var(--rule);border-radius:0;
+    padding:13px 14px;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:12.5px;line-height:1.55;resize:vertical}
+  .field:focus-visible{outline:2px solid var(--hi);outline-offset:1px}
+  .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .btn{font-family:inherit;font-weight:700;font-size:11.5px;border-radius:0;padding:11px 15px;cursor:pointer;
+    text-transform:uppercase;letter-spacing:.07em;border:2px solid var(--rule);background:none;
+    color:var(--ink);transition:.12s ease;display:inline-flex;align-items:center}
+  .btn:hover{background:var(--hi);color:var(--hi-ink)}
+  .btn.primary{background:var(--rule);color:var(--paper)}
+  .btn.primary:hover{background:var(--hi);color:var(--hi-ink)}
+  .msg{margin-top:14px;font-size:13px;padding:11px 14px;border-radius:0;line-height:1.45;border-left:4px solid}
+  .msg.ok{background:var(--lift);color:var(--ink);border-color:#2E7D4F}
+  .msg.err{background:var(--lift);color:var(--ink);border-color:#C0392B}
+  .pdftext{margin-top:14px;max-height:230px;overflow:auto;white-space:pre-wrap;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;line-height:1.55;
+    color:var(--ink-2);background:var(--lift);border:2px solid var(--rule);border-radius:0;padding:13px 14px}
+
+  .shop{list-style:none;margin-top:2px}
+  .shop li{display:flex;align-items:center;gap:12px;padding:10px 0;font-size:14.5px;color:var(--ink);
+    cursor:pointer;border-bottom:1px solid var(--hair);-webkit-tap-highlight-color:transparent}
+  .shop li:last-child{border-bottom:none}
+  .shop li .box{flex:0 0 auto;width:18px;height:18px;border-radius:0;border:2px solid var(--rule);
+    display:flex;align-items:center;justify-content:center;transition:.12s ease}
+  .shop li.on{color:var(--ink-3)}
+  .shop li.on .sname{text-decoration:line-through}
+  .shop li.on .box{background:var(--rule)}
+  .shop li.on .box::after{content:"";width:4px;height:8px;border:solid var(--paper);border-width:0 2px 2px 0;
+    transform:rotate(45deg) translateY(-1px)}
+  .shop li .sname{flex:1}
+  .shop li .sqty{flex:0 0 auto;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+  .shop li.on .sqty{color:var(--ink-3);font-weight:400}
+
+  .prep-item{padding:16px 0;border-bottom:1px solid var(--hair)}
+  .prep-item:first-child{padding-top:4px}
+  .prep-item:last-child{border-bottom:none;padding-bottom:0}
+  .pi-name{font-weight:900;font-size:17px;text-transform:uppercase;font-stretch:84%;
+    margin-bottom:9px;line-height:1.15}
+  .pi-row{display:flex;gap:12px;font-size:13.5px;color:var(--ink-2);padding:2px 0;line-height:1.45}
+  .pi-row span{flex:0 0 92px;font-size:10.5px;font-weight:800;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-3);padding-top:3px}
+
+  footer{margin-top:34px;padding-top:18px;border-top:2px solid var(--rule);color:var(--ink-3);font-size:12.5px}
+  footer .lk{display:flex;align-items:flex-start;gap:8px;color:var(--ink-2);margin-bottom:9px;line-height:1.45}
+  footer .lk svg{width:13px;height:13px;flex:0 0 auto;margin-top:3px;color:var(--ink-3)}
+  footer .mt{font-size:11.5px;line-height:1.45}
+
+  .fade{animation:fade .28s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><b>Programma</b><span class="n">Nutrizionale</span></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="hero">
+    <h1 id="heroDay">Lunedì</h1>
+    <div class="date" id="heroDate"></div>
+    <div class="oggi-wrap">
+      <div class="oggi-h">Oggi</div>
+      <div class="reminders" id="oggi"></div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <nav class="seg" id="seg" role="tablist" aria-label="Sezioni"></nav>
+  <div class="gridwrap" id="gridWrap">
+    <div class="grid" id="grid" role="grid" aria-label="Settimana"></div>
+    <div class="gridnote" id="gridNote">Tocca un pasto, o il nome del giorno per vederlo tutto.</div>
+    <div id="recap"></div>
+  </div>
+  <main id="content"></main>
+  <footer>
+    <div class="lk">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      Colazione e spuntini sono uguali ogni giorno. Condimenti liberi non spostano i macro.
+    </div>
+    <div class="mt">Dott. Salvatore Occhino · 22/04/2026 · sale moderato salvo dove indicato “no sale”.</div>
+  </footer>
+</div>
+
+<div class="sheet-bg" id="sheetBg" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head">
+      <div>
+        <div class="sheet-kick">Con cosa posso sostituirlo</div>
+        <div class="sheet-title" id="sheetTitle"></div>
+      </div>
+      <button class="sheet-x" id="sheetX" aria-label="Chiudi">✕</button>
+    </div>
+    <div class="sheet-tabs" role="tablist">
+      <button role="tab" id="tabDoc" aria-selected="true">Dott. Occhino</button>
+      <button role="tab" id="tabWeb" aria-selected="false">Alternative</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+
+<script>
+const clock='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const bolt='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>';
+
+const COLAZIONE={kick:'Colazione',title:'Latte e cereali',
+  ing:[['Latte p.s.','200 g'],['Cereali','50 g'],['Cioccolato fondente','10 g']],
+  sub:{'Latte p.s.':[['Kefir','150 g'],['Yogurt 2%','150 g'],['Yogurt intero','125 g']],
+       'Cereali':[['Corn Flakes','40 g'],['Muesli','45 g'],['Frollini','40 g'],['Avena','40 g']]},
+  altsTitle:'Colazioni alternative',
+  alts:['Pancake: 1 uovo + 40 g farina + latte q.b., con 10 g marmellata o crema cacao',
+    'Porridge cotto: 100 g latte + 50 g farina, cioccolato fondente sopra',
+    'Panino 80 g con 10 g formaggio molle + 30 g affettato (o 50 g mozzarella e pomodoro)',
+    '2 uova + 60 g di pane o pan bauletto']};
+
+const SP_MATTINO={kick:'Spuntino · mattino',title:'Frutta e frutta secca',
+  ing:[['Frutta fresca','150 g'],['Frutta secca/oleosa','30 g']],
+  liberi:'Un frutto medio va benissimo.'};
+
+const SP_POMERIGGIO={kick:'Spuntino · pomeriggio',title:'Spuntino salato',
+  ing:[['Crackers','50 g']],
+  sub:{'Crackers':[['Pan Bauletto bianco','60 g'],['Grissini','50 g'],['Biscotti','40 g']]},
+  liberi:'+ 20 g di marmellata solo se ti alleni.'};
+
+const DAYS=[
+ {id:'lun',name:'Lun',full:'Lunedì',
+  pranzo:{title:'Pasta caprese',time:'~10 min',
+   ing:[['Pasta di semola','110 g'],['Mozzarella','100 g'],['Pomodori','100 g'],['Olio EVO','5 g']],
+   liberi:'Basilico, origano, pepe.',
+   steps:['Metti su l’acqua e cuoci la pasta al dente.','Intanto taglia mozzarella e pomodori a cubetti e condisci con l’olio, basilico e pepe.','Scola, lascia intiepidire un minuto e manteca. Origano a chiudere.'],
+   tip:'Cuoci <b>220 g</b> di pasta in un colpo: metà in frigo con un filo d’olio → domani pasta fredda pronta in 60 secondi.'},
+  cena:{title:'Pollo arrosto, verdure e pane',
+   ing:[['Pollo','250 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Pane integrale','100 g']],
+   sub:{'Pollo':[['Coscia (con osso)','300 g']],
+        'Pane integrale':[['Patate','300 g'],['Cous cous','70 g']]},
+   liberi:'Paprika, rosmarino, aglio, limone.',
+   steps:['Marina il pollo 5 min con limone, paprika, rosmarino e aglio.','Cuoci in padella o forno a 200° finché dorato (15–18 min).','Arrostisci le verdure con metà olio; il resto a crudo. Pane a parte.'],
+   tip:'Cuoci una porzione di pollo in più: la coscia avanzata diventa proteina già pronta per un pranzo extra in settimana.'}},
+
+ {id:'mar',name:'Mar',full:'Martedì',
+  pranzo:{title:'Insalata di orzo e tonno',time:'~5 min',prep:true,
+   ing:[['Orzo','100 g'],['Tonno sgocciolato','50 g'],['Verdure','200 g'],['Olio EVO','5 g']],
+   liberi:'Limone e spezie — <b>no sale</b> (c’è il tonno).',
+   sub:{'Orzo':[['Riso','100 g']]},
+   oppure:'Verdure: zucchine, melanzane, broccoli, cavolfiore, cavoletti.',
+   steps:['Sgocciola bene il tonno e usa l’orzo già cotto (vedi tip).','Aggiungi le verdure: ottime anche surgelate ripassate o lessate.','Unisci a freddo con olio, limone e spezie. Niente sale.'],
+   tip:'Lessa <b>300 g di orzo</b> a inizio settimana e porziona: assembli in 2 minuti.'},
+  cena:{title:'Frittata di verdure, pane e insalata',
+   ing:[['Uova (3)','150 g'],['Pane integrale','130 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+   sub:{'Uova (3)':[['Gamberetti','300 g']],
+        'Pane integrale':[['Patate','380 g']]},
+   liberi:'Pomodori, carote, iceberg a crudo. Sale moderato, pepe.',
+   steps:['Sbatti le uova con pepe e poco sale.','Cuoci la frittata a fuoco medio con parte dell’olio (con un po’ di verdura dentro se vuoi).','Servi con pane e insalata cruda condita con l’olio rimasto e limone.'],
+   tip:'Usa le verdure già lavate e tagliate per il pranzo di domani (vedi tip orzo): frittata pronta in 8 minuti.'}},
+
+ {id:'mer',name:'Mer',full:'Mercoledì',
+  pranzo:{title:'Farro e lenticchie tiepido',time:'~4 min',prep:true,
+   ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Olio EVO','5 g']],
+   sub:{'Farro':[['Riso','101 g']],
+        'Lenticchie scatola':[['Lenticchie secche','70 g']]},
+   liberi:'Spezie, prezzemolo.',
+   steps:['Sciacqua le lenticchie in scatola per togliere il sale in eccesso.','Usa il farro già cotto, unisci lenticchie e verdure.','Condisci con olio e spezie.'],
+   tip:'Farro <b>batch-cooked</b> + lenticchie in vetro = piatto freddo o tiepido in 3–4 minuti.'},
+  cena:{title:'Manzo magro alla griglia',
+   ing:[['Manzo magro','220 g'],['Pane integrale','130 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Frutta','150 g']],
+   sub:{'Manzo magro':[['Pollo','253 g'],['Pesce azzurro','220 g'],['Cavallo','248 g'],['Feta','112 g']],
+        'Pane integrale':[['Patate','380 g']]},
+   liberi:'Rosmarino, pepe.',
+   steps:['Scalda bene una piastra o padella.','Cuoci la carne 2–3 min per lato secondo lo spessore; sala dopo la cottura.','Verdure grigliate o crude con l’olio; pane a parte. Frutta a chiudere.'],
+   tip:'Non serve marinare: bastano 2–3 minuti per lato a fuoco alto. Sala solo a fine cottura per non far perdere succosità.'}},
+
+ {id:'gio',name:'Gio',full:'Giovedì',
+  pranzo:{title:'Riso freddo con feta e verdure',time:'~4 min',prep:true,
+   ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
+   liberi:'Menta, limone, spezie — <b>no sale</b> (c’è la feta).',
+   sub:{'Feta':[['Formaggio molle','40 g'],['Ricotta','80 g']]},
+   oppure:'Verdure: zucchine, melanzane, broccoli, cavolfiore.',
+   steps:['Usa il riso freddo già cotto.','Sbriciola la feta e unisci le verdure (grigliate o surgelate ripassate).','Condisci con olio, limone e menta. Niente sale.'],
+   tip:'Cuoci <b>2–3 porzioni di riso</b> e tienile in frigo: si monta a freddo in pochi minuti.'},
+  cena:{title:'Merluzzo al forno con cous cous',
+   ing:[['Cous cous','100 g'],['Merluzzo','300 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+   sub:{'Cous cous':[['Riso','100 g']],
+        'Merluzzo':[['Pesce azzurro','145 g'],['Salmone affumicato','135 g'],['Uova (3)','150 g'],['Tofu (+ salsa soia 10 g)','253 g']]},
+   liberi:'Limone, prezzemolo, aglio.',
+   steps:['Idrata il cous cous con pari volume d’acqua bollente, coperto 5 min, poi sgrana.','Cuoci il merluzzo al forno o in padella con limone ed erbe (8–10 min).','Verdure di contorno; chiudi con l’olio a crudo.'],
+   tip:'Tieni filetti di merluzzo surgelati in monoporzione: si cuociono in forno direttamente da congelati, bastano 5 minuti in più.'}},
+
+ {id:'ven',name:'Ven',full:'Venerdì',
+  pranzo:{title:'Pasta e ceci',time:'~12 min',
+   ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g']],
+   sub:{'Ceci scatola':[['Ceci secchi','60 g'],['Fagioli scatola','160 g'],['Fagioli secchi','60 g']]},
+   liberi:'Rosmarino, aglio, pepe.',
+   steps:['Sciacqua i ceci. Soffriggi appena aglio e rosmarino nell’olio.','Cuoci la pasta; unisci i ceci (frullane una parte per cremosità, se ti va).','Manteca con un po’ d’acqua di cottura.'],
+   tip:'Versione fredda: pasta corta cotta prima + ceci in scatola a crudo → <b>4 minuti</b>.'},
+  cena:{title:'Salmone al forno, patate e verdure',
+   ing:[['Patate','400 g'],['Salmone','140 g'],['Olio EVO','10 g'],['Verdure','150 g'],['Frutta','150 g']],
+   sub:{'Salmone':[['Salmone affumicato','117 g'],['Ricotta','140 g'],['Vongole','350 g'],['Cozze','292 g'],['Polpo','467 g']]},
+   liberi:'Limone, aglio.',
+   steps:['Patate a tocchetti in forno a 200° con parte dell’olio (~25 min).','A metà cottura aggiungi il salmone con limone (oppure cozze/vongole in padella aglio e olio).','Verdure di contorno; olio a crudo per finire. Frutta a chiudere.'],
+   tip:'Un’unica teglia per patate e salmone: meno tempo ai fornelli e meno da lavare.'}},
+
+ {id:'sab',name:'Sab',full:'Sabato',
+  pranzo:{title:'Pasta al pesto',time:'~10 min',
+   ing:[['Pasta o riso','100 g'],['Pesto Genovese','40 g'],['Grana','10 g'],['Frutta','150 g']],
+   liberi:'—',
+   steps:['Cuoci la pasta al dente.','Stempera il pesto con un cucchiaio d’acqua di cottura (non scaldarlo sul fuoco).','Manteca fuori dal fuoco, grana sopra. Frutta a chiudere.'],
+   tip:'È già il più rapido: tieni il pesto pronto e in <b>10 min</b> sei a tavola.'},
+  cena:{title:'Pollo al forno, pane e verdure crude',
+   ing:[['Pollo petto','250 g'],['Pane integrale','120 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+   sub:{'Pollo petto':[['Coscia','200 g']],
+        'Pane integrale':[['Patate','350 g']]},
+   oppure:'Se lo fai panato, togli olio e panatura dal totale.',
+   liberi:'Paprika, limone.',
+   steps:['Insaporisci il pollo con paprika e limone.','Forno a 200° o padella finché dorato (~15 min).','Verdure crude condite con l’olio; pane a parte.'],
+   tip:'Marina il pollo al mattino, anche solo 10 minuti: la sera è già pronto da cuocere.'}},
+
+ {id:'dom',name:'Dom',full:'Domenica',
+  pranzo:{title:'Pasta all’uovo al ragù',time:'~15 min',
+   ing:[['Pasta all’uovo','130 g'],['Manzo magro tritato','100 g'],['Grana','10 g'],['Frutta','150 g']],
+   sub:{'Manzo magro tritato':[['Legumi secchi','70 g'],['Legumi scatola','140 g']]},
+   liberi:'Passata/salsa, aglio, spezie.',
+   steps:['Rosola il tritato con poca passata e aglio (niente olio extra: i grassi sono già nei macro).','Cuoci la pasta all’uovo — cottura breve.','Manteca col ragù, grana sopra. Frutta dopo.'],
+   tip:'Di domenica hai più tempo, ma un ragù lampo si fa in 12–15 min. Per il più veloce usa la <b>versione legumi</b>.'},
+  cena:{title:'Uova, pane integrale e verdure',
+   ing:[['Uova (3)','150 g'],['Pane integrale','70 g'],['Olio EVO','10 g'],['Verdure','200 g']],
+   sub:{'Uova (3)':[['Tonno sgocciolato','80 g'],['Stracchino','64 g'],['Gamberetti','270 g'],['Vongole','270 g']],
+        'Pane integrale':[['Wasa','q.b.']]},
+   liberi:'Limone, spezie.',
+   steps:['Cuoci le uova come preferisci: sode, in camicia o à la coque.','Condisci una bella porzione di verdure con l’olio e limone.','Pane integrale o Wasa a parte.'],
+   tip:'La cena più rapida della settimana: le uova sode si fanno mentre apparecchi, 8 minuti in tutto.'}}
+];
+
+const DEFAULT_PLAN={colazione:COLAZIONE,spMattino:SP_MATTINO,spPomeriggio:SP_POMERIGGIO,days:DAYS};
+const PLAN_KEY='piano11-plan-v1';
+
+function clonePlan(p){return JSON.parse(JSON.stringify(p));}
+
+function validatePlan(p){
+  if(!p||typeof p!=='object') return 'Il piano deve essere un oggetto JSON valido.';
+  if(!p.colazione||!Array.isArray(p.colazione.ing)) return 'Manca "colazione" con un array "ing".';
+  if(!p.spMattino||!Array.isArray(p.spMattino.ing)) return 'Manca "spMattino" con un array "ing".';
+  if(!p.spPomeriggio||!Array.isArray(p.spPomeriggio.ing)) return 'Manca "spPomeriggio" con un array "ing".';
+  if(!Array.isArray(p.days)||p.days.length!==7) return '"days" deve essere un array di 7 giorni.';
+  for(const d of p.days){
+    if(!d.name||!d.full) return 'Ogni giorno richiede "name" e "full".';
+    if(!d.pranzo||!Array.isArray(d.pranzo.ing)||!d.pranzo.title) return 'Ogni giorno richiede "pranzo" con "title" e "ing" (array).';
+    if(!d.cena||!Array.isArray(d.cena.ing)||!d.cena.title) return 'Ogni giorno richiede "cena" con "title" e "ing" (array).';
+  }
+  return null;
+}
+
+function loadPlan(){
+  try{
+    const raw=localStorage.getItem(PLAN_KEY);
+    if(!raw) return clonePlan(DEFAULT_PLAN);
+    const parsed=JSON.parse(raw);
+    if(validatePlan(parsed)) return clonePlan(DEFAULT_PLAN);
+    return parsed;
+  }catch(e){return clonePlan(DEFAULT_PLAN);}
+}
+
+let PLAN=loadPlan();
+
+const MESI=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+
+const PREP_BATCH=[
+ {nome:'Cereali in chicco — riso, orzo, farro',quando:'Domenica o lunedì, tutti insieme',conserva:'3–4 giorni in frigo (contenitore chiuso) · fino a 1 mese in freezer',per:'Orzo (mar), farro (mer), riso (gio e sab)'},
+ {nome:'Pasta',quando:'Al momento, oppure raddoppia il lunedì',conserva:'1–2 giorni in frigo, condita con un filo d’olio',per:'Pasta fredda pronta per il pranzo del giorno dopo'},
+ {nome:'Pollo e carne',quando:'Cuoci una porzione in più quando li prepari',conserva:'3–4 giorni in frigo · 2–3 mesi in freezer',per:'Proteina pronta per un pranzo o una cena extra'},
+ {nome:'Uova sode',quando:'Anche 2–3 giorni prima',conserva:'Fino a 1 settimana in frigo, con il guscio',per:'Spuntino o cena rapida'},
+ {nome:'Verdure',quando:'Lava e taglia la sera prima',conserva:'2–3 giorni in frigo in contenitore ermetico',per:'Contorni e insalate della settimana'},
+ {nome:'Legumi in scatola',quando:'All’occorrenza',conserva:'3–4 giorni in frigo, travasati dalla lattina e sciacquati',per:'Lenticchie (mer), ceci (ven)'}
+];
+
+function categoriaSpesa(name){
+  const n=name.toLowerCase();
+  const has=(...ks)=>ks.some(k=>n.includes(k));
+  if(has('pasta','riso','orzo','farro','cous','pane','patate','cracker','cereali','avena','grissini','biscott','wasa','bauletto','frollini','muesli','corn flakes')) return 'Carboidrati';
+  if(has('verdur','pomodor','insalata','carote','zucchine','melanzane','broccoli','cavolfiore','frutta')) return 'Verdura e frutta';
+  if(has('pollo','manzo','merluzzo','salmone','uov','tonno','feta','mozzarella','lenticchie','ceci','fagioli','pesce','gamberetti','vongole','cozze','tofu','affettato','prosciutto','ricotta','stracchino','cavallo','polpo','formaggio')) return 'Proteine';
+  if(has('olio','pesto','cioccolat','grana','latte','kefir','yogurt','sale','spezie','salsa','passata')) return 'Dispensa';
+  return 'Altro';
+}
+
+function parseGrams(q){const m=String(q).replace(',','.').match(/([\d.]+)/);return m?parseFloat(m[1]):0;}
+function fmtGrams(g){
+  g=Math.round(g);
+  if(g>=1000){const kg=g/1000;return (Number.isInteger(kg)?kg:kg.toFixed(1)).toString().replace('.',',')+' kg';}
+  return g+' g';
+}
+// Arrotonda per eccesso a una quantità pratica da spesa
+function roundPractical(g){
+  if(g<=0) return 0;
+  const step=g>=1000?100:50;
+  return Math.ceil(g/step)*step;
+}
+
+// ---- Valori nutrizionali ----
+// Per 100 g: [kcal, proteine, carboidrati, grassi]. Sono STIME da tabelle di
+// composizione pubbliche (CREA e equivalenti): non sono i calcoli del medico e
+// variano con marca, taglio e cottura. L'ordine conta: le voci più specifiche
+// stanno prima (es. "salmone affumicato" prima di "salmone").
+const NUTRI=[
+ [/pasta all|pasta all’uovo/i,[366,13,71,3.5]],
+ [/frutta secca|oleosa|mandorl|noci|nocciol|pistacch|anacard|semi /i,[600,18,8,55]],
+ [/yogurt greco|skyr/i,[59,10,4,.4]],
+ [/salmone affumicato/i,[147,25,0,4.5]],
+ [/lenticchie scatola|ceci scatola|fagioli scatola|legumi scatola/i,[100,7,14,1.5]],
+ [/^latte|kefir|bevanda vegetale/i,[46,3.3,5,1.5]],
+ [/yogurt|fiocchi di latte/i,[66,3.8,4.3,3.9]],
+ [/cereali|corn flakes|muesli/i,[370,8,80,2.5]],
+ [/avena|porridge/i,[367,12.6,63,7]],
+ [/cioccolat/i,[515,5,50,33]],
+ [/cacao/i,[355,20,11,22]],
+ [/datteri/i,[253,2,63,.4]],
+ [/frutta|mele|pere|banana|frutti di bosco/i,[45,.6,10,.2]],
+ [/cracker|grissini|gallette/i,[428,10,80,8]],
+ [/frollini|biscott|savoiard/i,[416,7,73,11]],
+ [/pasta|farina|semola|polenta/i,[353,11,74,1.4]],
+ [/pane|panino|bauletto|wasa|piadina/i,[224,7.5,48.5,1.3]],
+ [/cous ?cous|bulgur/i,[358,12,72,1.5]],
+ [/orzo/i,[319,10.4,71,1.4]],
+ [/farro/i,[335,15,67,2.5]],
+ [/riso|quinoa|miglio|amaranto|grano saraceno/i,[332,6.7,80,.4]],
+ [/patate/i,[85,2.1,18,1]],
+ [/mozzarella|caciotta|primo sale/i,[253,18.7,.7,19.5]],
+ [/feta/i,[250,14,4,21]],
+ [/grana|parmigian|pecorino/i,[384,33,0,28]],
+ [/ricotta/i,[146,8.8,3.5,10.9]],
+ [/stracchino|formaggio molle|formaggio fresco/i,[300,18,1,25]],
+ [/uov/i,[128,12.4,0,8.7]],
+ [/pollo|tacchino/i,[100,23.3,0,.8]],
+ [/manzo|cavallo|vitello|macinato|tritato|hamburger/i,[122,21,0,4]],
+ [/bresaola|prosciutto|affettato/i,[151,32,0,2.6]],
+ [/merluzzo|nasello|platessa|sogliola|orata/i,[71,17,0,.3]],
+ [/salmone/i,[185,20,0,12]],
+ [/tonno/i,[192,25.2,0,10]],
+ [/gamberetti|gamberi|vongole|cozze|polpo|calamari/i,[71,15,1,.8]],
+ [/pesce azzurro|sgombro|alici|sardine/i,[170,19,0,10]],
+ [/tofu/i,[76,8,1.9,4.8]],
+ [/tempeh/i,[193,19,9,11]],
+ [/seitan/i,[121,25,4,1]],
+ [/lenticchie|ceci|fagioli|legumi|piselli/i,[291,23,51,2]],
+ [/pesto/i,[450,5,6,45]],
+ [/olio/i,[899,0,0,99.9]],
+ [/passata|pomodor/i,[19,1,3.5,.2]],
+ [/marmellata|crema cacao/i,[222,.5,55,.1]],
+ [/verdur|insalata|zucchine|melanzane|broccoli|cavolfiore|carote|cetriol|edamame/i,[25,2,3.5,.3]]
+];
+function nutriDi(nome){const r=NUTRI.find(x=>x[0].test(nome));return r?r[1]:null;}
+
+// Solo quantità in peso. "1 normale", "2 gusti", "q.b." non sono calcolabili.
+// Unica eccezione: le uova a pezzi, contate a 55 g l'una (uovo medio).
+function grammiDi(q,nome){
+  const s=String(q).trim();
+  if(!/\d/.test(s)) return null;
+  if(/\bkg\b/i.test(s)) return parseGrams(s)*1000;
+  if(/\bg\b/i.test(s)) return parseGrams(s);
+  if(nome&&/uov/i.test(nome)&&/^\d+$/.test(s)) return parseGrams(s)*55;
+  return null;
+}
+
+// Somma i macro di un pasto, segnalando le voci che non ha saputo contare
+function macroPasto(m){
+  let k=0,p=0,c=0,g=0;const fuori=[];
+  (m&&m.ing||[]).forEach(i=>{
+    const gr=grammiDi(i[1],i[0]), n=nutriDi(i[0]);
+    if(gr===null||!n){fuori.push(i[0]);return;}
+    k+=n[0]*gr/100;p+=n[1]*gr/100;c+=n[2]*gr/100;g+=n[3]*gr/100;
+  });
+  return {k:Math.round(k),p:Math.round(p),c:Math.round(c),g:Math.round(g),fuori};
+}
+function macroSomma(list){
+  return list.reduce((a,m)=>{const t=macroPasto(m);
+    return {k:a.k+t.k,p:a.p+t.p,c:a.c+t.c,g:a.g+t.g,fuori:a.fuori.concat(t.fuori)};},
+    {k:0,p:0,c:0,g:0,fuori:[]});
+}
+function kcalDi(nome,qta){
+  const gr=grammiDi(qta,nome), n=nutriDi(nome);
+  return (gr===null||!n)?null:Math.round(n[0]*gr/100);
+}
+function barraMacro(t){
+  const kp=t.p*4,kc=t.c*4,kg=t.g*9,tot=kp+kc+kg;
+  if(!tot) return '';
+  const w=x=>(x/tot*100).toFixed(1)+'%';
+  return '<div class="mbar"><i style="width:'+w(kp)+';background:var(--mP)"></i>'
+    +'<i style="width:'+w(kc)+';background:var(--mC)"></i>'
+    +'<i style="width:'+w(kg)+';background:var(--mG)"></i></div>';
+}
+function bloccoMacro(t){
+  // Se anche una sola voce non è pesabile il totale sarebbe fuorviante
+  // (la pizzeria mostrava "38 kcal" contando solo il contorno): meglio nulla.
+  if(t.fuori.length) return '<div class="mtot vuoto">Macro non calcolabili: '
+    +[...new Set(t.fuori)].join(', ')+'.</div>';
+  return '<div class="mtot"><div class="mtot-r"><b>'+t.k+' kcal</b>'
+    +'<span><em style="--m:var(--mP)">P</em> '+t.p+' g <em style="--m:var(--mC)">C</em> '+t.c
+    +' g <em style="--m:var(--mG)">G</em> '+t.g+' g</span></div>'+barraMacro(t)+'</div>';
+}
+// Accorpa i doppioni del piano in una voce di spesa unica
+function normNome(name){
+  const clean=String(name).replace(/\s*\([^)]*\)/g,'').trim();
+  const n=clean.toLowerCase();
+  if(n.includes('pasta')&&n.includes('uovo')) return 'Pasta all’uovo';
+  if(n.includes('pasta')) return 'Pasta';
+  if(n.startsWith('verdur')) return 'Verdure';
+  if(n.startsWith('frutta secca')||n.includes('oleosa')) return 'Frutta secca';
+  if(n.startsWith('frutta')) return 'Frutta fresca';
+  if(n.includes('pollo')) return 'Pollo';
+  if(n.includes('manzo')) return 'Manzo magro';
+  return clean;
+}
+
+function buildSpesa(){
+  const items={}; // nome canonico -> {qty, cat}
+  const addMeal=(meal,mult)=>{(meal&&meal.ing||[]).forEach(pair=>{
+    const nome=normNome(pair[0]);
+    if(!nome) return;
+    if(!items[nome]) items[nome]={qty:0,cat:categoriaSpesa(nome)};
+    items[nome].qty+=parseGrams(pair[1])*mult;
+  });};
+  // Colazione e spuntini sono uguali ogni giorno → x7
+  addMeal(PLAN.colazione,7);addMeal(PLAN.spMattino,7);addMeal(PLAN.spPomeriggio,7);
+  PLAN.days.forEach(d=>{addMeal(d.pranzo,1);addMeal(d.cena,1);});
+  const cats={'Carboidrati':[],'Proteine':[],'Verdura e frutta':[],'Dispensa':[],'Altro':[]};
+  Object.keys(items).sort((a,b)=>a.localeCompare(b,'it')).forEach(nome=>{
+    cats[items[nome].cat].push({nome,qty:items[nome].qty});
+  });
+  return cats;
+}
+
+const SPESA_KEY='piano11-spesa-checked';
+function loadChecked(){try{return new Set(JSON.parse(localStorage.getItem(SPESA_KEY)||'[]'));}catch(e){return new Set();}}
+function saveChecked(set){try{localStorage.setItem(SPESA_KEY,JSON.stringify([...set]));}catch(e){}}
+
+const TRUCCHI=[
+ 'Mise en place la sera prima: lava e taglia le verdure del giorno dopo — 5 minuti guadagnati a pranzo.',
+ 'Le verdure surgelate già pulite sono equivalenti alle fresche e saltano il lavaggio e il taglio.',
+ 'Tieni sempre 2–3 porzioni di un cereale cotto (pasta, riso, orzo, farro) in frigo: si conservano 3–4 giorni.',
+ 'Lo scatolame (legumi, tonno) è proteina o carboidrato pronto in zero minuti — sciacqualo sempre per togliere il sale in eccesso.',
+ 'Usa il forno per più cose insieme (proteina + patate sulla stessa teglia) per ridurre tempi e lavaggi.',
+ 'Cuoci pasta, riso, orzo e farro nella stessa pentola durante la settimana: cambia solo il condimento.'
+];
+
+// Equivalenze indicative da tabelle di sostituzione pubbliche (non prescritte dal medico).
+// Fonti: petrininutrizione.it, educazionenutrizionale.granapadano.it, melarossa.it
+const WEB_RULES=[
+ {re:/pasta|riso|orzo|farro|cous|polenta/i,subs:[
+   ['Riso, orzo o farro',1,'I cereali in chicco si scambiano 1:1 a crudo'],
+   ['Quinoa o amaranto',1,'1:1 a crudo, senza glutine e più proteici del riso'],
+   ['Bulgur o cous cous',1,'1:1 a crudo, pronti in 5 minuti'],
+   ['Miglio o grano saraceno',1,'1:1 a crudo, senza glutine'],
+   ['Pane',1.25,'80 g di pasta ≈ 100 g di pane'],
+   ['Patate',4,'50 g di pasta ≈ 210 g di patate']]},
+ {re:/pane|cracker|grissini|bauletto|wasa|biscott|frollini/i,subs:[
+   ['Pane di segale o integrale',1,'A pari peso, più fibra'],
+   ['Gallette o Wasa',1,'A pari peso, comode da tenere in borsa'],
+   ['Pasta o riso (a crudo)',.8,'100 g di pane ≈ 80 g di pasta'],
+   ['Cous cous (a crudo)',.7,'Stesso rapporto usato nel piano'],
+   ['Patate',3,'50 g di pane ≈ 150 g di patate']]},
+ {re:/patate/i,subs:[
+   ['Patate dolci',1,'A pari peso, indice glicemico più basso'],
+   ['Pane',.33,'150 g di patate ≈ 50 g di pane'],
+   ['Pasta o riso (a crudo)',.25,'210 g di patate ≈ 50 g di pasta']]},
+ {re:/pollo|tacchino|cavallo|manzo|vitello|carne/i,subs:[
+   ['Tacchino',1.05,'Praticamente equivalente al pollo'],
+   ['Merluzzo o nasello',1.33,'200 g di pollo ≈ 250–280 g di merluzzo'],
+   ['Platessa o sogliola',1.2,'Pesce magro, cottura rapidissima'],
+   ['Salmone',.68,'200 g di pollo ≈ 120–150 g di salmone'],
+   ['Gamberi o gamberetti',1.3,'A pari proteine, molto magri'],
+   ['Ricotta o mozzarella',.55,'Formaggi freschi, a pari proteine'],
+   ['Seitan',.9,'25 g di proteine per 100 g: il più proteico dei vegetali'],
+   ['Tempeh',1.2,'Circa 19 g di proteine per 100 g'],
+   ['Tofu',1.6,'Circa 14 g di proteine per 100 g'],
+   ['Legumi secchi',.25,'Aggiungono però parecchi carboidrati'],
+   ['Bresaola o prosciutto sgrassato',.3,'Salumi magri, da limitare per il sale']]},
+ {re:/merluzzo|nasello|sogliola|platessa|pesce|salmone|vongole|cozze|polpo|gamberetti|tonno/i,subs:[
+   ['Altro pesce magro',1,'Merluzzo, nasello, platessa e orata si scambiano a pari peso'],
+   ['Pollo o tacchino',.75,'250–280 g di merluzzo ≈ 200 g di pollo'],
+   ['Gamberi o calamari',1,'A pari peso, stesso profilo magro'],
+   ['Uova',.5,'A pari proteine, circa 3 uova ogni 300 g di pesce magro'],
+   ['Ricotta o mozzarella',.42,'Formaggi freschi, a pari proteine'],
+   ['Tofu',.8,'Alternativa vegetale, meno proteica a pari peso']]},
+ {re:/uova|uovo/i,subs:[
+   ['Merluzzo o pesce magro',2,'150 g di uova (3) ≈ 300 g di merluzzo'],
+   ['Pollo o tacchino',1.4,'A pari proteine'],
+   ['Gamberetti',1.8,'A pari proteine'],
+   ['Ricotta o fiocchi di latte',1.1,'Alternativa vegetariana'],
+   ['Tofu',1.6,'Alternativa vegetale, ottimo strapazzato']]},
+ {re:/latte|kefir|yogurt/i,subs:[
+   ['Yogurt bianco naturale',.75,'200 g di latte ≈ 150 g di yogurt'],
+   ['Kefir',.75,'Stesso rapporto dello yogurt, più fermenti'],
+   ['Yogurt greco o skyr',.55,'Più densi di proteine: ne serve meno'],
+   ['Fiocchi di latte',.5,'Versione salata, molto proteica'],
+   ['Bevanda vegetale non zuccherata',1,'Attenzione: ha molte meno proteine del latte']]},
+ {re:/lenticchie|ceci|fagioli|legumi|piselli/i,subs:[
+   ['Altri legumi',1,'Ceci, fagioli, lenticchie, piselli e fave a pari peso'],
+   ['Secchi ↔ in scatola',.4,'I secchi pesano circa 2,5 volte meno di quelli in scatola'],
+   ['Pasta di legumi',.45,'Da ceci o lenticchie: comoda e proteica'],
+   ['Tofu o tempeh',.7,'Sempre da soia, con meno carboidrati']]},
+ {re:/feta|ricotta|mozzarella|stracchino|formaggio|grana/i,subs:[
+   ['Altro formaggio fresco',1,'Mozzarella, caciotta fresca e primo sale: 1:1'],
+   ['Ricotta',1.8,'50 g di mozzarella ≈ 90 g di ricotta'],
+   ['Fiocchi di latte',1.2,'Più magri e molto sazianti'],
+   ['Grana o parmigiano',.45,'Stagionati: più proteine e grassi a parità di peso'],
+   ['Pollo o tacchino',1.8,'A pari proteine']]},
+ {re:/frutta secca|oleosa|mandorle|noci/i,subs:[
+   ['Altra frutta oleosa',1,'Mandorle, noci, nocciole, pistacchi e anacardi a pari peso'],
+   ['Semi (girasole, zucca, lino)',1,'A pari peso, buoni sullo yogurt o in insalata']]},
+ {re:/frutta/i,subs:[
+   ['Altra frutta di stagione',1,'A pari peso, preferendo frutta non troppo zuccherina'],
+   ['Frutti di bosco',1,'A pari peso, meno zuccheri della media']]},
+ {re:/verdur|pomodor|insalata/i,subs:[
+   ['Altra verdura a pari peso',1,'Zucchine, melanzane, broccoli, cavolfiore, cavoletti, carote, insalata'],
+   ['Verdure surgelate',1,'Equivalenti alle fresche e già pulite'],
+   ['Verdure grigliate o al vapore',1,'Stesso peso: cambia solo la cottura']]},
+ {re:/pesto/i,subs:[
+   ['Pesto di pistacchi o noci',1,'A pari peso, stesso ruolo di condimento grasso'],
+   ['Crema di verdure frullate + olio',1,'Zucchine o piselli frullati, contando l’olio a parte']]},
+ {re:/olio/i,subs:[
+   ['Olio di semi di lino o noce',1,'A crudo, a pari peso'],
+   ['Frutta secca tritata',1,'Stessa quota di grassi, ma con fibra e croccantezza']]},
+ {re:/cioccolat/i,subs:[
+   ['Cacao amaro in polvere',.5,'Molto più concentrato: ne basta la metà'],
+   ['Crema di frutta secca 100%',.7,'Senza zuccheri aggiunti']]}
+];
+
+// Ogni ricetta usa gli stessi ingredienti e grammi del pasto che sostituisce:
+// cambiano solo tecnica e aromi, quindi i macro restano quelli del piano.
+const RICETTE=[
+ {gruppo:'Pranzi',nome:'Pasta al pomodoro confit',quando:'Pranzo di lunedì',tempo:'~20 min',
+  ing:[['Pasta di semola','110 g'],['Mozzarella','100 g'],['Pomodori','100 g'],['Olio EVO','5 g']],
+  steps:['Pomodorini in forno a 200° per 15 minuti con origano e pepe, senza condimento.','Cuoci la pasta al dente.','Manteca fuori dal fuoco con i pomodori confit, la mozzarella a cubetti e l’olio a crudo. Basilico a chiudere.'],
+  nota:'Il forno concentra gli zuccheri del pomodoro: più dolcezza e profondità senza aggiungere nulla.'},
+ {gruppo:'Pranzi',nome:'Pasta gratinata all’origano',quando:'Pranzo di lunedì',tempo:'~15 min',
+  ing:[['Pasta di semola','110 g'],['Mozzarella','100 g'],['Pomodori','100 g'],['Olio EVO','5 g']],
+  steps:['Cuoci la pasta molto al dente e condiscila con i pomodori a cubetti, origano e pepe.','Trasferisci in una pirofila e copri con la mozzarella a fette.','Grill acceso, 3–4 minuti, finché fa la crosticina. Olio a crudo all’uscita.'],
+  nota:'Il grill dà la crosta dorata che di solito si ottiene con besciamella o formaggio in più.'},
+ {gruppo:'Pranzi',nome:'Tabbouleh d’orzo',quando:'Pranzo di martedì',tempo:'~10 min',
+  ing:[['Orzo','100 g'],['Tonno sgocciolato','50 g'],['Verdure','200 g'],['Olio EVO','5 g']],
+  steps:['Usa l’orzo già cotto e freddo.','Trita finissimi prezzemolo e menta in abbondanza; taglia pomodoro e cetriolo a dadini piccolissimi.','Condisci con olio e molto limone, unisci il tonno ben sgocciolato all’ultimo. Niente sale.'],
+  nota:'Il segreto è tagliare tutto molto piccolo: il sapore si distribuisce e il sale non serve.'},
+ {gruppo:'Pranzi',nome:'Orzo freddo al curry e limone',quando:'Pranzo di martedì',tempo:'~10 min',
+  ing:[['Orzo','100 g'],['Tonno sgocciolato','50 g'],['Verdure','200 g'],['Olio EVO','5 g']],
+  steps:['Sciogli mezzo cucchiaino di curry nel succo di limone e nell’olio, come una vinaigrette.','Ripassa le verdure in padella antiaderente senza grassi finché prendono colore.','Unisci orzo, verdure e tonno e condisci con l’emulsione al curry.'],
+  nota:'Sciogliere le spezie in un liquido acido le distribuisce molto meglio che spolverarle a secco.'},
+ {gruppo:'Pranzi',nome:'Zuppa tiepida di farro e lenticchie',quando:'Pranzo di mercoledì',tempo:'~15 min',
+  ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Olio EVO','5 g']],
+  steps:['Sciacqua le lenticchie. Scalda appena aglio e rosmarino nell’olio.','Unisci le verdure a dadini e un po’ d’acqua calda, cuoci 8 minuti.','Aggiungi farro e lenticchie e scalda.'],
+  nota:'Frulla due cucchiai di lenticchie e rimettile nella zuppa: diventa cremosa senza panna.'},
+ {gruppo:'Pranzi',nome:'Farro speziato al cumino',quando:'Pranzo di mercoledì',tempo:'~10 min',
+  ing:[['Farro','100 g'],['Lenticchie scatola','250 g'],['Verdure','150 g'],['Olio EVO','5 g']],
+  steps:['Tosta cumino e coriandolo in padella a secco per 30 secondi, finché profumano.','Unisci verdure e lenticchie sciacquate e salta 5 minuti.','Spegni, aggiungi il farro, poi limone e prezzemolo a crudo con l’olio.'],
+  nota:'Tostare le spezie prima di usarle moltiplica l’aroma: è il passaggio che manca a quasi tutti i piatti “da dieta”.'},
+ {gruppo:'Pranzi',nome:'Riso freddo alla greca',quando:'Pranzo di giovedì',tempo:'~8 min',
+  ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
+  steps:['Usa il riso già cotto e freddo.','Taglia cetriolo e pomodoro a dadini, aggiungi menta e origano abbondanti.','Feta sbriciolata, olio e molto limone. Niente sale: la feta è già sapida.'],
+  nota:'Lascialo riposare 10 minuti prima di mangiarlo: il riso assorbe il condimento e cambia completamente.'},
+ {gruppo:'Pranzi',nome:'Riso alla paprika affumicata',quando:'Pranzo di giovedì',tempo:'~10 min',
+  ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
+  steps:['Griglia le verdure finché sono ben segnate.','Sciogli la paprika affumicata nell’olio con qualche goccia di limone.','Condisci il riso, unisci le verdure e chiudi con la feta a scaglie, a crudo.'],
+  nota:'La paprika affumicata dà la nota “di brace” che di solito arriva da salumi o formaggi stagionati.'},
+ {gruppo:'Pranzi',nome:'Pasta e ceci cremosa',quando:'Pranzo di venerdì',tempo:'~15 min',
+  ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g']],
+  steps:['Sciacqua i ceci e frullane metà con poca acqua.','Scalda aglio e rosmarino nell’olio, unisci la crema e i ceci interi.','Cuoci la pasta molto al dente e finiscila direttamente nella crema con un po’ d’acqua di cottura.'],
+  nota:'Finire la pasta nel condimento la rende cremosa senza aggiungere un grammo di grassi.'},
+ {gruppo:'Pranzi',nome:'Pasta e ceci al peperoncino',quando:'Pranzo di venerdì',tempo:'~14 min',
+  ing:[['Pasta di semola','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g']],
+  steps:['Scalda aglio, peperoncino e rosmarino nell’olio.','Unisci poca passata e i ceci sciacquati, cuoci 5 minuti.','Manteca la pasta al dente nel sugo con l’acqua di cottura.'],
+  nota:'Passata, aglio e spezie sono condimenti liberi: danno sapore senza spostare i macro.'},
+ {gruppo:'Pranzi',nome:'Ragù bianco alle erbe',quando:'Pranzo di domenica',tempo:'~18 min',
+  ing:[['Pasta all’uovo','130 g'],['Manzo magro tritato','100 g'],['Grana','10 g'],['Frutta','150 g']],
+  steps:['Rosola il tritato a fuoco vivo in padella antiaderente, senza olio, finché è ben colorato.','Sfuma con poca acqua, unisci alloro e rosmarino e cuoci 10 minuti.','Manteca la pasta all’uovo nel sugo, grana a chiudere.'],
+  nota:'Senza pomodoro il gusto viene tutto dalla rosolatura: lascia colorare bene la carne prima di bagnarla.'},
+
+ {gruppo:'Cene',nome:'Pollo alla paprika affumicata',quando:'Cena di lunedì',tempo:'~20 min',
+  ing:[['Pollo','250 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Pane integrale','100 g']],
+  steps:['Marina il pollo 10 minuti con succo di limone, paprika affumicata, aglio e pepe.','Padella rovente: 4–5 minuti per lato senza mai muoverlo, così fa crosta.','Verdure arrostite con metà olio; il resto a crudo sul pollo. Pane a parte.'],
+  nota:'Non muovere la carne nei primi minuti: è così che si forma la crosticina saporita.'},
+ {gruppo:'Cene',nome:'Pollo agli agrumi e timo',quando:'Cena di sabato',tempo:'~18 min',
+  ing:[['Pollo petto','250 g'],['Pane integrale','120 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+  steps:['Copri il pollo con scorza grattugiata di limone e arancia, timo, aglio e pepe.','Forno a 200° per 15 minuti, irrorando col succo degli agrumi.','Verdure crude condite con l’olio e la scorza rimasta. Pane a parte.'],
+  nota:'La scorza contiene gli oli aromatici: il succo da solo porta acidità ma non profumo.'},
+ {gruppo:'Cene',nome:'Uova in purgatorio',quando:'Cena di martedì',tempo:'~15 min',
+  ing:[['Uova (3)','150 g'],['Pane integrale','130 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+  steps:['Scalda aglio e peperoncino nell’olio, unisci pomodori a pezzi e cuoci 8 minuti.','Fai degli incavi nel sugo e rompici dentro le uova; coperchio, 5 minuti.','Pane a fette per raccogliere il sugo, verdure crude a parte.'],
+  nota:'Cuocere le uova dentro il sugo invece che a parte: assorbono sapore e non serve altro condimento.'},
+ {gruppo:'Cene',nome:'Frittata alle erbe e limone',quando:'Cena di domenica',tempo:'~12 min',
+  ing:[['Uova (3)','150 g'],['Pane integrale','70 g'],['Olio EVO','10 g'],['Verdure','200 g']],
+  steps:['Sbatti le uova con prezzemolo, erba cipollina, scorza di limone e pepe.','Padella a fuoco medio-basso con parte dell’olio e coperchio: resta morbida.','Verdure condite a crudo con l’olio rimasto e limone. Pane a parte.'],
+  nota:'Fuoco basso e coperchio: la frittata resta cremosa invece di diventare gommosa.'},
+ {gruppo:'Cene',nome:'Tagliata al rosmarino',quando:'Cena di mercoledì',tempo:'~12 min',
+  ing:[['Manzo magro','220 g'],['Pane integrale','130 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Frutta','150 g']],
+  steps:['Carne a temperatura ambiente, piastra rovente: 2–3 minuti per lato.','Falla riposare 5 minuti prima di tagliarla; sala solo adesso.','Affetta controfibra, condisci con rosmarino, pepe, olio a crudo e limone.'],
+  nota:'Il riposo prima del taglio trattiene i succhi: è la differenza tra una tagliata tenera e una asciutta.'},
+ {gruppo:'Cene',nome:'Merluzzo all’acqua pazza',quando:'Cena di giovedì',tempo:'~18 min',
+  ing:[['Cous cous','100 g'],['Merluzzo','300 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+  steps:['In padella metti aglio, prezzemolo, pomodorini e poca acqua.','Adagia il merluzzo, coperchio, 8 minuti a fuoco dolce.','Filtra il brodetto di cottura e usalo al posto dell’acqua per idratare il cous cous.'],
+  nota:'Usare il liquido di cottura del pesce per il cous cous è il passaggio che cambia davvero il piatto.'},
+ {gruppo:'Cene',nome:'Salmone e patate in teglia unica',quando:'Cena di venerdì',tempo:'~35 min',
+  ing:[['Patate','400 g'],['Salmone','140 g'],['Olio EVO','10 g'],['Verdure','150 g'],['Frutta','150 g']],
+  steps:['Patate a tocchetti in forno a 200° con metà olio, 20 minuti.','Aggiungi salmone e verdure nella stessa teglia, altri 10 minuti.','Limone e aneto a crudo all’uscita, con l’olio rimasto. Frutta a chiudere.'],
+  nota:'Una sola teglia: meno lavoro, e le patate si insaporiscono col grasso che rilascia il salmone.'},
+
+ {gruppo:'Sgarri fit',nome:'Pizza margherita',quando:'Pranzo di lunedì',tempo:'~25 min + lievitazione',
+  swap:['Pasta di semola 110 g → Farina 110 g (cereali 1:1 a crudo)'],
+  ing:[['Farina','110 g'],['Mozzarella','100 g'],['Passata o pomodori','100 g'],['Olio EVO','5 g']],
+  steps:['Impasta la farina con acqua, un pizzico di sale e poco lievito; lascia lievitare qualche ora.','Stendi sottile su teglia rovente, condisci con la passata e inforna al massimo (250°) per 8–10 minuti.','Aggiungi la mozzarella scolata negli ultimi 3 minuti e l’olio a crudo all’uscita.'],
+  nota:'Forno al massimo e teglia già calda: è così che si ottiene la base croccante, non con più olio.'},
+ {gruppo:'Sgarri fit',nome:'Hamburger nel panino',quando:'Cena di mercoledì',tempo:'~15 min',
+  swap:['Nessuno: gli ingredienti del piano sono già quelli dell’hamburger'],
+  ing:[['Manzo magro macinato','220 g'],['Panino','130 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Frutta','150 g']],
+  steps:['Forma il burger senza compattarlo troppo e schiaccialo solo una volta, all’inizio.','Padella rovente, 3 minuti per lato, senza mai premerlo: perderebbe i succhi.','Tosta il panino tagliato, monta con insalata, pomodoro, cipolla e un velo di senape.'],
+  nota:'Senape, aceto, cipolla e spezie sono liberi: danno tutto il sapore da fast food senza salse grasse.'},
+ {gruppo:'Sgarri fit',nome:'Hamburger e patatine al forno',quando:'Cena di mercoledì',tempo:'~35 min',
+  swap:['Pane integrale 130 g → Patate 390 g (rapporto pane→patate 1:3)'],
+  ing:[['Manzo magro macinato','220 g'],['Patate','390 g'],['Verdure','150 g'],['Olio EVO','10 g'],['Frutta','150 g']],
+  steps:['Taglia le patate a bastoncino e tienile 10 minuti in acqua fredda per togliere l’amido, poi asciugale bene.','Forno ventilato a 210° con metà olio e paprika, 25–30 minuti girandole a metà.','Cuoci il burger in padella rovente 3 minuti per lato; verdure a crudo con l’olio rimasto.'],
+  nota:'Ammollo, asciugatura e forno ventilato: croccanti fuori e morbide dentro, senza friggere.'},
+ {gruppo:'Sgarri fit',nome:'Poke bowl al salmone',quando:'Cena di giovedì',tempo:'~12 min',
+  swap:['Cous cous 100 g → Riso 100 g (1:1 a crudo)','Merluzzo 300 g → Salmone affumicato 135 g (scambio indicato nel piano)'],
+  ing:[['Riso','100 g'],['Salmone affumicato','135 g'],['Verdure','150 g'],['Olio EVO','10 g']],
+  steps:['Condisci il riso freddo già cotto con aceto di riso e un pizzico di zenzero.','Taglia le verdure a dadini regolari e disponile a spicchi sopra il riso.','Salmone a striscioline al centro; emulsiona olio, lime e salsa di soia come dressing.'],
+  nota:'Aceto di riso, lime, zenzero e semi di sesamo sono liberi: fanno tutto il sapore del poke.'},
+ {gruppo:'Sgarri fit',nome:'Piadina con pollo speziato',quando:'Cena di sabato',tempo:'~25 min',
+  swap:['Pane integrale 120 g → Farina 84 g (rapporto pane→cereale secco del piano, 0,7)'],
+  ing:[['Farina','84 g'],['Pollo petto','250 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+  steps:['Impasta farina, acqua tiepida, un pizzico di sale e metà dell’olio; riposo 20 minuti.','Stendi sottile e cuoci in padella antiaderente rovente, 1 minuto per lato.','Salta il pollo a straccetti con paprika, aglio e limone; farcisci con verdure crude.'],
+  nota:'La piadina di casa si fa senza strutto: acqua e un filo d’olio bastano, e resta morbida.'},
+ {gruppo:'Sgarri fit',nome:'Wrap di hummus',quando:'Pranzo di venerdì',tempo:'~20 min',
+  swap:['Pasta di semola 100 g → Farina 100 g (cereali 1:1 a crudo)'],
+  ing:[['Farina','100 g'],['Ceci scatola','140 g'],['Olio EVO','5 g']],
+  steps:['Impasta farina e acqua, stendi sottilissimo e cuoci le tortillas in padella a secco.','Frulla i ceci sciacquati con limone, aglio, cumino e un po’ della loro acqua fino a crema.','Spalma l’hummus, aggiungi verdure crude e l’olio a crudo, poi arrotola stretto.'],
+  nota:'L’acqua dei ceci al posto della tahina: stessa cremosità, senza aggiungere grassi.'},
+ {gruppo:'Sgarri fit',nome:'Risotto alla feta e limone',quando:'Pranzo di giovedì',tempo:'~20 min',
+  swap:['Nessuno: stessi ingredienti del piano, cambia la cottura'],
+  ing:[['Riso','110 g'],['Feta','60 g'],['Verdure','100 g'],['Olio EVO','5 g']],
+  steps:['Tosta il riso a secco in padella finché è caldo e traslucido.','Aggiungi brodo vegetale un mestolo alla volta, mescolando, con le verdure a dadini.','Fuori dal fuoco manteca con la feta sbriciolata, scorza di limone e l’olio. Niente sale.'],
+  nota:'Mantecare con la feta al posto di burro e panna: cremoso e già sapido.'},
+ {gruppo:'Sgarri fit',nome:'Polpette al sugo',quando:'Pranzo di domenica',tempo:'~25 min',
+  swap:['Nessuno: stessi ingredienti del piano'],
+  ing:[['Pasta all’uovo','130 g'],['Manzo magro tritato','100 g'],['Grana','10 g'],['Frutta','150 g']],
+  steps:['Impasta il macinato con il grana, prezzemolo, aglio e pepe; forma polpettine piccole.','Rosolale in padella antiaderente, poi finisci la cottura in poca passata per 10 minuti.','Cuoci la pasta e mantecala nel sugo delle polpette. Frutta a chiudere.'],
+  nota:'Cuocere le polpette dentro il sugo le tiene morbide e insaporisce il condimento.'},
+ {gruppo:'Sgarri fit',nome:'Club sandwich all’uovo',quando:'Cena di martedì',tempo:'~15 min',
+  swap:['Nessuno: stessi ingredienti del piano'],
+  ing:[['Uova (3)','150 g'],['Pane integrale','130 g'],['Verdure crude','150 g'],['Olio EVO','10 g']],
+  steps:['Uova sode, poi schiacciale con una forchetta insieme a senape, limone, l’olio e molto pepe.','Tosta il pane finché è ben croccante.','Farcisci con la crema di uova, insalata e pomodoro a fette; taglia in diagonale.'],
+  nota:'Senape e limone al posto della maionese: stessa cremosità acidula, zero grassi aggiunti.'},
+ {gruppo:'Sgarri fit',nome:'Cheesecake in barattolo',quando:'Colazione',tempo:'~10 min + frigo',
+  swap:['Latte 200 g → Yogurt greco 110 g (più denso di proteine)','Cereali 50 g → Frollini 40 g (scambio indicato nel piano)'],
+  ing:[['Yogurt greco','110 g'],['Frollini','40 g'],['Cioccolato fondente','10 g']],
+  steps:['Sbriciola i frollini sul fondo di un barattolo.','Mescola lo yogurt con scorza di limone e vaniglia e versalo sopra.','Grattugia il cioccolato in superficie e lascia in frigo almeno 30 minuti.'],
+  nota:'Vaniglia e scorza di limone aumentano la dolcezza percepita senza un grammo di zucchero.'},
+ {gruppo:'Sgarri fit',nome:'Coppa tiramisù',quando:'Colazione',tempo:'~10 min + frigo',
+  swap:['Latte 200 g → Yogurt greco 110 g','Cereali 50 g → Savoiardi o frollini 40 g','Cioccolato 10 g → Cacao amaro 5 g (più concentrato)'],
+  ing:[['Yogurt greco','110 g'],['Savoiardi','40 g'],['Cacao amaro','5 g']],
+  steps:['Prepara un caffè amaro e lascialo raffreddare.','Bagna velocemente i savoiardi nel caffè e alterna strati con lo yogurt profumato alla vaniglia.','Spolvera di cacao amaro e lascia in frigo un paio d’ore.'],
+  nota:'Il caffè è un condimento libero: dà tutto il carattere del tiramisù senza toccare i macro.'},
+ {gruppo:'Sgarri fit',nome:'Pancake soffici',quando:'Colazione',tempo:'~12 min',
+  swap:['Alternativa già prevista dal piano al posto di latte e cereali'],
+  ing:[['Uovo','1'],['Farina','40 g'],['Latte','q.b.'],['Marmellata o crema cacao','10 g']],
+  steps:['Separa l’albume e montalo a neve ferma.','Mescola tuorlo, farina e latte fino a ottenere una pastella densa, poi incorpora l’albume dal basso.','Cuoci in padella antiaderente a fuoco medio-basso, coperchio, finché si formano le bolle. Marmellata sopra.'],
+  nota:'L’albume montato a neve fa i pancake alti e soffici senza lievito né burro.'},
+ {gruppo:'Sgarri fit',nome:'French toast alla cannella',quando:'Colazione',tempo:'~10 min',
+  swap:['Alternativa già prevista dal piano: 2 uova + 60 g di pane'],
+  ing:[['Uova','2'],['Pane o pan bauletto','60 g']],
+  steps:['Sbatti le uova con un goccio di latte, cannella e vaniglia.','Inzuppa bene le fette di pane da entrambi i lati.','Cuoci in padella antiaderente calda, 2 minuti per lato, finché dorate. Altra cannella sopra.'],
+  nota:'Cannella e vaniglia ingannano il palato: sanno di dolce pur non essendoci zucchero.'},
+ {gruppo:'Sgarri fit',nome:'Gelato di frutta',quando:'Spuntino del mattino',tempo:'~5 min',
+  swap:['Nessuno: stessi ingredienti dello spuntino'],
+  ing:[['Frutta','150 g'],['Frutta secca','30 g']],
+  steps:['Taglia la frutta a pezzi e congelala per almeno 3 ore (banana e mango sono le migliori).','Frulla a intermittenza con pochissima acqua, fermandoti a raschiare i bordi, finché diventa cremosa.','Servi subito con la frutta secca tritata grossolanamente sopra.'],
+  nota:'La frutta congelata frullata prende una consistenza da gelato mantecato, senza panna né zucchero.'},
+ {gruppo:'Sgarri fit',nome:'Barrette datteri e frutta secca',quando:'Spuntino del mattino',tempo:'~10 min + frigo',
+  swap:['Frutta 150 g → Datteri 150 g (altra frutta a pari peso)'],
+  ing:[['Datteri','150 g'],['Frutta secca','30 g']],
+  steps:['Frulla i datteri denocciolati finché formano una pasta appiccicosa.','Aggiungi la frutta secca e frulla a impulsi, lasciandola in pezzi grossolani.','Compatta bene in uno stampo, frigo un’ora, poi taglia a barrette.'],
+  nota:'Compattare con forza è essenziale: se resta aria, le barrette si sbriciolano.'},
+ {gruppo:'Sgarri fit',nome:'Chips di pane speziate',quando:'Spuntino del pomeriggio',tempo:'~12 min',
+  swap:['Crackers 50 g → Pane 50 g (prodotti da forno a pari peso)'],
+  ing:[['Pane','50 g']],
+  steps:['Taglia il pane a triangoli sottili.','Spruzza con succo di limone e condisci con paprika, origano e pepe.','Forno a 180° per 8–10 minuti, finché sono ben croccanti.'],
+  nota:'Il limone spruzzato fa aderire le spezie: sostituisce l’olio che di solito si usa per farle attaccare.'},
+
+ {gruppo:'Dolci',nome:'Porridge al cioccolato',quando:'Colazione',tempo:'~8 min',
+  swap:['Cereali 50 g → Avena 40 g (scambio indicato nel piano)'],
+  ing:[['Latte p.s.','200 g'],['Avena','40 g'],['Cioccolato fondente','10 g']],
+  steps:['Scalda il latte con l’avena a fuoco basso, mescolando, finché si addensa: 5–6 minuti.','Spegni e sciogli dentro metà del cioccolato tritato: colora tutto il porridge.','Completa con il resto a scaglie e un pizzico di cannella.'],
+  nota:'Metà cioccolato sciolto dentro e metà a scaglie sopra: sembra molto più cioccolatoso a parità di grammi.'},
+ {gruppo:'Dolci',nome:'Mousse allo yogurt e cacao',quando:'Colazione',tempo:'~10 min + frigo',
+  swap:['Latte 200 g → Yogurt greco 110 g','Cioccolato 10 g → Cacao amaro 5 g','Cereali 50 g → Frollini 40 g'],
+  ing:[['Yogurt greco','110 g'],['Cacao amaro','5 g'],['Frollini','40 g']],
+  steps:['Monta lo yogurt con il cacao e la vaniglia usando le fruste, per due minuti buoni.','Sbriciola i frollini sul fondo del bicchiere.','Versa sopra la mousse e lascia rassodare in frigo 20 minuti.'],
+  nota:'Montare lo yogurt incorpora aria: da denso diventa spumoso, senza aggiungere un solo ingrediente.'},
+ {gruppo:'Dolci',nome:'Pancake al cacao',quando:'Colazione',tempo:'~12 min',
+  swap:['Alternativa pancake già prevista dal piano','Cioccolato 10 g → Cacao amaro 5 g nell’impasto'],
+  ing:[['Uovo','1'],['Farina','40 g'],['Cacao amaro','5 g'],['Latte','q.b.']],
+  steps:['Monta l’albume a neve ferma.','Mescola tuorlo, farina, cacao e latte fino a una pastella densa, poi incorpora l’albume dal basso verso l’alto.','Cuoci in padella antiaderente a fuoco medio-basso, con il coperchio.'],
+  nota:'Il cacao assorbe più liquido della farina: serve un goccio di latte in più, altrimenti restano asciutti.'},
+ {gruppo:'Dolci',nome:'Crumble di frutta e frutta secca',quando:'Spuntino del mattino',tempo:'~25 min',
+  swap:['Nessuno: stessi ingredienti dello spuntino'],
+  ing:[['Frutta','150 g'],['Frutta secca','30 g']],
+  steps:['Taglia la frutta a cubetti — mele e pere sono le migliori — e mettila in pirofila con cannella e succo di limone.','Trita grossolanamente la frutta secca e distribuiscila in superficie.','Forno a 180° per 20 minuti, finché sopra è dorato e croccante.'],
+  nota:'La frutta secca tostata in forno fa da crumble: la croccantezza arriva da lì, non da burro e zucchero.'},
+ {gruppo:'Dolci',nome:'Mele al forno alla cannella',quando:'Spuntino del mattino',tempo:'~35 min',
+  swap:['Nessuno: stessi ingredienti dello spuntino'],
+  ing:[['Frutta (mele)','150 g'],['Frutta secca','30 g']],
+  steps:['Svuota il torsolo lasciando il fondo intero e riempi la mela con la frutta secca tritata.','Spolvera di cannella, bagna con poca acqua e succo di limone.','Forno a 180° per 30 minuti, irrorando ogni tanto con il fondo di cottura.'],
+  nota:'La cottura lunga caramella gli zuccheri della mela: diventa dolcissima senza aggiungere niente.'},
+ {gruppo:'Dolci',nome:'Sorbetto al limone',quando:'Spuntino del mattino',tempo:'~10 min + freezer',
+  swap:['Nessuno: è la frutta dello spuntino, congelata'],
+  ing:[['Frutta','150 g'],['Frutta secca','30 g']],
+  steps:['Congela la frutta a pezzi per almeno tre ore.','Frulla a impulsi con succo e scorza di limone e pochissima acqua.','Rimetti in freezer 20 minuti per farlo rassodare, poi servi con la frutta secca.'],
+  nota:'La scorza porta il profumo e il succo l’acidità: insieme fanno percepire dolcezza che non c’è.'},
+ {gruppo:'Dolci',nome:'Pere grigliate',quando:'Spuntino del mattino',tempo:'~8 min',
+  swap:['Nessuno: stessi ingredienti dello spuntino'],
+  ing:[['Frutta (pere)','150 g'],['Frutta secca','30 g']],
+  steps:['Taglia le pere a spicchi spessi, senza sbucciarle.','Piastra ben calda, due minuti per lato, finché prendono le righe scure.','Cannella e granella di frutta secca a chiudere, ancora calde.'],
+  nota:'La griglia caramella la superficie della frutta: stesso effetto dello zucchero, senza zucchero.'},
+ {gruppo:'Dolci',nome:'Macedonia al lime e menta',quando:'Spuntino del mattino',tempo:'~8 min',
+  swap:['Nessuno: stessi ingredienti dello spuntino'],
+  ing:[['Frutta','150 g'],['Frutta secca','30 g']],
+  steps:['Taglia la frutta a cubetti piccoli e regolari.','Condisci con succo e scorza di lime e menta spezzata a mano.','Riposo in frigo 15 minuti; frutta secca solo al momento di servire, per non ammorbidirla.'],
+  nota:'La menta va spezzata con le dita, non tagliata: il coltello la ossida e le porta via il profumo.'},
+
+ {gruppo:'Fuori casa',nome:'Pizzeria',quando:'Al posto di una cena',
+  swapLabel:'Da tenere a mente',
+  swap:['Una margherita da pizzeria vale circa il doppio dei carboidrati di una cena del piano','Se aggiungi fritti, birra o dolce, contala come il pasto libero della settimana'],
+  ing:[['Pizza margherita','1 normale'],['Verdure di contorno','150 g']],
+  steps:['Scegli margherita o marinara: le farcite raddoppiano grassi e sale senza saziare di più.','Salta supplì, crocchè e patatine: è lì che si accumula il grosso.','Acqua invece di birra o bibite, e niente doppia mozzarella.'],
+  nota:'Se sai già che andrai in pizzeria, mettila in conto come pasto libero settimanale invece di rincorrere i grammi.'},
+ {gruppo:'Fuori casa',nome:'Ristorante o trattoria',quando:'Al posto di una cena',
+  swapLabel:'Da tenere a mente',
+  swap:['Secondo alla griglia + verdure + pane ricalca la struttura delle cene del piano','L’olio usato al ristorante è quasi sempre più dei 10 g previsti'],
+  ing:[['Carne o pesce alla griglia','200–250 g'],['Verdure di contorno','150 g'],['Pane','100 g']],
+  steps:['Ordina il secondo alla griglia e chiedi l’olio a parte, così lo dosi tu.','Contorno di verdure al posto delle patatine; se prendi le patate, salta il pane.','Primo o secondo, non entrambi: nel piano non stanno insieme.'],
+  nota:'Chiedere il condimento a parte è la richiesta che sposta di più i macro, e nessun ristorante si offende.'},
+ {gruppo:'Fuori casa',nome:'Sushi',quando:'Al posto della cena di giovedì',
+  swapLabel:'Da tenere a mente',
+  swap:['Ricalca bene la cena di giovedì: cous cous 100 g → riso, merluzzo 300 g → pesce crudo'],
+  ing:[['Nigiri o sashimi','10–12 pezzi'],['Edamame o insalata','150 g']],
+  steps:['Punta su nigiri, sashimi e maki semplici; evita tempura e tutto ciò che è "crispy".','Salta le salse dolci e cremose (teriyaki, salsa rosa): sono zucchero e grassi aggiunti.','Salsa di soia con misura per il sale; zenzero e wasabi sono liberi.'],
+  nota:'Il pesce crudo in sé è perfetto per il piano: sono il fritto e le salse a trasformarlo in una cena molto grassa.'},
+ {gruppo:'Fuori casa',nome:'Hamburger o fast food',quando:'Al posto della cena di mercoledì',
+  swapLabel:'Da tenere a mente',
+  swap:['Un hamburger singolo corrisponde bene alla cena di mercoledì (manzo 220 g + pane 130 g)','Menù completo con patatine grandi e bibita: contalo come pasto libero'],
+  ing:[['Hamburger semplice','1'],['Insalata di contorno','150 g']],
+  steps:['Panino singolo, non doppio, e senza salse cremose: ketchup e senape pesano poco.','Niente menù: se proprio, patatine piccole, e acqua al posto della bibita.','Aggiungi un contorno di insalata per arrivare alle verdure previste.'],
+  nota:'Nel fast food il grosso delle calorie sta in salse, patatine grandi e bibite, non nella carne.'},
+ {gruppo:'Fuori casa',nome:'Bar a pranzo',quando:'Al posto di un pranzo',
+  swapLabel:'Da tenere a mente',
+  swap:['Il pane sostituisce il cereale, l’affettato magro la proteina del pranzo'],
+  ing:[['Panino con pollo, bresaola o tonno','~130 g di pane'],['Verdure nel panino','a piacere']],
+  steps:['Pane semplice con pollo, bresaola o tonno; evita salse e formaggi aggiunti.','Chiedi di farcirlo con verdure: pomodoro, insalata, zucchine grigliate.','Se c’è, il poke bowl è ancora meglio: riso, proteina magra e verdure separati.'],
+  nota:'Il poke bowl è il pasto fuori casa più simile al piano: ha già la struttura cereale + proteina + verdure.'},
+ {gruppo:'Fuori casa',nome:'Colazione al bar',quando:'Al posto della colazione',
+  swapLabel:'Da tenere a mente',
+  swap:['Cappuccino e cornetto vuoto stanno vicini alla colazione del piano (latte 200 g + cereali 50 g)','Cornetti farciti a crema o cioccolato: contali come sgarro, non come colazione'],
+  ing:[['Cappuccino','1'],['Cornetto semplice','1']],
+  steps:['Cappuccino normale, senza panna, e cornetto vuoto invece che farcito.','Se hai molta fame, meglio due cornetti vuoti che uno farcito: stesso peso, molto meno zucchero.','In alternativa, yogurt e frutta se il bar li ha.'],
+  nota:'Il ripieno di un cornetto farcito può valere da solo quanto tutta la colazione del piano.'},
+ {gruppo:'Fuori casa',nome:'Aperitivo',quando:'Al posto di uno spuntino',
+  swapLabel:'Da tenere a mente',
+  swap:['L’alcol non rientra nei macro del piano: un calice pesa circa come uno spuntino','Il buffet con fritti e salumi è un pasto intero: contalo come cena o come libero'],
+  ing:[['Verdure crude o olive','a piacere'],['Vino','1 calice']],
+  steps:['Mangia qualcosa prima di uscire: si arriva molto meno affamati al tavolo dei fritti.','Punta su crudités, olive, bresaola e formaggi freschi; lascia stare patatine e salatini.','Alterna ogni bicchiere con un bicchiere d’acqua.'],
+  nota:'Non è il calice a rovinare i conti, ma le due ore di stuzzichini che lo accompagnano.'},
+ {gruppo:'Fuori casa',nome:'Cucina cinese, thai o indiana',quando:'Al posto di una cena',
+  swapLabel:'Da tenere a mente',
+  swap:['Riso al vapore + proteina + verdure ricalca la struttura delle cene del piano'],
+  ing:[['Riso al vapore','~100 g a crudo'],['Carne o pesce saltati','200–250 g'],['Verdure saltate','150 g']],
+  steps:['Chiedi riso bianco al vapore, non riso fritto o alla cantonese.','Scegli piatti saltati o al vapore; evita agrodolce, pastelle fritte e curry con panna o latte di cocco.','Salsa di soia a parte e con misura: è molto salata.'],
+  nota:'Le versioni al vapore e saltate ci sono quasi sempre nel menù: basta chiederle esplicitamente.'},
+ {gruppo:'Fuori casa',nome:'Gelateria',quando:'Al posto dello spuntino del mattino',
+  swapLabel:'Da tenere a mente',
+  swap:['Due gusti alla frutta stanno vicini allo spuntino (frutta 150 g + frutta secca 30 g)','Gusti alla crema e panna raddoppiano i grassi: in quel caso salta la frutta secca'],
+  ing:[['Gelato in coppetta','2 gusti alla frutta']],
+  steps:['Coppetta piccola, due gusti, preferendo sorbetti e gusti alla frutta.','Niente panna e niente cono biscottato, se vuoi restare vicino allo spuntino.','Se scegli gusti alla crema, considera che sostituiscono anche la frutta secca della giornata.'],
+  nota:'I sorbetti alla frutta sono in pratica frutta e acqua: sono la scelta più vicina al piano.'}
+];
+
+function sameFood(ing,sub){
+  const a=ing.toLowerCase(),b=sub.toLowerCase();
+  if(/^altr/.test(b)) return false; // "Altro cereale", "Altra frutta"… sono volutamente generici
+  return b.split(/[ ,(]/).filter(w=>w.length>3).some(w=>a.includes(w));
+}
+function webSubsFor(nome,qty){
+  const g=parseGrams(qty);
+  if(!g) return [];
+  const rule=WEB_RULES.find(r=>r.re.test(nome));
+  if(!rule) return [];
+  return rule.subs.filter(s=>!sameFood(nome,s[0]))
+    .map(s=>({nome:s[0],qty:fmtGrams(Math.round(g*s[1]/5)*5),nota:s[2]}));
+}
+function subsFor(m,idx){
+  const ing=m.ing[idx];
+  return {nome:ing[0],qty:ing[1],
+    occhino:((m.sub&&m.sub[ing[0]])||[]).map(s=>({nome:s[0],qty:s[1]})),
+    web:webSubsFor(ing[0],ing[1])};
+}
+
+function chips(m,mi){
+  return '<ul class="ing">'+m.ing.map((i,idx)=>{
+    const s=subsFor(m,idx);
+    const kc=kcalDi(i[0],i[1]);
+    const label='<span class="nm">'+i[0]+'</span>'
+      +'<span class="kc">'+(kc===null?'':kc+' kcal')+'</span>'
+      +'<span class="g">'+i[1]+'</span>';
+    const row=(!s.occhino.length&&!s.web.length)
+      ? '<span class="chip">'+label+'</span>'
+      : '<button class="chip'+(s.occhino.length?' doc':'')+'" type="button" data-m="'+mi+'" data-i="'+idx+'" aria-haspopup="dialog">'+label+'</button>';
+    return '<li>'+row+'</li>';
+  }).join('')+'</ul>'+bloccoMacro(macroPasto(m));
+}
+function stepsList(a){return '<ol class="steps">'+a.map(s=>'<li>'+s+'</li>').join('')+'</ol>';}
+// Chiusi di default: quasi sempre si guardano grammi e macro, i passaggi
+// servono solo quando si cucina davvero. <details> perche' funziona anche
+// senza JS ed e' gia' accessibile da tastiera.
+function steps(a,label){
+  return '<details class="prep-steps"><summary>'+(label||'Preparazione')
+    +'<span>'+a.length+' passaggi</span></summary>'+stepsList(a)+'</details>';
+}
+function renderMeal(m,mi,col,slot){
+  let h='<div class="card'+(m.accent?' accent':'')+'"'+(col?' style="--c:'+col+'"':'')+'>'
+       +'<div class="meal-top"><div>';
+  h+='<div class="kick">'+m.kick+'</div><div class="mtitle">'+m.title+'</div></div>';
+  if(m.time) h+='<span class="timepill">'+clock+m.time+'</span>';
+  h+='</div>'+chips(m,mi);
+  if(m.liberi&&m.liberi!=='—') h+='<div class="liberi">Liberi: '+m.liberi+'</div>';
+  if(m.oppure) h+='<div class="oppure"><span>Nota</span>'+m.oppure+'</div>';
+  if(m.alts) h+='<div class="alts"><span>'+(m.altsTitle||'Alternative')+'</span><ul>'+m.alts.map(a=>'<li>'+a+'</li>').join('')+'</ul></div>';
+  if(m.steps) h+=steps(m.steps);
+  if(m.tip) h+='<div class="tip">'+bolt+'<div><b>Veloce.</b> '+m.tip+'</div></div>';
+  if(slot){
+    const fatto=DONE.has(slot);
+    h+='<button class="donebtn'+(fatto?' on':'')+'" type="button" data-slot="'+slot+'" aria-pressed="'+fatto+'">'
+      +(fatto?'Fatto':'Segna come fatto')+'</button>';
+  }
+  return h+'</div>';
+}
+
+const seg=document.getElementById('seg');
+const grid=document.getElementById('grid');
+const gridWrap=document.getElementById('gridWrap');
+const content=document.getElementById('content');
+const heroDay=document.getElementById('heroDay');
+const heroDate=document.getElementById('heroDate');
+let currentDay=0;
+let currentMeal=null;      // null = tutta la giornata
+let currentSection='sett';
+let CURRENT_SEQ=[];
+
+// Le cinque fasce, ognuna col suo colore: è lo stesso sistema in griglia e nelle schede
+// "fisso" = uguale tutti i giorni (colazione e spuntini): nella griglia pesa
+// meno, così pranzo e cena — le uniche che cambiano — restano protagoniste.
+const SLOTS=[
+  {lab:'Colaz.',c:'var(--c1)',fisso:true},{lab:'Spunt.',c:'var(--c2)',fisso:true},
+  {lab:'Pranzo',c:'var(--c3)'},
+  {lab:'Spunt.',c:'var(--c4)',fisso:true},{lab:'Cena',c:'var(--c5)'}
+];
+
+// Pasti fatti. Sono legati alla settimana ISO, così il lunedì si riparte da zero
+// senza doverli azzerare a mano.
+function settimanaISO(d){
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));
+  const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));
+  return t.getUTCFullYear()+'-W'+Math.ceil(((t-y0)/864e5+1)/7);
+}
+const DONE_KEY='piano11-fatti';
+const SETTIMANA=settimanaISO(new Date());
+// Prima di azzerare una settimana la si archivia: e' il dato che serve per
+// dire al medico quanto si e' seguito il piano, e prima veniva buttato.
+const STORICO_KEY='piano11-storico';
+function loadStorico(){
+  try{const s=JSON.parse(localStorage.getItem(STORICO_KEY)||'[]');return Array.isArray(s)?s:[];}
+  catch(e){return [];}
+}
+function archiviaSettimana(w,arr){
+  try{
+    const st=loadStorico();
+    if(!w||!arr.length||st.some(x=>x.w===w)) return;
+    const per=[0,0,0,0,0];
+    arr.forEach(k=>{const m=+String(k).split('-')[1];if(per[m]!==undefined)per[m]++;});
+    st.push({w:w,n:arr.length,tot:35,per:per});
+    while(st.length>26) st.shift();          // circa sei mesi
+    localStorage.setItem(STORICO_KEY,JSON.stringify(st));
+  }catch(e){}
+}
+function loadDone(){
+  try{
+    const o=JSON.parse(localStorage.getItem(DONE_KEY)||'{}');
+    if(o.w===SETTIMANA) return new Set(o.d||[]);
+    archiviaSettimana(o.w,o.d||[]);
+    return new Set();
+  }catch(e){return new Set();}
+}
+function saveDone(){
+  try{localStorage.setItem(DONE_KEY,JSON.stringify({w:SETTIMANA,d:[...DONE]}));}catch(e){}
+}
+let DONE=loadDone();
+
+// ---- Prescrizioni giornaliere ----
+// Acqua e integratori valgono per OGGI e si azzerano al cambio di data; il
+// pasto libero e' settimanale come le spunte dei pasti.
+const OGGI_KEY='piano11-oggi', LIBERO_KEY='piano11-libero';
+const ACQUA_OBIETTIVO=12;              // bicchieri da 250 ml ≈ 3 L
+function dataOggi(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function nuovoOggi(){return {d:dataOggi(),acqua:0,creatina:false,omega:false,sgarri:[]};}
+function loadOggi(){
+  try{
+    const o=JSON.parse(localStorage.getItem(OGGI_KEY)||'{}');
+    if(o.d!==dataOggi()) return nuovoOggi();
+    const v=Object.assign(nuovoOggi(),o);
+    if(!Array.isArray(v.sgarri)) v.sgarri=[];
+    // vecchio formato: un totale libero in kcal, lo converto in voci "altro"
+    if(o.extra>0&&!v.sgarri.length)
+      v.sgarri=new Array(Math.round(o.extra/100)).fill('altro');
+    delete v.extra;
+    return v;
+  }catch(e){return nuovoOggi();}
+}
+function saveOggi(){try{localStorage.setItem(OGGI_KEY,JSON.stringify(OGGI));}catch(e){}}
+function loadLibero(){
+  try{const o=JSON.parse(localStorage.getItem(LIBERO_KEY)||'{}');return o.w===SETTIMANA&&!!o.u;}
+  catch(e){return false;}
+}
+function saveLibero(){try{localStorage.setItem(LIBERO_KEY,JSON.stringify({w:SETTIMANA,u:LIBERO}));}catch(e){}}
+let OGGI=loadOggi(), LIBERO=loadLibero();
+
+function renderOggi(){
+  const box=document.getElementById('oggi');
+  if(!box) return;
+  const a=OGGI.acqua, perc=Math.min(100,a/ACQUA_OBIETTIVO*100);
+  const litri=(a*0.25).toString().replace('.',',');
+  box.innerHTML=
+    '<div class="rem acqua'+(a>=ACQUA_OBIETTIVO?' full':'')+'">'
+     +'<span class="fill" style="width:'+perc+'%"></span>'
+     +'<span>Acqua</span><span class="v">'+litri+' L</span>'
+     +'<button class="mini" type="button" data-a="-1" aria-label="Un bicchiere in meno">−</button>'
+     +'<button class="mini" type="button" data-a="1" aria-label="Un bicchiere in più">+</button>'
+    +'</div>'
+    +'<button class="rem'+(OGGI.creatina?' on':'')+'" type="button" data-k="creatina" aria-pressed="'+OGGI.creatina+'">Creatina <span class="v">5 g</span></button>'
+    +'<button class="rem'+(OGGI.omega?' on':'')+'" type="button" data-k="omega" aria-pressed="'+OGGI.omega+'">Omega-3 <span class="v">1 g</span></button>'
+    +'<button class="rem'+(LIBERO?' on':'')+'" type="button" data-k="libero" aria-pressed="'+LIBERO+'">Pasto libero <span class="v">'+(LIBERO?'usato':'1/sett')+'</span></button>';
+
+  box.querySelectorAll('.mini').forEach(b=>b.addEventListener('click',()=>{
+    OGGI.acqua=Math.max(0,Math.min(ACQUA_OBIETTIVO,OGGI.acqua+ +b.dataset.a));
+    saveOggi();renderOggi();
+  }));
+  box.querySelectorAll('button.rem').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.k;
+    if(k==='libero'){LIBERO=!LIBERO;saveLibero();}
+    else{OGGI[k]=!OGGI[k];saveOggi();}
+    renderOggi();
+  }));
+}
+
+function seqFor(i){
+  const d=PLAN.days[i];
+  return [PLAN.colazione,PLAN.spMattino,
+    Object.assign({kick:'Pranzo · veloce',accent:true},d.pranzo),
+    PLAN.spPomeriggio,
+    Object.assign({kick:'Cena'},d.cena)];
+}
+
+function fade(){content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');}
+
+function renderDay(i){
+  currentDay=i;currentMeal=null;
+  heroDay.textContent=PLAN.days[i].full;
+  const seq=seqFor(i);CURRENT_SEQ=seq;
+  content.innerHTML=seq.map((m,mi)=>renderMeal(m,mi,SLOTS[mi].c,i+'-'+mi)).join('');
+  paintGrid();fade();
+}
+
+function renderPasto(i,m){
+  currentDay=i;currentMeal=m;
+  heroDay.textContent=PLAN.days[i].full;
+  const seq=seqFor(i);CURRENT_SEQ=[seq[m]];
+  content.innerHTML=renderMeal(seq[m],0,SLOTS[m].c,i+'-'+m);
+  paintGrid();fade();
+}
+
+// Previsto dal piano per quel giorno, contro quanto risulta dai pasti segnati.
+// Il "previsto" non è un obiettivo del medico: è la somma di ciò che il piano
+// prevede quel giorno, calcolata con le stesse stime.
+// Catalogo degli sgarri più comuni: [kcal, prot, carbo, grassi] a porzione.
+// Negli alcolici le calorie vengono quasi tutte dall'alcol, che non è nessuno
+// dei tre macro: per quelli kcal e P/C/G non tornano, ed è corretto così.
+const SGARRI={
+ 'Alcolici':[
+  ['birra33','Birra chiara 33 cl',110,1,9,0,true],
+  ['birra40','Birra media 40 cl',135,1.2,11,0,true],
+  ['birradm','Birra doppio malto 33 cl',280,2,22,0,true],
+  ['vino','Bicchiere di vino 125 ml',90,0,1,0,true],
+  ['spritz','Spritz',170,0,16,0,true],
+  ['amaro','Amaro o superalcolico 40 ml',95,0,4,0,true]],
+ 'Dolci':[
+  ['gelato','Gelato in coppetta, 2 gusti',260,4,32,12],
+  ['cono','Cono gelato',300,5,36,15],
+  ['tiramisu','Tiramisù, una porzione',350,6,32,21],
+  ['torta','Fetta di torta',320,4,42,15],
+  ['ciocc','Cioccolato 25 g',130,1,12,8],
+  ['cornetto','Cornetto semplice',300,6,40,13],
+  ['cornettof','Cornetto farcito',400,6,50,19]],
+ 'Salato':[
+  ['pizza','Pizza margherita intera',900,35,120,30],
+  ['trancio','Trancio di pizza',300,12,40,10],
+  ['patatine','Patatine fritte, porzione',470,5,55,25],
+  ['burger','Hamburger semplice',500,25,40,25],
+  ['panino','Panino con salumi',450,20,45,21],
+  ['busta','Patatine in busta 50 g',270,3,25,17],
+  ['aperitivo','Aperitivo con stuzzichini',450,10,45,25]],
+ 'Altro':[
+  ['altro','Qualcos’altro, circa 100 kcal',100,0,0,0]]
+};
+const SGARRO_BY_ID=(function(){const m={};
+  Object.keys(SGARRI).forEach(c=>SGARRI[c].forEach(v=>{m[v[0]]={cat:c,id:v[0],n:v[1],k:v[2],p:v[3],c:v[4],g:v[5],alc:!!v[6]};}));
+  return m;})();
+
+// Voci aggiunte a mano: restano salvate e riutilizzabili, non sono per un giorno solo.
+const MIEI_KEY='piano11-miei';
+function loadMiei(){
+  try{const a=JSON.parse(localStorage.getItem(MIEI_KEY)||'[]');return Array.isArray(a)?a:[];}
+  catch(e){return [];}
+}
+function saveMiei(){try{localStorage.setItem(MIEI_KEY,JSON.stringify(MIEI));}catch(e){}}
+let MIEI=loadMiei();
+function sgarroById(id){return SGARRO_BY_ID[id]||MIEI.find(m=>m.id===id)||null;}
+
+function sgarriDiOggi(){return (OGGI.sgarri||[]).map(sgarroById).filter(Boolean);}
+function totaleSgarri(){
+  return sgarriDiOggi().reduce((a,s)=>({k:a.k+s.k,p:a.p+s.p,c:a.c+s.c,g:a.g+s.g}),
+    {k:0,p:0,c:0,g:0});
+}
+
+// Le voci ancora disponibili oggi, dalle quali si può togliere per rientrare
+// dopo uno sgarro. Solo kcal reali degli ingredienti: nessuna stima inventata.
+let TOLTI=new Set();
+let PICKER_APERTO=false, FORM_APERTO=false;
+function pickerSgarri(){
+  let h='<details class="sg-pick"'+(PICKER_APERTO?' open':'')+'>'
+   +'<summary>Aggiungi uno sgarro</summary><div class="sg-body">';
+  h+=Object.keys(SGARRI).map(cat=>'<div class="sg-cat">'+cat+'</div><div class="sg-row">'
+      +SGARRI[cat].map(v=>'<button class="sg-chip" type="button" data-add="'+v[0]+'">'
+        +v[1]+' <b>'+v[2]+'</b></button>').join('')+'</div>').join('');
+  if(MIEI.length)
+    h+='<div class="sg-cat">Tue voci</div><div class="sg-row">'
+      +MIEI.map(m=>'<button class="sg-chip mio" type="button" data-add="'+m.id+'">'
+        +m.n+' <b>'+m.k+'</b></button>').join('')+'</div>';
+
+  h+='<details class="sg-new"'+(FORM_APERTO?' open':'')+'><summary>Aggiungi una voce tua</summary>'
+   +'<div class="sg-form">'
+   +'<input class="fin" id="mioN" type="text" placeholder="Nome — es. Birra del pub" maxlength="42">'
+   +'<div class="sg-num">'
+     +'<label>kcal<input class="fin" id="mioK" type="text" inputmode="numeric" placeholder="0"></label>'
+     +'<label>Prot.<input class="fin" id="mioP" type="text" inputmode="decimal" placeholder="0"></label>'
+     +'<label>Carbo<input class="fin" id="mioC" type="text" inputmode="decimal" placeholder="0"></label>'
+     +'<label>Grassi<input class="fin" id="mioG" type="text" inputmode="decimal" placeholder="0"></label>'
+   +'</div>'
+   +'<div class="sg-help">Le kcal bastano. I macro, se li sai, rendono più preciso il riepilogo.</div>'
+   +'<div class="btnrow"><button class="btn primary" type="button" id="salvaMio">Salva la voce</button></div>'
+   +'<div id="mioMsg"></div>';
+  if(MIEI.length)
+    h+='<div class="sg-cat">Le tue voci salvate</div><ul class="sg-list">'
+      +MIEI.map(m=>'<li><span>'+m.n+'</span><b>'+m.k+' kcal</b>'
+        +'<button class="sg-x" type="button" data-delmio="'+m.id+'" aria-label="Elimina '+m.n+'">×</button></li>').join('')
+      +'</ul>';
+  h+='</div></details>';
+  return h+'</div></details>';
+}
+
+function bloccoCompensa(i){
+  if(i!==TODAY) return '';
+  const scelti=sgarriDiOggi(), tot=totaleSgarri(), extra=tot.k;
+  if(!extra) return '<div class="comp">'+pickerSgarri()+'</div>';
+
+  const rest=[];
+  seqFor(i).forEach((m,mi)=>{
+    if(DONE.has(i+'-'+mi)) return;
+    (m.ing||[]).forEach((ing,ii)=>{
+      const k=kcalDi(ing[0],ing[1]);
+      if(k) rest.push({key:mi+'-'+ii,nome:ing[0],k:k,pasto:SLOTS[mi].lab});
+    });
+  });
+  rest.sort((a,b)=>b.k-a.k);
+  const tolto=rest.filter(r=>TOLTI.has(r.key)).reduce((a,r)=>a+r.k,0);
+
+  let h='<div class="comp"><div class="comp-h"><span>Fuori piano <b>'+extra+' kcal</b></span>'
+   +'<button class="linkbtn" type="button" id="azzeraExtra">azzera</button></div>'
+   +'<ul class="sg-list">'+scelti.map((s,idx)=>
+      '<li><span>'+s.n+'</span><b>'+s.k+' kcal</b>'
+      +'<button class="sg-x" type="button" data-del="'+idx+'" aria-label="Togli '+s.n+'">×</button></li>').join('')
+   +'</ul>'+pickerSgarri();
+  if(!rest.length){
+    h+='<div class="comp-n">Non restano pasti da alleggerire oggi.</div>';
+  }else{
+    h+='<div class="comp-n">Tocca cosa togli dai pasti che restano: <b class="'
+      +(tolto>=extra?'ok':'')+'">'+tolto+'</b> di '+extra+' kcal</div>'
+      +'<ul class="comp-l">'+rest.slice(0,8).map(r=>
+        '<li><button class="comp-i'+(TOLTI.has(r.key)?' on':'')+'" type="button" data-t="'+r.key+'">'
+        +'<span>'+r.nome+' <em>'+r.pasto+'</em></span><b>'+r.k+' kcal</b></button></li>').join('')
+      +'</ul>';
+  }
+  return h+'</div>';
+}
+
+function renderRecap(i){
+  const box=document.getElementById('recap');
+  if(!box) return;
+  const seq=seqFor(i);
+  const prev=macroSomma(seq);
+  const fatti=seq.filter((_,m)=>DONE.has(i+'-'+m));
+  const mang=macroSomma(fatti);
+  // Gli sgarri scelti dal catalogo portano anche i loro macro
+  const sg=(i===TODAY?totaleSgarri():{k:0,p:0,c:0,g:0});
+  const extra=sg.k;
+  // calorie del fuori piano che i macro non spiegano: alcol, o voci senza macro
+  const scartoSg=sg.k-(sg.p*4+sg.c*4+sg.g*9);
+  // i macro del catalogo hanno decimali: arrotondo qui, non nei dati
+  mang.k=Math.round(mang.k+sg.k);mang.p=Math.round(mang.p+sg.p);
+  mang.c=Math.round(mang.c+sg.c);mang.g=Math.round(mang.g+sg.g);
+  const resta={k:Math.max(0,prev.k-mang.k),p:Math.max(0,prev.p-mang.p),
+               c:Math.max(0,prev.c-mang.c),g:Math.max(0,prev.g-mang.g)};
+  const riga=(et,f,p,u)=>{
+    const perc=p?Math.min(100,f/p*100):0;
+    return '<div class="rc-r"><span class="rc-l">'+et+'</span>'
+      +'<div class="rc-bar"><i style="width:'+perc.toFixed(1)+'%"></i></div>'
+      +'<span class="rc-v"><b>'+f+'</b>/'+p+' '+u+'</span></div>';
+  };
+  box.innerHTML='<div class="recap"><div class="rc-h">'
+    +'<span>'+PLAN.days[i].full+(i===TODAY?' · oggi':'')+'</span>'
+    +'<span class="rc-n">'+fatti.length+'/'+seq.length+' pasti segnati</span></div>'
+    +riga('kcal',mang.k,prev.k,'')
+    +riga('Proteine',mang.p,prev.p,'g')
+    +riga('Carbo',mang.c,prev.c,'g')
+    +riga('Grassi',mang.g,prev.g,'g')
+    +((fatti.length||extra)&&fatti.length<seq.length
+      ? '<div class="rc-rest">Restano <b>'+resta.k+' kcal</b> · P '+resta.p+' g · C '+resta.c+' g · G '+resta.g+' g</div>'
+      : fatti.length===seq.length
+        ? '<div class="rc-rest">Giornata completata.</div>'
+        : '<div class="rc-rest">Segna i pasti fatti per vedere cosa manca.</div>')
+    +bloccoCompensa(i)
+    +'<div class="rc-note">Stime da tabelle di composizione pubbliche, non i calcoli del medico.'
+    +(scartoSg>Math.max(40,sg.k*0.15)
+      ? ' Di '+Math.round(scartoSg)+' kcal del fuori piano non si sa da quali macro vengano: '
+       +'negli alcolici è l’alcol, che non rientra in P/C/G; nelle voci senza macro è ignoto.'
+      : '')+'</div>'
+    +'</div>';
+
+  const az=document.getElementById('azzeraExtra');
+  if(az) az.addEventListener('click',()=>{OGGI.sgarri=[];TOLTI=new Set();saveOggi();renderRecap(i);});
+  box.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{
+    OGGI.sgarri=(OGGI.sgarri||[]).concat([b.dataset.add]);saveOggi();renderRecap(i);
+  }));
+  box.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+    const a=(OGGI.sgarri||[]).slice();a.splice(+b.dataset.del,1);
+    OGGI.sgarri=a;if(!a.length) TOLTI=new Set();
+    saveOggi();renderRecap(i);
+  }));
+
+  // ricordo quali pannelli erano aperti: il render li ricostruisce da zero
+  const pick=box.querySelector('.sg-pick'), form=box.querySelector('.sg-new');
+  if(pick) pick.addEventListener('toggle',()=>{PICKER_APERTO=pick.open;});
+  if(form) form.addEventListener('toggle',()=>{FORM_APERTO=form.open;});
+
+  const salva=document.getElementById('salvaMio');
+  if(salva) salva.addEventListener('click',()=>{
+    const msg=document.getElementById('mioMsg');
+    // accetto sia la virgola sia il punto, e tengo un decimale
+    const num=id=>{const v=parseFloat((document.getElementById(id).value||'').replace(',','.'));
+                   return isFinite(v)&&v>0?Math.min(5000,Math.round(v*10)/10):0;};
+    const n=(document.getElementById('mioN').value||'').trim();
+    const k=num('mioK');
+    if(!n){msg.innerHTML='<div class="msg err">Serve un nome.</div>';return;}
+    if(!(k>0)){msg.innerHTML='<div class="msg err">Servono le kcal della porzione.</div>';return;}
+    if(MIEI.length>=40){msg.innerHTML='<div class="msg err">Hai già 40 voci: eliminane una.</div>';return;}
+    MIEI.push({id:'mio'+Date.now(),n:n,k:Math.round(k),p:num('mioP'),c:num('mioC'),g:num('mioG')});
+    saveMiei();
+    PICKER_APERTO=true;FORM_APERTO=true;
+    renderRecap(i);
+    const m2=document.getElementById('mioMsg');
+    if(m2) m2.innerHTML='<div class="msg ok">Voce salvata: la trovi in “Tue voci”.</div>';
+  });
+  box.querySelectorAll('[data-delmio]').forEach(b=>b.addEventListener('click',()=>{
+    const id=b.dataset.delmio;
+    const usata=(OGGI.sgarri||[]).indexOf(id)>=0;
+    if(!confirm('Eliminare questa voce?'+(usata?' L’hai usata oggi: verrà tolta anche dal conteggio.':''))) return;
+    if(usata) OGGI.sgarri=(OGGI.sgarri||[]).filter(x=>x!==id),saveOggi();
+    MIEI=MIEI.filter(m=>m.id!==id);saveMiei();
+    PICKER_APERTO=true;FORM_APERTO=true;renderRecap(i);
+  }));
+  box.querySelectorAll('.comp-i').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.t;
+    TOLTI.has(k)?TOLTI.delete(k):TOLTI.add(k);
+    renderRecap(i);
+  }));
+}
+
+function paintGrid(){
+  grid.querySelectorAll('.cell').forEach(c=>{
+    const d=+c.dataset.d, m=+c.dataset.m;
+    const on=currentSection==='sett'&&d===currentDay&&(currentMeal===null||currentMeal===m);
+    c.setAttribute('aria-selected',on);
+    c.classList.toggle('done',DONE.has(d+'-'+m));
+  });
+  grid.querySelectorAll('.ghead').forEach(h=>{
+    h.classList.toggle('today',+h.dataset.d===TODAY);
+  });
+  const oggi=SLOTS.filter((_,m)=>DONE.has(TODAY+'-'+m)).length;
+  const tot=PLAN.days.length*SLOTS.length;
+  const nota=document.getElementById('gridNote');
+  if(nota) nota.innerHTML=DONE.size
+    ? '<b>'+oggi+'/'+SLOTS.length+'</b> pasti di oggi · <b>'+DONE.size+'/'+tot+'</b> in settimana'
+      +' · <button class="linkbtn" type="button" id="resetDone">azzera</button>'
+    : 'Tocca un pasto, o il nome del giorno per vederlo tutto. Il puntino segna i pasti che vogliono un cereale cotto prima.';
+  const rb=document.getElementById('resetDone');
+  if(rb) rb.addEventListener('click',()=>{DONE=new Set();saveDone();paintGrid();
+    currentMeal===null?renderDay(currentDay):renderPasto(currentDay,currentMeal);});
+  renderRecap(currentDay);
+}
+
+function selectDay(i){
+  i=Math.max(0,Math.min(PLAN.days.length-1,i));
+  currentMeal===null?renderDay(i):renderPasto(i,currentMeal);
+}
+
+// Settimane archiviate + quella in corso, con il pasto piu' saltato:
+// e' quello che serve portare al controllo dal medico.
+// L'API moderna richiede contesto sicuro e gesto dell'utente: se viene negata
+// si ripiega sulla vecchia execCommand, che funziona anche li'.
+async function copiaTesto(t){
+  try{await navigator.clipboard.writeText(t);return true;}catch(e){}
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=t;ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:-1000px;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    const ok=document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  }catch(e){return false;}
+}
+
+function bloccoAderenza(){
+  const st=loadStorico().slice();
+  const perOra=[0,0,0,0,0];
+  DONE.forEach(k=>{const m=+String(k).split('-')[1];if(perOra[m]!==undefined)perOra[m]++;});
+  const righe=st.concat([{w:SETTIMANA,n:DONE.size,tot:35,per:perOra,ora:true}]);
+  if(righe.length===1&&!DONE.size)
+    return '<div class="card"><div class="kick">Aderenza</div>'
+      +'<div class="mtitle">Quanto stai seguendo il piano</div>'
+      +'<div class="liberi">Da qui in avanti ogni settimana viene archiviata: segna i pasti fatti e '
+      +'fra qualche settimana avrai un quadro da mostrare al medico.</div></div>';
+
+  const ultime=righe.slice(-8);
+  const media=Math.round(righe.reduce((a,r)=>a+r.n/r.tot,0)/righe.length*100);
+  // il piu' saltato: confronto i mancati per fascia sul totale delle settimane
+  const mancati=[0,0,0,0,0];
+  righe.forEach(r=>r.per.forEach((c,m)=>{mancati[m]+=7-c;}));
+  const peggio=mancati.indexOf(Math.max.apply(null,mancati));
+  const nomiFascia=['la colazione','lo spuntino del mattino','il pranzo','lo spuntino del pomeriggio','la cena'];
+
+  let h='<div class="card"><div class="kick">Aderenza</div>'
+   +'<div class="mtitle">Quanto stai seguendo il piano</div><div class="aderenza">';
+  ultime.forEach(r=>{
+    const p=Math.round(r.n/r.tot*100);
+    h+='<div class="ad-r"><span class="ad-w">'+r.w.replace(/^\d+-W/,'sett. ')+(r.ora?' · in corso':'')+'</span>'
+      +'<div class="ad-bar"><i style="width:'+p+'%"></i></div>'
+      +'<span class="ad-v"><b>'+p+'%</b> '+r.n+'/'+r.tot+'</span></div>';
+  });
+  h+='</div><div class="liberi">Media <b>'+media+'%</b> su '+righe.length
+    +(righe.length===1?' settimana':' settimane')+'. Il pasto che salti più spesso è <b>'+nomiFascia[peggio]+'</b>.</div>';
+  h+='<div class="btnrow"><button class="btn" type="button" id="copiaAderenza">Copia il riepilogo</button></div>';
+  return h+'</div>';
+}
+
+function renderPrep(){
+  heroDay.textContent='Organizza';
+  const checked=loadChecked();
+  let h='<div class="day-label">Organizzazione settimanale</div>';
+
+  h+='<div class="card"><div class="kick">Batch cooking</div><div class="mtitle">Cosa preparare prima e quanto dura</div>';
+  h+=PREP_BATCH.map(p=>
+    '<div class="prep-item"><div class="pi-name">'+p.nome+'</div>'+
+    '<div class="pi-row"><span>Quando</span>'+p.quando+'</div>'+
+    '<div class="pi-row"><span>Si conserva</span>'+p.conserva+'</div>'+
+    '<div class="pi-row"><span>Per</span>'+p.per+'</div></div>'
+  ).join('')+'</div>';
+
+  const cats=buildSpesa();
+  h+='<div class="card"><div class="meal-top"><div><div class="kick">Lista della spesa</div><div class="mtitle">Stima per la settimana</div></div>';
+  h+='<button class="btn" id="clearShop">Azzera</button></div>';
+  h+=Object.entries(cats).filter(([,items])=>items.length).map(([cat,items])=>
+    '<div class="alts"><span>'+cat+'</span><ul class="shop">'+items.map(it=>{
+      const on=checked.has(it.nome)?' class="on"':'';
+      return '<li'+on+' data-ing="'+it.nome.replace(/"/g,'&quot;')+'"><span class="box"></span><span class="sname">'+it.nome+'</span><span class="sqty">'+fmtGrams(roundPractical(it.qty))+'</span></li>';
+    }).join('')+'</ul></div>').join('');
+  h+='<div class="liberi">Quantità per 7 giorni, arrotondate per eccesso (colazione e spuntini contati × 7). Tocca un alimento per spuntarlo: le spunte restano salvate.</div></div>';
+
+  h+=bloccoAderenza();
+
+  h+='<div class="card accent"><div class="kick">Trucchi</div><div class="mtitle">Per fare tutto più in fretta</div>'+stepsList(TRUCCHI)+'</div>';
+
+  content.innerHTML=h;
+  content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
+
+  content.querySelectorAll('.shop li').forEach(li=>{
+    li.addEventListener('click',()=>{
+      const set=loadChecked();
+      const ing=li.dataset.ing;
+      if(li.classList.toggle('on')) set.add(ing); else set.delete(ing);
+      saveChecked(set);
+    });
+  });
+  const clear=document.getElementById('clearShop');
+  if(clear) clear.addEventListener('click',()=>{
+    saveChecked(new Set());
+    content.querySelectorAll('.shop li.on').forEach(li=>li.classList.remove('on'));
+  });
+
+  const cp=document.getElementById('copiaAderenza');
+  if(cp) cp.addEventListener('click',async ()=>{
+    const righe=[...content.querySelectorAll('.ad-r')]
+      .map(r=>r.querySelector('.ad-w').textContent+': '+r.querySelector('.ad-v').textContent.trim());
+    const testo='Aderenza al piano\n'+righe.join('\n')+'\n'
+      +content.querySelector('.aderenza').parentNode.querySelector('.liberi').textContent;
+    cp.textContent=(await copiaTesto(testo))?'Copiato':'Copia non riuscita';
+    setTimeout(()=>{cp.textContent='Copia il riepilogo';},1600);
+  });
+}
+
+function ingRows(list){
+  const righe=list.map(i=>{
+    const kc=kcalDi(i[0],i[1]);
+    return '<li><span class="chip"><span class="nm">'+i[0]+'</span>'
+      +'<span class="kc">'+(kc===null?'':kc+' kcal')+'</span>'
+      +'<span class="g">'+i[1]+'</span></span></li>';
+  }).join('');
+  return '<ul class="ing">'+righe+'</ul>'+bloccoMacro(macroPasto({ing:list}));
+}
+
+let ricetteFiltro='Tutte';
+function renderRicette(){
+  heroDay.textContent='Ricette';
+  const gruppi=[...new Set(RICETTE.map(r=>r.gruppo))];
+  if(gruppi.indexOf(ricetteFiltro)<0) ricetteFiltro='Tutte';
+
+  let h='<div class="day-label">Varianti che rispettano i macro</div>';
+  h+='<div class="card"><div class="kick">Come funziona</div><div class="mtitle">Stessi macro, piatti diversi</div>'
+    +'<div class="liberi">Ogni ricetta parte da un pasto preciso del piano e ne mantiene i macro. '
+    +'In <b>Pranzi</b> e <b>Cene</b> ingredienti e grammi sono identici: cambiano solo tecnica e aromi. '
+    +'In <b>Sgarri fit</b> e <b>Dolci</b> qualche ingrediente è scambiato applicando i rapporti di conversione, '
+    +'scritti sotto ogni ricetta. <b>Fuori casa</b> non sono ricette ma indicazioni su cosa ordinare. '
+    +'Erbe, spezie, limone, aceto, aglio, senape, caffè e passata sono condimenti liberi e non spostano nulla.</div></div>';
+
+  h+='<div class="filters">'+['Tutte'].concat(gruppi).map(g=>{
+    const n=g==='Tutte'?RICETTE.length:RICETTE.filter(r=>r.gruppo===g).length;
+    return '<button class="fchip" type="button" data-f="'+g+'" aria-pressed="'+(g===ricetteFiltro)+'">'+g+' <span>'+n+'</span></button>';
+  }).join('')+'</div>';
+
+  const descr={
+    'Pranzi':'Stessi ingredienti e grammi del piano.',
+    'Cene':'Stessi ingredienti e grammi del piano.',
+    'Sgarri fit':'Quello che ti verrebbe voglia di mangiare fuori dieta, ricostruito con scambi che tengono i macro.',
+    'Dolci':'Da colazione e spuntini, senza zucchero aggiunto.',
+    'Fuori casa':'Cosa ordinare per restare vicino al piano quando non cucini tu.'
+  };
+  gruppi.filter(g=>ricetteFiltro==='Tutte'||g===ricetteFiltro).forEach(g=>{
+    h+='<div class="rgroup">'+g+(descr[g]?'<small>'+descr[g]+'</small>':'')+'</div>';
+    RICETTE.filter(r=>r.gruppo===g).forEach(r=>{
+      h+='<div class="card"><div class="meal-top"><div>';
+      h+='<div class="kick">'+r.quando+'</div><div class="mtitle">'+r.nome+'</div></div>';
+      if(r.tempo) h+='<span class="timepill">'+r.tempo+'</span>';
+      h+='</div>';
+      if(r.ing) h+=ingRows(r.ing);
+      if(r.swap) h+='<div class="swap"><b>'+(r.swapLabel||'Scambi applicati')+'</b>'+r.swap.map(s=>'<i>'+s+'</i>').join('')+'</div>';
+      h+=steps(r.steps,g==='Fuori casa'?'Come ordinare':'Preparazione');
+      h+='<div class="tip"><div><b>Il trucco.</b> '+r.nota+'</div></div></div>';
+    });
+  });
+
+  content.innerHTML=h;
+  content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
+
+  content.querySelectorAll('.fchip').forEach(b=>b.addEventListener('click',()=>{
+    ricetteFiltro=b.dataset.f;
+    const y=window.scrollY;
+    renderRicette();
+    window.scrollTo(0,y); // resta dove sei invece di risalire in cima
+  }));
+}
+
+const SEZIONI=[['sett','Settimana'],['ric','Ricette'],['prep','Prep'],['piano','Piano']];
+
+function setSection(s){
+  currentSection=s;
+  gridWrap.hidden=(s!=='sett');
+  [...seg.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.s===s));
+  if(s==='sett') currentMeal===null?renderDay(currentDay):renderPasto(currentDay,currentMeal);
+  else if(s==='ric') renderRicette();
+  else if(s==='prep') renderPrep();
+  else if(s==='piano') renderPiano();
+  paintGrid();
+}
+
+function buildRail(){
+  seg.innerHTML='';
+  SEZIONI.forEach(([id,lab])=>{
+    const b=document.createElement('button');
+    b.type='button';b.dataset.s=id;b.textContent=lab;b.setAttribute('role','tab');
+    b.setAttribute('aria-selected',id===currentSection);
+    b.addEventListener('click',()=>setSection(id));
+    seg.appendChild(b);
+  });
+
+  grid.innerHTML='';
+  const corner=document.createElement('div');grid.appendChild(corner);
+  PLAN.days.forEach((d,i)=>{
+    const h=document.createElement('button');
+    h.type='button';h.className='ghead';h.dataset.d=i;h.textContent=d.name;
+    h.title='Tutta la giornata di '+d.full;
+    h.addEventListener('click',()=>{setSection('sett');renderDay(i);});
+    grid.appendChild(h);
+  });
+  SLOTS.forEach((sl,m)=>{
+    const rh=document.createElement('div');rh.className='grow'+(sl.fisso?' fisso':'');
+    rh.textContent=sl.lab;
+    if(sl.fisso) rh.title='Uguale tutti i giorni';
+    grid.appendChild(rh);
+    PLAN.days.forEach((d,i)=>{
+      const c=document.createElement('button');
+      c.type='button';c.className='cell'+(sl.fisso?' fisso':'')+(i===TODAY?' today':'');
+      c.style.setProperty('--c',sl.c);
+      c.dataset.d=i;c.dataset.m=m;
+      const pasto=seqFor(i)[m];
+      if(pasto&&pasto.prep){c.classList.add('prep');c.title='Richiede un cereale cotto in anticipo';}
+      c.setAttribute('aria-label',sl.lab+' di '+d.full+(pasto&&pasto.prep?' — richiede preparazione in anticipo':''));
+      c.addEventListener('click',()=>{setSection('sett');renderPasto(i,m);});
+      grid.appendChild(c);
+    });
+  });
+  paintGrid();
+}
+
+function planJsonString(){return JSON.stringify(PLAN,null,2);}
+
+async function loadPdfJs(){
+  if(window.pdfjsLib) return window.pdfjsLib;
+  await new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js';
+    s.onload=res;s.onerror=()=>rej(new Error('Impossibile caricare il lettore PDF: serve connessione internet la prima volta.'));
+    document.head.appendChild(s);
+  });
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+  return window.pdfjsLib;
+}
+
+async function extractPdfText(file){
+  const pdfjsLib=await loadPdfJs();
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let text='';
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const tc=await page.getTextContent();
+    text+=tc.items.map(it=>it.str).join(' ')+'\n\n';
+  }
+  return text.trim();
+}
+
+function renderPiano(){
+  heroDay.textContent='Piano';
+  let h='<div class="day-label">Cambia il piano alimentare</div>';
+
+  h+='<div class="card"><div class="kick">PDF</div><div class="mtitle">Estrai testo da un PDF</div>';
+  h+='<div class="liberi">Carica il PDF del medico per leggerne il testo qui sotto: copia i valori che ti servono e incollali nel JSON del piano qui sotto. Il parsing automatico dei grammi non è affidabile su PDF con layout diversi, quindi va sempre controllato a mano. Serve connessione internet solo la prima volta (scarica il lettore PDF).</div>';
+  h+='<div class="btnrow"><label class="btn">Scegli PDF<input type="file" id="pdfFile" accept="application/pdf" hidden></label></div>';
+  h+='<div id="pdfMsg"></div>';
+  h+='<div class="pdftext" id="pdfText" hidden></div>';
+  h+='</div>';
+
+  h+='<div class="card accent"><div class="kick">Editor</div><div class="mtitle">Piano in formato JSON</div>';
+  h+='<div class="liberi">Modifica i valori qui sotto (o incolla/importa un piano esportato in precedenza) e premi <b>Applica modifiche</b>. Resta salvato su questo dispositivo, senza bisogno di toccare il codice dell’app.</div>';
+  h+='<textarea class="field" id="planEditor" rows="14" spellcheck="false">'+planJsonString()+'</textarea>';
+  h+='<div class="btnrow">';
+  h+='<button class="btn primary" id="applyBtn">Applica modifiche</button>';
+  h+='<button class="btn" id="exportBtn">Esporta JSON</button>';
+  h+='<label class="btn">Importa file JSON<input type="file" id="jsonFile" accept="application/json" hidden></label>';
+  h+='<button class="btn" id="resetBtn">Ripristina piano originale</button>';
+  h+='</div>';
+  h+='<div id="planMsg"></div>';
+  h+='</div>';
+
+  content.innerHTML=h;
+  content.classList.remove('fade');void content.offsetWidth;content.classList.add('fade');
+
+  const pdfMsg=document.getElementById('pdfMsg');
+  const pdfText=document.getElementById('pdfText');
+  document.getElementById('pdfFile').addEventListener('change',async (e)=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    pdfMsg.innerHTML='<div class="msg">Lettura in corso…</div>';
+    pdfText.hidden=true;
+    try{
+      const text=await extractPdfText(file);
+      pdfText.textContent=text||'(nessun testo trovato — il PDF potrebbe essere una scansione/immagine)';
+      pdfText.hidden=false;
+      pdfMsg.innerHTML='<div class="msg ok">Testo estratto. Copia i valori che ti servono nel JSON qui sotto.</div>';
+    }catch(err){
+      pdfMsg.innerHTML='<div class="msg err">'+(err&&err.message?err.message:'Errore nella lettura del PDF.')+'</div>';
+    }
+  });
+
+  const planMsg=document.getElementById('planMsg');
+  const planEditor=document.getElementById('planEditor');
+
+  document.getElementById('applyBtn').addEventListener('click',()=>{
+    let parsed;
+    try{ parsed=JSON.parse(planEditor.value); }
+    catch(e){ planMsg.innerHTML='<div class="msg err">JSON non valido: '+e.message+'</div>'; return; }
+    const err=validatePlan(parsed);
+    if(err){ planMsg.innerHTML='<div class="msg err">'+err+'</div>'; return; }
+    PLAN=parsed;
+    try{localStorage.setItem(PLAN_KEY,JSON.stringify(PLAN));}catch(e){}
+    planMsg.innerHTML='<div class="msg ok">Piano applicato e salvato su questo dispositivo. Tocca un giorno per vederlo.</div>';
+    buildRail();
+    });
+
+  document.getElementById('exportBtn').addEventListener('click',()=>{
+    const blob=new Blob([planJsonString()],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='piano11.json';a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('jsonFile').addEventListener('change',(e)=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=()=>{ planEditor.value=reader.result; };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    if(!confirm('Ripristinare il piano originale? Le modifiche correnti andranno perse.')) return;
+    try{localStorage.removeItem(PLAN_KEY);}catch(e){}
+    PLAN=clonePlan(DEFAULT_PLAN);
+    buildRail();
+    renderPiano();
+    const m=document.getElementById('planMsg');
+    if(m) m.innerHTML='<div class="msg ok">Piano originale ripristinato.</div>';
+  });
+}
+
+// buildRail() viene chiamata in fondo, quando TODAY è definito
+
+// ---- Popup sostituzioni ----
+const sheetBg=document.getElementById('sheetBg');
+const sheetBody=document.getElementById('sheetBody');
+const sheetTitle=document.getElementById('sheetTitle');
+const tabDoc=document.getElementById('tabDoc');
+const tabWeb=document.getElementById('tabWeb');
+let sheetData=null, lastFocus=null, hideTimer=null;
+
+function subRows(list){
+  return list.map(s=>'<div class="sub"><div class="sn">'+s.nome+(s.nota?'<i>'+s.nota+'</i>':'')+'</div><div class="sq">'+s.qty+'</div></div>').join('');
+}
+function paintSheet(which){
+  const isDoc=which==='doc';
+  tabDoc.setAttribute('aria-selected',isDoc);
+  tabWeb.setAttribute('aria-selected',!isDoc);
+  const list=isDoc?sheetData.occhino:sheetData.web;
+  if(!list.length){
+    sheetBody.innerHTML='<div class="sheet-empty">'+(isDoc
+      ? 'Il piano non indica sostituzioni per questo alimento. Guarda la scheda <b>Alternative</b> per equivalenze indicative.'
+      : 'Nessuna alternativa disponibile per questo alimento.')+'</div>';
+    return;
+  }
+  sheetBody.innerHTML=subRows(list)+(isDoc
+    ? '<div class="sheet-note">Sostituzioni indicate nel piano del <b>Dott. Salvatore Occhino</b>: mantengono i macro previsti.</div>'
+    : '<div class="sheet-note"><b>Non fanno parte del piano.</b> Sono equivalenze indicative da tabelle nutrizionali pubbliche, arrotondate a 5 g: usale come ripiego e verificale con il medico prima di renderle abituali.</div>');
+}
+function openSheet(mi,idx){
+  const meal=CURRENT_SEQ[mi];
+  if(!meal) return;
+  sheetData=subsFor(meal,idx);
+  sheetTitle.innerHTML=sheetData.nome+' <em>'+sheetData.qty+'</em>';
+  paintSheet(sheetData.occhino.length?'doc':'web');
+  lastFocus=document.activeElement;
+  if(hideTimer){clearTimeout(hideTimer);hideTimer=null;} // annulla una chiusura ancora in corso
+  sheetBg.hidden=false;
+  void sheetBg.offsetWidth; // reflow sincrono: non dipende da rAF, che non scatta a tab nascosta
+  sheetBg.classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('sheetX').focus();
+}
+function closeSheet(){
+  if(sheetBg.hidden) return;
+  sheetBg.classList.remove('open');
+  document.body.style.overflow='';
+  if(hideTimer) clearTimeout(hideTimer);
+  hideTimer=setTimeout(()=>{sheetBg.hidden=true;hideTimer=null;},220);
+  if(lastFocus&&lastFocus.focus) lastFocus.focus();
+}
+content.addEventListener('click',e=>{
+  const b=e.target.closest('button.chip');
+  if(b){openSheet(+b.dataset.m,+b.dataset.i);return;}
+  const f=e.target.closest('.donebtn');
+  if(f){
+    const s=f.dataset.slot;
+    DONE.has(s)?DONE.delete(s):DONE.add(s);
+    saveDone();
+    f.classList.toggle('on',DONE.has(s));
+    f.setAttribute('aria-pressed',DONE.has(s));
+    f.textContent=DONE.has(s)?'Fatto':'Segna come fatto';
+    paintGrid();
+  }
+});
+tabDoc.addEventListener('click',()=>paintSheet('doc'));
+tabWeb.addEventListener('click',()=>paintSheet('web'));
+document.getElementById('sheetX').addEventListener('click',closeSheet);
+sheetBg.addEventListener('click',e=>{if(e.target===sheetBg) closeSheet();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sheetBg.hidden) closeSheet();});
+
+// Swipe orizzontale tra i giorni, solo dentro la Settimana
+let tsx=0,tsy=0;
+content.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tsx=t.clientX;tsy=t.clientY;},{passive:true});
+content.addEventListener('touchend',e=>{
+  if(currentSection!=='sett') return;
+  const t=e.changedTouches[0];
+  const dx=t.clientX-tsx, dy=t.clientY-tsy;
+  if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.6) selectDay(currentDay+(dx<0?1:-1));
+},{passive:true});
+
+// Frecce: orizzontali cambiano giorno, verticali cambiano fascia di pasto
+grid.addEventListener('keydown',e=>{
+  const k=e.key;
+  if(k!=='ArrowRight'&&k!=='ArrowLeft'&&k!=='ArrowUp'&&k!=='ArrowDown') return;
+  e.preventDefault();
+  if(k==='ArrowRight'||k==='ArrowLeft') selectDay(currentDay+(k==='ArrowRight'?1:-1));
+  else{
+    const m=currentMeal===null?(k==='ArrowDown'?0:SLOTS.length-1)
+                              :Math.max(0,Math.min(SLOTS.length-1,currentMeal+(k==='ArrowDown'?1:-1)));
+    renderPasto(currentDay,m);
+  }
+  const sel=grid.querySelector('.cell[aria-selected="true"]');
+  if(sel) sel.focus();
+});
+
+const now=new Date();
+heroDate.textContent=now.getDate()+' '+MESI[now.getMonth()]+' '+now.getFullYear();
+const map={1:0,2:1,3:2,4:3,5:4,6:5,0:6};
+const TODAY=map[now.getDay()]??0;
+currentDay=TODAY;
+buildRail();
+renderOggi();
+renderDay(TODAY);
+
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}
+</script>
+</body>
+</html>
