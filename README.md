@@ -1,41 +1,73 @@
 # Programma Nutrizionale
 
-Web app (PWA) installabile su iPhone con le ricette del piano alimentare:
-colazione, spuntini, pranzo (veloce) e cena per ogni giorno della settimana.
-Grammi e macro identici al piano del Dott. Salvatore Occhino.
+PWA per iPhone con il piano alimentare del Dott. Salvatore Occhino: cosa
+mangiare adesso, pasti fatti, kcal e macro, sostituzioni e peso.
+Funziona offline e i dati restano sul telefono.
 
-- Dark glassmorphism, font Geist
-- Funziona offline (service worker)
-- Aggiungibile alla schermata Home su iOS
-- **Sostituzioni in un tocco**: tocca un ingrediente per aprire un popup con due schede — quelle previste dal Dott. Occhino e alternative indicative da tabelle nutrizionali pubbliche
-- Trucco "veloce" su ogni pranzo e cena per ridurre i tempi in cucina
-- **Swipe** sinistra/destra per cambiare giorno; frecce ← → da tastiera tra le schede
-- Scheda **Prep**: batch cooking, **lista della spesa generata automaticamente dal piano** con caselle spuntabili (le spunte restano salvate), trucchi di organizzazione
-- Scheda **Piano**: cambia il piano alimentare senza toccare il codice
+## Cosa fa
 
-## Sostituzioni
-Ogni ingrediente sostituibile è un pulsante: toccandolo si apre un popup con due schede.
+- **Oggi**: il pasto da fare adesso con i grammi, il pulsante "Fatto", il
+  totale di kcal e macro del giorno e gli altri pasti.
+- **Settimana**: pasti fatti e kcal per giorno, aderenza della settimana, le
+  settimane precedenti; da qui si può segnare un pasto dimenticato.
+- **Peso**: pesata del giorno, grafico con la media mobile a 7 giorni e
+  l'obiettivo, storico.
+- **Piano**: editor guidato (giorno → pasto → alimento e grammi, scambi del
+  medico, note), "copia giorno su…", "usa questo pasto in tutti i giorni",
+  catalogo alimenti, backup.
+- **Sostituzioni**: tocca un alimento con ⇄ per vedere gli scambi del medico
+  e le alternative indicative.
 
-- **Dott. Occhino** — le sostituzioni scritte nel piano, che mantengono i macro previsti. Sono la fonte da seguire.
-- **Alternative** — equivalenze *indicative* calcolate da rapporti di tabelle nutrizionali pubbliche
+### Sostituzioni
+- **Dott. Occhino**: gli scambi scritti nel piano, che mantengono i macro.
+  Sono la fonte da seguire.
+- **Alternative**: equivalenze *indicative* calcolate con i rapporti di
+  tabelle pubbliche
   ([petrininutrizione.it](https://petrininutrizione.it/sostituire-riso-pasta-pane-patate/),
   [Grana Padano — Educazione Nutrizionale](https://www.educazionenutrizionale.granapadano.it/it/stile-di-vita/tabelle-alimenti-equivalenti),
-  [melarossa.it](https://www.melarossa.it/dieta/dimagrire/abc-delle-sostituzioni-dei-cibi-la-guida-di-melarossa/)),
-  applicate ai grammi del pasto e arrotondate a 5 g. **Non fanno parte del piano**: servono come ripiego e vanno verificate con il medico.
+  [melarossa.it](https://www.melarossa.it/dieta/dimagrire/abc-delle-sostituzioni-dei-cibi-la-guida-di-melarossa/))
+  e arrotondate a 5 g. Non fanno parte del piano: vanno verificate con il medico.
 
-I rapporti usati: cereali in chicco 1:1 · pasta→pane ×1,25 · pasta→patate ×4 · pane→patate ×3 · pollo→merluzzo ×1,33 · pollo→salmone ×0,68.
+### Valori nutrizionali
+Sono stime per 100 g da tabelle di composizione pubbliche (CREA e
+equivalenti), non i calcoli del medico. Si possono correggere alimento per
+alimento dal catalogo; un valore modificato diventa "tuo".
 
-## Cambiare il piano alimentare
-Nella scheda **Piano** trovi:
-- **PDF**: carica il PDF del medico per estrarne il testo (richiede internet la prima volta, scarica il lettore PDF). Il parsing dei grammi *non* è automatico — il testo serve come riferimento da ricopiare a mano, perché i PDF hanno layout troppo vari per un'estrazione affidabile su dati sanitari.
-- **Editor JSON**: il piano completo è modificabile direttamente come JSON. Premi **Applica modifiche** per salvarlo sul dispositivo (resta anche dopo un riavvio del browser).
-- **Esporta/Importa JSON**: per backup o per trasferire il piano su un altro dispositivo.
-- **Ripristina piano originale**: torna ai dati di default dell'app, cancellando le modifiche salvate.
+## Dati e backup
+Tutto è salvato in IndexedDB sul dispositivo. Da **Piano → Backup** puoi
+esportare un file JSON da tenere in File o iCloud, e reimportarlo. Prima di
+un import l'app scarica in automatico una copia dei dati attuali.
 
-Il piano modificato resta solo sul dispositivo (`localStorage`) finché non lo esporti/reimporti altrove o non aggiorni i dati di default nel codice.
+Al primo avvio l'app importa una volta sola, dalla versione precedente
+(stesso indirizzo), il piano e i pasti fatti con il loro storico.
 
-## Deploy su GitHub Pages
-Tieni questi file nella stessa cartella:
-`index.html`, `manifest.json`, `sw.js`, `icon-180.png`, `icon-512.png`.
+## Sviluppo
 
-Una volta online, apri l'URL in Safari → Condividi → **Aggiungi a Home**.
+```bash
+npm install
+npm run dev      # http://localhost:5173/programma-nutrizionale/
+npm test         # Vitest: dominio, database, schermate
+npm run check    # svelte-check (TypeScript)
+npm run build    # dist/
+```
+
+Stack: Vite, Svelte 5, TypeScript, Dexie (IndexedDB), vite-plugin-pwa,
+icone [Phosphor](https://phosphoricons.com).
+
+```
+src/domain/   logica pura e testata: macro, sostituzioni, settimana, peso, validazione, conversione v1
+src/db/       IndexedDB: schema, repository, backup, primo avvio e migrazione
+src/state/    stato reattivo condiviso, bozza dell'editor, router a hash
+src/ui/       componenti di base in stile iOS
+src/screens/  le schermate
+```
+
+Il design è in [docs/superpowers/specs](docs/superpowers/specs/).
+
+## Pubblicazione
+La GitHub Action [deploy.yml](.github/workflows/deploy.yml) esegue controlli,
+test e build a ogni push e pubblica `dist/` su GitHub Pages da `main`.
+In **Settings → Pages** del repository, la sorgente va impostata su
+**GitHub Actions**.
+
+Poi apri l'URL in Safari → Condividi → **Aggiungi alla schermata Home**.

@@ -37,6 +37,10 @@ export function fmtNumber(n: number): string {
   return Math.round(n).toLocaleString('it-IT');
 }
 
+export function fmtDecimal(n: number): string {
+  return n.toLocaleString('it-IT', { maximumFractionDigits: 1 });
+}
+
 export function fmtGrams(g: number): string {
   const r = Math.round(g);
   if (r >= 1000) return (r / 1000).toLocaleString('it-IT', { maximumFractionDigits: 1 }) + ' kg';

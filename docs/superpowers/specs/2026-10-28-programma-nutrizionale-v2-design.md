@@ -1,6 +1,6 @@
 # Programma Nutrizionale v2 — design
 
-Data: 2026-10-28 · Stato: in revisione
+Data: 2026-10-28 · Stato: implementato sul branch `v2`
 
 ## 1. Obiettivo
 
@@ -125,7 +125,7 @@ src/
     validate.ts      validazione del piano e del backup
     legacy.ts        conversione dal formato v1 (localStorage) al modello v2
   db/          Dexie: schema, repository, backup, migrazione
-    schema.ts  repos.ts  backup.ts  migrate.ts  seed.ts
+    schema.ts  repos.ts  backup.ts  migrate.ts   (catalogo iniziale in domain/catalog.ts)
   state/       stato reattivo Svelte 5 (*.svelte.ts)
     plan.svelte.ts  today.svelte.ts  weight.svelte.ts
   ui/          componenti di base stile iOS
@@ -142,7 +142,7 @@ src/
 ## 6. Dati
 
 ```ts
-Food     { id, name, per100: {kcal, p, c, f}, category, source: 'CREA'|'etichetta'|'manuale' }
+Food     { id, name, per100: {kcal, p, c, f}, category, source: 'tabelle'|'etichetta'|'manuale' }
 PlanItem { foodId, grams, subs: {foodId, grams}[] }   // subs = scambi del medico
 Meal     { slot: 'colazione'|'spuntinoMattino'|'pranzo'|'spuntinoPomeriggio'|'cena',
            title, note, items: PlanItem[] }
@@ -156,12 +156,14 @@ Settings { activePlanId, weightGoalKg?, lastBackupAt?, migratedFromV1: boolean }
 
 - Tabelle Dexie: `foods`, `plans`, `mealLogs` (chiave `[date+slot]`),
   `weights` (chiave `date`), `legacyWeeks`, `settings`.
-- **Catalogo iniziale (`seed.ts`):** gli alimenti del piano attuale e delle
-  sue sostituzioni, con i valori per 100 g ricopiati dalle tabelle CREA
-  (Banca Dati di Composizione degli Alimenti). Per i prodotti confezionati
-  (crackers, cereali) si usano i valori medi da etichetta, con `source: 'etichetta'`.
-  I valori che oggi stanno in `NUTRI` si confrontano con il CREA; dove
-  differiscono vince il CREA e la differenza va annotata nel commit.
+- **Catalogo iniziale (`domain/catalog.ts`):** i 67 alimenti del piano attuale
+  e delle sue sostituzioni. *Scostamento dal design originale:* i valori per
+  100 g sono **quelli della v1** (stime da tabelle pubbliche, CREA e
+  equivalenti), con `source: 'tabelle'`; i prodotti confezionati hanno
+  `source: 'etichetta'`. Non sono stati riscontrati uno per uno sulla banca
+  dati CREA, che non offre un'API o un export JSON. Così i totali restano
+  identici a quelli della v1 (es. mercoledì 2.212 kcal). Il riscontro si fa
+  dal catalogo: un valore modificato diventa `source: 'manuale'`.
 - **Alternative:** si riportano le regole di oggi (`WEB_RULES`): cereali 1:1,
   pasta→pane ×1,25, pasta→patate ×4, pane→patate ×3, pollo→merluzzo ×1,33,
   pollo→salmone ×0,68, arrotondamento a 5 g.
