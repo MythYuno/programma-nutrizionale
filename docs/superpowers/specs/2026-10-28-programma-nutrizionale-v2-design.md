@@ -62,8 +62,9 @@ direzione **"Colore dell'ora"**, descritta in `DESIGN.md`:
 
 ### 4.1 Oggi (schermata iniziale)
 - Intestazione con data e titolo grande "Oggi".
-- **Scheda "Adesso"**: il primo pasto non fatto della giornata, cioè il primo
-  della lista in ordine di fascia oraria. Mostra titolo, alimenti con grammi e
+- **Scheda "Adesso"**: il primo pasto non fatto dopo l'ultimo pasto segnato,
+  in ordine di fascia oraria. I pasti non segnati che restano prima compaiono
+  nell'elenco come "saltato?" (aggiornato il 28/10/2026). Mostra titolo, alimenti con grammi e
   il pulsante "✓ Fatto". Gli alimenti che hanno sostituzioni hanno l'icona ⇄ e
   aprono il foglio (4.5).
 - Riga del totale: kcal consumate su kcal del piano; P/C/G in grammi.

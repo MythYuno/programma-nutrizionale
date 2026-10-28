@@ -55,6 +55,9 @@ settimana) va sotto il titolo, in `.subtitle`.
   `--on-hour`. Sostituisce l'anello di avanzamento.
 - `ui/Segmented.svelte`: variante `ground` per stare sul fondo colorato.
 - `.btn.on-ground`, `.ground-link`, `.icon-btn`: controlli fuori dalle schede.
+- `ui/Toast.svelte`: avviso breve sopra la tab bar con un'azione (per esempio
+  "Annulla" dopo aver eliminato una pesata).
+- Le note di un pasto nell'editor si modificano dal menu «···», non nella scheda.
 
 ## Regole
 - Dentro una scheda di un pasto `--act` diventa il colore di quella fascia.
