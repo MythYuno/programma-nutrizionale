@@ -38,3 +38,12 @@ export function validatePlan(plan: Plan, foods: readonly Food[]): PlanIssue[] {
 }
 
 export { DAY_NAMES };
+
+// Toglie dal piano tutto quello che non ha scritto il medico (titoli dei piatti,
+// note, preparazioni delle versioni precedenti): restano fasce, alimenti e scambi.
+export function stripRecipes(plan: Plan): Plan {
+  return {
+    ...plan,
+    days: plan.days.map((d) => ({ meals: d.meals.map((m) => ({ slot: m.slot, items: m.items })) })),
+  };
+}

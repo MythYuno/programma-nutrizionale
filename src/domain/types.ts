@@ -39,10 +39,10 @@ export const SLOT_LABEL: Record<Slot, string> = {
   cena: 'Cena',
 };
 
+// Un pasto è quello che ha scritto il medico: la fascia e gli alimenti.
+// Titoli di piatti, preparazioni e ricette non stanno nel piano.
 export interface Meal {
   slot: Slot;
-  title: string;
-  note: string;
   items: PlanItem[];
 }
 

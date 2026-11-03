@@ -4,7 +4,7 @@ import { fmtGrams, indexFoods, mealMacro, portionMacro, rounded, sumMacro } from
 import { addDays, isoWeek, mondayOf, nextMeal, skippedMeals, weekDates, weekdayIndex } from './schedule';
 import { alternativesFor, roundTo5 } from './substitutions';
 import { inRange, parseKg, trailingAverage, upsertWeight, weeklyChange } from './weight';
-import { validatePlan } from './validate';
+import { stripRecipes, validatePlan } from './validate';
 import type { Meal, Plan } from './types';
 
 const foods = indexFoods(SEED_FOODS);
@@ -16,7 +16,7 @@ describe('nutrition', () => {
   });
 
   it('somma un pasto senza arrotondare a ogni alimento', () => {
-    const meal: Meal = { slot: 'pranzo', title: '', note: '', items: [
+    const meal: Meal = { slot: 'pranzo', items: [
       { foodId: 'pasta-semola', grams: 110, subs: [] },
       { foodId: 'mozzarella', grams: 100, subs: [] },
       { foodId: 'pomodori', grams: 100, subs: [] },
@@ -61,28 +61,28 @@ describe('schedule', () => {
 
   it('il pasto "adesso" è il primo non fatto', () => {
     const day = { meals: [
-      { slot: 'cena', title: 'C', note: '', items: [] },
-      { slot: 'colazione', title: 'A', note: '', items: [] },
-      { slot: 'pranzo', title: 'B', note: '', items: [] },
+      { slot: 'cena', items: [] },
+      { slot: 'colazione', items: [] },
+      { slot: 'pranzo', items: [] },
     ] as Meal[] };
-    expect(nextMeal(day, new Set())?.title).toBe('A');
-    expect(nextMeal(day, new Set(['colazione']))?.title).toBe('B');
+    expect(nextMeal(day, new Set())?.slot).toBe('colazione');
+    expect(nextMeal(day, new Set(['colazione']))?.slot).toBe('pranzo');
     expect(nextMeal(day, new Set(['colazione', 'pranzo', 'cena']))).toBeNull();
   });
 
   it('un pasto saltato non blocca "adesso"', () => {
     const day = { meals: [
-      { slot: 'colazione', title: 'A', note: '', items: [] },
-      { slot: 'spuntinoMattino', title: 'S', note: '', items: [] },
-      { slot: 'pranzo', title: 'B', note: '', items: [] },
-      { slot: 'cena', title: 'C', note: '', items: [] },
+      { slot: 'colazione', items: [] },
+      { slot: 'spuntinoMattino', items: [] },
+      { slot: 'pranzo', items: [] },
+      { slot: 'cena', items: [] },
     ] as Meal[] };
     // Colazione e spuntino saltati, pranzo fatto: adesso è la cena.
-    expect(nextMeal(day, new Set(['pranzo']))?.title).toBe('C');
-    expect(skippedMeals(day, new Set(['pranzo'])).map((m) => m.title)).toEqual(['A', 'S']);
+    expect(nextMeal(day, new Set(['pranzo']))?.slot).toBe('cena');
+    expect(skippedMeals(day, new Set(['pranzo'])).map((m) => m.slot)).toEqual(['colazione', 'spuntinoMattino']);
     // Cena fatta e colazione no: nessun pasto "adesso", la colazione è saltata.
     expect(nextMeal(day, new Set(['spuntinoMattino', 'pranzo', 'cena']))).toBeNull();
-    expect(skippedMeals(day, new Set(['spuntinoMattino', 'pranzo', 'cena'])).map((m) => m.title)).toEqual(['A']);
+    expect(skippedMeals(day, new Set(['spuntinoMattino', 'pranzo', 'cena'])).map((m) => m.slot)).toEqual(['colazione']);
     expect(skippedMeals(day, new Set())).toEqual([]);
   });
 });
@@ -150,7 +150,7 @@ describe('weight', () => {
 
 describe('validate', () => {
   const ok = (): Plan => ({ id: 'p', name: 'P', startDate: '2026-10-26', days: Array.from({ length: 7 }, () => ({
-    meals: [{ slot: 'pranzo' as const, title: 'X', note: '', items: [{ foodId: 'riso', grams: 80, subs: [] }] }],
+    meals: [{ slot: 'pranzo' as const, items: [{ foodId: 'riso', grams: 80, subs: [] }] }],
   })) });
 
   it('un piano corretto non ha problemi', () => {
@@ -181,5 +181,15 @@ describe('catalog', () => {
 
   it('id unici', () => {
     expect(new Set(SEED_FOODS.map((f) => f.id)).size).toBe(SEED_FOODS.length);
+  });
+});
+
+describe('piano senza ricette', () => {
+  it('toglie titoli e note dai pasti, lascia alimenti e scambi', () => {
+    const old = {
+      id: 'p', name: 'P', startDate: '2026-11-02',
+      days: [{ meals: [{ slot: 'pranzo', title: 'Pasta caprese', note: 'Basilico', items: [{ foodId: 'riso', grams: 80, subs: [{ foodId: 'pane-integrale', grams: 100 }] }] }] }],
+    } as unknown as Plan;
+    expect(stripRecipes(old).days[0]!.meals[0]).toEqual({ slot: 'pranzo', items: [{ foodId: 'riso', grams: 80, subs: [{ foodId: 'pane-integrale', grams: 100 }] }] });
   });
 });

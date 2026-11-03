@@ -1,6 +1,7 @@
 import type { AppDb } from './schema';
 import type { CustomItem, ExtraLog, Food, LegacyWeek, MealLog, Plan, Settings, Weight } from '../domain/types';
 import { getSettings } from './repos';
+import { stripRecipes } from '../domain/validate';
 
 export interface Backup {
   app: 'programma-nutrizionale';
@@ -56,7 +57,8 @@ export function parseBackup(text: string): { backup: Backup; summary: BackupSumm
   // Un backup della versione 2 non ha voci fuori piano.
   const extras = Array.isArray(b.extras) ? b.extras : [];
   const customItems = Array.isArray(b.customItems) ? b.customItems : [];
-  const backup = { ...(b as Backup), extras, customItems };
+  // Un backup di una versione precedente può avere titoli e note: si tolgono.
+  const backup = { ...(b as Backup), plans: (b.plans as Plan[]).map(stripRecipes), extras, customItems };
   return {
     backup,
     summary: {

@@ -10,7 +10,8 @@ describe('convertLegacyPlan con il piano reale della v1', () => {
   it('produce 7 giorni da 5 pasti, colazione e spuntini ripetuti', () => {
     expect(plan.days).toHaveLength(7);
     for (const d of plan.days) expect(d.meals.map((m) => m.slot)).toEqual(['colazione', 'spuntinoMattino', 'pranzo', 'spuntinoPomeriggio', 'cena']);
-    expect(plan.days[4]!.meals[0]!.title).toBe('Latte e cereali');
+    // Solo gli alimenti del medico: niente titoli di piatti né note.
+    for (const d of plan.days) for (const m of d.meals) expect(Object.keys(m).sort()).toEqual(['items', 'slot']);
   });
 
   it('riconosce tutti gli alimenti del piano', () => {
@@ -24,24 +25,15 @@ describe('convertLegacyPlan con il piano reale della v1', () => {
 
   it('porta grammi e scambi del medico', () => {
     const cenaMer = plan.days[2]!.meals[4]!;
-    expect(cenaMer.title).toBe('Manzo magro alla griglia');
     const manzo = cenaMer.items[0]!;
     expect(manzo).toMatchObject({ foodId: 'manzo-magro', grams: 220 });
     expect(manzo.subs).toContainEqual({ foodId: 'pollo', grams: 253 });
     expect(manzo.subs).toContainEqual({ foodId: 'feta', grams: 112 });
   });
 
-  it('mette liberi, passi e consigli nella nota, senza HTML', () => {
-    const pranzoMar = plan.days[1]!.meals[2]!;
-    expect(pranzoMar.note).toContain('Liberi: Limone e spezie — no sale');
-    expect(pranzoMar.note).toContain('Consiglio: Lessa 300 g di orzo');
-    expect(pranzoMar.note).not.toMatch(/<b>/);
-  });
-
-  it('gli scambi senza grammi finiscono nella nota', () => {
+  it('salta gli scambi senza grammi', () => {
     const cenaDom = plan.days[6]!.meals[4]!;
     expect(cenaDom.items[1]!.subs).toEqual([]);
-    expect(cenaDom.note).toContain('Scambi senza grammi: Wasa q.b.');
   });
 });
 

@@ -236,3 +236,14 @@ describe('Correzioni dalla revisione', () => {
     expect(await db.customItems.count()).toBe(1);
   });
 });
+
+describe('Pasti come li ha dati il medico', () => {
+  it('le schede mostrano solo gli alimenti, senza titoli di piatti né note', async () => {
+    render(DayView, { date: DATE });
+    expect(screen.queryByText('Latte e cereali')).toBeNull();
+    expect(screen.queryByText('Note e preparazione')).toBeNull();
+    expect(screen.queryByText('Farro e lenticchie tiepido')).toBeNull();
+    // Le righe compatte riassumono gli alimenti al posto del titolo.
+    expect(screen.getByRole('button', { name: /Frutta fresca, Frutta secca/ })).toBeInTheDocument();
+  });
+});

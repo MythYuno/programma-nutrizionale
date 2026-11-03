@@ -34,10 +34,6 @@ export interface ConvertedPlan {
   warnings: string[];
 }
 
-export function stripHtml(s: string): string {
-  return s.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-}
-
 // Solo quantità in peso. Le uova a pezzi valgono 55 g l'una come nella v1.
 export function legacyGrams(q: string, name: string): number | null {
   const s = String(q).trim();
@@ -52,17 +48,6 @@ export function legacyGrams(q: string, name: string): number | null {
 
 function slugify(name: string): string {
   return 'v1-' + normalizeName(name).normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
-
-function noteFor(m: LegacyMeal, skipped: string[]): string {
-  const parts: string[] = [];
-  if (m.liberi && m.liberi !== '—') parts.push('Liberi: ' + stripHtml(m.liberi));
-  if (m.oppure) parts.push(stripHtml(m.oppure));
-  if (skipped.length) parts.push('Scambi senza grammi: ' + skipped.join(', ') + '.');
-  if (m.steps?.length) parts.push(m.steps.map((s, i) => `${i + 1}. ${stripHtml(s)}`).join('\n'));
-  if (m.tip) parts.push('Consiglio: ' + stripHtml(m.tip));
-  if (m.alts?.length) parts.push((m.altsTitle ?? 'Alternative') + ':\n' + m.alts.map((a) => '• ' + stripHtml(a)).join('\n'));
-  return parts.join('\n\n');
 }
 
 export function convertLegacyPlan(lp: LegacyPlan, planId: string, startDate: string): ConvertedPlan {
@@ -81,20 +66,19 @@ export function convertLegacyPlan(lp: LegacyPlan, planId: string, startDate: str
   };
 
   const meal = (m: LegacyMeal, slot: Slot): Meal => {
-    const skipped: string[] = [];
     const items: PlanItem[] = [];
     for (const [name, q] of m.ing) {
       const grams = legacyGrams(q, name);
-      if (grams === null) { skipped.push(`${name} ${q}`); continue; }
+      if (grams === null) continue; // "q.b." e simili: niente grammi, niente voce
       const subs: Portion[] = [];
       for (const [sn, sq] of m.sub?.[name] ?? []) {
         const sg = legacyGrams(sq, sn);
-        if (sg === null) skipped.push(`${sn} ${sq}`);
-        else subs.push({ foodId: foodId(sn), grams: sg });
+        if (sg !== null) subs.push({ foodId: foodId(sn), grams: sg });
       }
       items.push({ foodId: foodId(name), grams, subs });
     }
-    return { slot, title: m.title, note: noteFor(m, skipped), items };
+    // Solo gli alimenti del medico: titoli, passi e consigli della v1 restano fuori.
+    return { slot, items };
   };
 
   const days = lp.days.map((d) => ({

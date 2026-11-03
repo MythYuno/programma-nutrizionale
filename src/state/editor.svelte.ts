@@ -55,7 +55,7 @@ class Editor {
   addMeal(slot: Slot) {
     const d = this.draft?.days[this.day];
     if (!d) return;
-    d.meals = sortMeals([...d.meals, { slot, title: '', note: '', items: [] }]);
+    d.meals = sortMeals([...d.meals, { slot, items: [] }]);
     this.touch();
   }
 

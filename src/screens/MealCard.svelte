@@ -31,11 +31,12 @@
   } = $props();
 
   let open = $state(false);
-  let showNote = $state(false);
   // Un pasto libero resta aperto: si vede subito cosa si è mangiato al suo posto.
   const expanded = $derived(hero || open || free);
   const kcal = $derived(mealMacro(meal, app.foodIndex).kcal);
   const freeKcal = $derived(sumExtras(freeItems).kcal);
+  // Al posto del nome di un piatto: gli alimenti del medico, in fila.
+  const foods = $derived(meal.items.map((it) => name(it.foodId)).join(', '));
 
   function name(id: string) {
     return app.foodIndex.get(id)?.name ?? 'Alimento sconosciuto';
@@ -51,7 +52,6 @@
       <h2>{SLOT_LABEL[meal.slot]}</h2>
       <span class="now">adesso</span>
     </div>
-    <p class="meal-title">{meal.title}</p>
   {:else}
     <button class="head" onclick={() => (open = !open)} aria-expanded={open}>
       <span class="dot" aria-hidden="true">
@@ -59,7 +59,7 @@
       </span>
       <span class="grow">
         <span class="slot">{SLOT_LABEL[meal.slot]}{#if skipped}<span class="skip">saltato?</span>{/if}{#if free}<span class="skip">pasto libero</span>{/if}</span>
-        <span class="title">{free ? freeItems.map((e) => e.name).join(', ') || 'Cosa hai mangiato?' : meal.title}</span>
+        <span class="title">{free ? freeItems.map((e) => e.name).join(', ') || 'Cosa hai mangiato?' : foods}</span>
       </span>
       <span class="kcal num">{fmtNumber(free ? freeKcal : kcal)} kcal</span>
       {#if !free}<span class="caret" class:up={open}><CaretDown size={16} weight="bold" /></span>{/if}
@@ -69,7 +69,7 @@
   {#if expanded}
     <div class="body" transition:slide={{ duration: hero ? 0 : 260, easing: cubicOut }}>
       {#if free}
-        <FreeMealBody planTitle={meal.title} items={freeItems} onAdd={() => onAddToFree?.()} onUnfree={() => onUnfree?.()} onOpen={(id) => onOpenExtra?.(id)} />
+        <FreeMealBody planTitle={foods} items={freeItems} onAdd={() => onAddToFree?.()} onUnfree={() => onUnfree?.()} onOpen={(id) => onOpenExtra?.(id)} />
       {:else}
         <ul class="items">
           {#each meal.items as it, i (i)}
@@ -85,13 +85,6 @@
             </li>
           {/each}
         </ul>
-
-        {#if meal.note}
-          <button class="note-toggle" onclick={() => (showNote = !showNote)} aria-expanded={showNote}>
-            {showNote ? 'Nascondi note' : 'Note e preparazione'}
-          </button>
-          {#if showNote}<p class="note" transition:slide={{ duration: 200, easing: cubicOut }}>{meal.note}</p>{/if}
-        {/if}
 
         <button class="btn" class:tinted={done} onclick={onToggle}>
           {#if done}Annulla «fatto»{:else}<Check size={20} weight="bold" /> Fatto{/if}
@@ -114,10 +107,9 @@
   .compact.open { --act: var(--accent); }
   .compact.done:not(.open) .title { font-weight: 500; }
 
-  .hero-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .hero-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
   h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.025em; margin: 0; color: var(--accent); }
   .now { font-size: 13px; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 4px 10px; border-radius: 999px; }
-  .meal-title { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; line-height: 1.25; margin: 4px 0 8px; }
 
   .head { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 14px; background: none; border: 0; text-align: left; color: inherit; }
   .dot { display: flex; color: var(--on-hour); }
@@ -145,8 +137,6 @@
   .item b small { font-size: 15px; font-weight: 700; margin-left: 2px; color: var(--ink-2); letter-spacing: 0; }
   .compact .item b { font-size: 21px; }
 
-  .note-toggle { background: none; border: 0; color: var(--accent); padding: 4px 0 12px; font-size: 15px; font-weight: 600; }
-  .note { white-space: pre-line; font-size: 15px; color: var(--ink-2); margin: 0 0 12px; line-height: 1.45; }
   .free-link { display: block; width: 100%; text-align: center; font-size: 15px; margin-top: 4px; }
   .foot { text-align: center; margin: 10px 0 0; font-size: 13px; color: var(--ink-2); }
 </style>

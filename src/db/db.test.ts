@@ -140,3 +140,33 @@ describe('fuori piano nel database', () => {
     expect(parsed.summary.extras).toBe(0);
   });
 });
+
+describe('piano senza ricette nel database', () => {
+  const oldPlan = {
+    id: 'piano-v1', name: 'Piano', startDate: '2026-11-02',
+    days: Array.from({ length: 7 }, () => ({ meals: [{ slot: 'pranzo', title: 'Pasta caprese', note: 'Basilico', items: [{ foodId: 'riso', grams: 80, subs: [] }] }] })),
+  };
+
+  it("l'aggiornamento allo schema 3 toglie titoli e note dal piano salvato", async () => {
+    const name = 'test-strip-' + n++;
+    const v2 = new Dexie(name);
+    v2.version(1).stores({ foods: 'id, name', plans: 'id', mealLogs: '[date+slot], date', weights: 'date', legacyWeeks: 'week', settings: 'key' });
+    v2.version(2).stores({ extras: 'id, date', customItems: 'id, name' });
+    await v2.table('plans').put(oldPlan);
+    v2.close();
+    const db = new AppDb(name);
+    dbs.push(db);
+    const meal = (await db.plans.get('piano-v1'))!.days[0]!.meals[0]!;
+    expect(meal).toEqual({ slot: 'pranzo', items: [{ foodId: 'riso', grams: 80, subs: [] }] });
+  });
+
+  it('un backup con titoli e note viene ripulito', async () => {
+    const a = freshDb();
+    await ensureStartup(a, storage({}), '2026-11-03');
+    const b = await exportBackup(a);
+    const parsed = parseBackup(JSON.stringify({ ...b, plans: [oldPlan] }));
+    if ('error' in parsed) throw new Error(parsed.error);
+    expect(parsed.backup.plans[0]!.days[0]!.meals[0]).not.toHaveProperty('title');
+    expect(parsed.backup.plans[0]!.days[0]!.meals[0]).not.toHaveProperty('note');
+  });
+});

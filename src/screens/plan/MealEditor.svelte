@@ -29,7 +29,6 @@
     <span class="muted num small">{fmtNumber(kcal)} kcal</span>
     <button class="icon" aria-label="Opzioni {SLOT_LABEL[meal.slot]}" onclick={() => (menu = true)}><DotsThree size={22} weight="bold" /></button>
   </div>
-  <input class="title" placeholder="Nome del pasto, per esempio Pasta e ceci" bind:value={meal.title} oninput={() => editor.touch()} />
 
   {#each meal.items as it, i (i)}
     <button class="row" class:bad={hasIssue(i)} onclick={() => (editing = i)}>
@@ -44,10 +43,6 @@
 <ItemSheet {meal} bind:index={editing} />
 
 <Sheet bind:open={menu} title={SLOT_LABEL[meal.slot]}>
-  <!-- Le note si modificano da qui: nella scheda del pasto restano solo gli alimenti. -->
-  <label class="lab" for="note-{meal.slot}">Note e preparazione</label>
-  <textarea id="note-{meal.slot}" class="note" rows="4" placeholder="Condimenti liberi, preparazione, consigli…" bind:value={meal.note} oninput={() => editor.touch()}></textarea>
-
   <div class="group">
     <button class="row" onclick={() => { editor.applyMealToAllDays(meal.slot); menu = false; }}>
       <span class="grow">Usa questo pasto in tutti i giorni<br /><span class="muted small">Sostituisce {SLOT_LABEL[meal.slot].toLowerCase()} negli altri 6 giorni</span></span>
@@ -59,16 +54,11 @@
 <style>
   .group { --act: var(--accent); border-radius: var(--radius-card); box-shadow: var(--shadow-card); margin-bottom: 14px; }
   .group.issue { box-shadow: var(--shadow-card), 0 0 0 2px var(--danger); }
-  .head { display: flex; align-items: center; gap: 8px; padding: 14px 8px 0 16px; }
+  .head { display: flex; align-items: center; gap: 8px; padding: 14px 8px 6px 16px; }
   .slot { flex: 1; color: var(--accent); font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
   .icon { border: 0; background: none; color: var(--act); width: 36px; height: 32px; display: grid; place-items: center; }
-  .title { width: 100%; border: 0; background: none; outline: none; padding: 2px 16px 8px; font-size: 19px; font-weight: 650; color: var(--ink); }
-  .title::placeholder { color: var(--ink-3); font-weight: 500; }
   .subs { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; font-size: 12px; color: var(--act); }
   .row.bad .grow { color: var(--danger); }
   .row.add { color: var(--act); gap: 8px; }
   .row.danger { color: var(--danger); }
-  .lab { display: block; font-size: 14px; font-weight: 600; color: var(--ink-2); margin: 4px 4px 6px; }
-  .note { display: block; width: 100%; margin: 0 0 16px; border: 0; border-radius: 14px; background: var(--card); box-shadow: 0 0 0 1px var(--sep); padding: 12px 14px; font-size: 16px; line-height: 1.45; resize: vertical; outline: none; color: var(--ink); }
-  .note:focus { box-shadow: 0 0 0 2px var(--act); }
 </style>

@@ -93,8 +93,8 @@ direzione **"Colore dell'ora"**, descritta in `DESIGN.md`:
 ### 4.4 Piano (editor)
 - Selettore del giorno (Lun…Dom) → pasti del giorno → alimenti.
 - Pasto: fascia (Colazione, Spuntino mattino, Pranzo, Spuntino pomeriggio,
-  Cena), titolo libero, nota libera (per "liberi", consigli, preparazione) e
-  kcal/macro calcolate.
+  Cena), alimenti del medico e kcal/macro calcolate. Dal 03/11/2026 niente
+  titoli di piatti né note: ricette e alternative andranno in una schermata a parte.
 - Alimento: scelto dal catalogo con ricerca, grammi, e scambi del medico (una
   lista di alimento + grammi). Le kcal si vedono mentre scrivi.
 - Azioni: aggiungi, riordina, elimina un alimento o un pasto; **duplica giorno
@@ -151,7 +151,7 @@ src/
 Food     { id, name, per100: {kcal, p, c, f}, category, source: 'tabelle'|'etichetta'|'manuale' }
 PlanItem { foodId, grams, subs: {foodId, grams}[] }   // subs = scambi del medico
 Meal     { slot: 'colazione'|'spuntinoMattino'|'pranzo'|'spuntinoPomeriggio'|'cena',
-           title, note, items: PlanItem[] }
+           items: PlanItem[] }               // dal 03/11/2026 senza title e note (schema DB 3)
 Day      { meals: Meal[] }                            // ordinati per slot
 Plan     { id, name, startDate, days: Day[7] }         // indice 0 = lunedì
 MealLog  { date: 'YYYY-MM-DD', slot, planId }          // presenza = fatto
@@ -197,7 +197,7 @@ Al primo avvio, se `settings.migratedFromV1` è falso:
    - `ing` → `PlanItem` (nome → alimento del catalogo per corrispondenza
      normalizzata, grammi da `parseGrams`); un nome che non corrisponde crea un
      alimento `manuale` con macro a zero e lo segnala;
-   - `sub` → `subs`; `liberi`, `tip`, `steps` e `alts` → `note` (testo semplice, HTML rimosso).
+   - `sub` → `subs`; titoli, `liberi`, `tip`, `steps` e `alts` della v1 non si importano più (03/11/2026).
 2. **Pasti fatti:** `piano11-fatti` (settimana corrente, chiavi `giorno-slot`)
    → `MealLog` con le date reali della settimana.
 3. **Storico:** `piano11-storico` → `LegacyWeek`.

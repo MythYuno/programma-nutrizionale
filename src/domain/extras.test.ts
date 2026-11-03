@@ -58,8 +58,8 @@ describe('extras · base', () => {
 describe('extras · bilancio', () => {
   // Colazione: 100 g di riso; cena: 200 g di pollo.
   const meals: Meal[] = [
-    { slot: 'colazione', title: 'A', note: '', items: [{ foodId: 'riso', grams: 100, subs: [] }] },
-    { slot: 'cena', title: 'C', note: '', items: [{ foodId: 'pollo', grams: 200, subs: [] }] },
+    { slot: 'colazione', items: [{ foodId: 'riso', grams: 100, subs: [] }] },
+    { slot: 'cena', items: [{ foodId: 'pollo', grams: 200, subs: [] }] },
   ];
   const kcalColazione = 332;
   const gelato = log({ refId: 'gelato', macro: gelatoMacro });
