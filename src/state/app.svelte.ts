@@ -24,6 +24,13 @@ class AppState {
 
   foodIndex = $derived(indexFoods(this.foods));
 
+  private loaders: (() => Promise<void>)[] = [];
+
+  // Gli stati che dipendono da app si registrano qui (evita un import circolare).
+  onLoad(loader: () => Promise<void>) {
+    this.loaders.push(loader);
+  }
+
   async load() {
     const report = await ensureStartup(db, safeLocalStorage());
     this.notices = report.warnings;
@@ -31,6 +38,9 @@ class AppState {
       db.foods.toArray(), db.mealLogs.toArray(), db.weights.toArray(), db.legacyWeeks.toArray(),
       repo.getSettings(db), repo.activePlan(db),
     ]);
+    // Gli altri stati (fuori piano, scambi) si caricano qui, prima di "pronta":
+    // così Oggi non mostra mai un totale senza le loro voci.
+    await Promise.all(this.loaders.map((l) => l()));
     this.persisted = await requestPersistence();
     this.ready = true;
   }

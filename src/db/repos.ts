@@ -1,5 +1,5 @@
 import type { AppDb } from './schema';
-import type { CustomItem, ExtraLog, Food, MealLog, Plan, Settings, Slot, Weight } from '../domain/types';
+import type { CustomItem, ExtraLog, Food, ItemLog, MealLog, Plan, Settings, Slot, Weight } from '../domain/types';
 import { DEFAULT_SETTINGS } from '../domain/types';
 
 export async function getSettings(db: AppDb): Promise<Settings> {
@@ -80,4 +80,14 @@ export function deleteCustomItem(db: AppDb, id: string) {
 
 export function putMealLog(db: AppDb, log: MealLog) {
   return db.mealLogs.put($plain(log));
+}
+
+// --- Scambi e grammi reali ---------------------------------------------------
+
+export function putItemLog(db: AppDb, l: ItemLog) {
+  return db.itemLogs.put($plain(l));
+}
+
+export function deleteItemLog(db: AppDb, date: string, slot: Slot, index: number) {
+  return db.itemLogs.delete([date, slot, index]);
 }

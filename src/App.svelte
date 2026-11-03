@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { app } from './state/app.svelte';
-  import { extrasState } from './state/extras.svelte';
+  import './state/extras.svelte';
+  import './state/eaten.svelte';
   import { router } from './state/router.svelte';
   import TabBar from './ui/TabBar.svelte';
   import DayView from './screens/DayView.svelte';
@@ -13,8 +14,8 @@
   import type { Slot } from './domain/types';
 
   onMount(() => {
-    // Le voci fuori piano si caricano dopo: servono il catalogo e il piano.
-    app.load().then(() => extrasState.load());
+    // Carica anche fuori piano e scambi: i loro stati si registrano con app.onLoad.
+    app.load();
     // Se l'app resta aperta oltre la mezzanotte, "Oggi" deve cambiare giorno.
     const onVisible = () => document.visibilityState === 'visible' && app.refreshToday();
     document.addEventListener('visibilitychange', onVisible);

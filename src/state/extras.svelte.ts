@@ -107,3 +107,4 @@ class ExtrasState {
 }
 
 export const extrasState = new ExtrasState();
+app.onLoad(() => extrasState.load());

@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
 import { stripRecipes } from '../domain/validate';
-import type { CustomItem, ExtraLog, Food, LegacyWeek, MealLog, Plan, Settings, Weight } from '../domain/types';
+import type { CustomItem, ExtraLog, Food, ItemLog, LegacyWeek, MealLog, Plan, Settings, Weight } from '../domain/types';
 
 export type SettingsRow = Settings & { key: 'settings' };
 
@@ -13,6 +13,7 @@ export class AppDb extends Dexie {
   settings!: EntityTable<SettingsRow, 'key'>;
   extras!: EntityTable<ExtraLog, 'id'>;
   customItems!: EntityTable<CustomItem, 'id'>;
+  itemLogs!: Dexie.Table<ItemLog, [string, string, number]>;
 
   constructor(name = 'programma-nutrizionale') {
     super(name);
@@ -30,6 +31,8 @@ export class AppDb extends Dexie {
     this.version(3).stores({}).upgrade((tx) =>
       tx.table<Plan, string>('plans').toCollection().modify((p) => { Object.assign(p, stripRecipes(p)); }),
     );
+    // Scambi e grammi reali, per giorno e per alimento del piano.
+    this.version(4).stores({ itemLogs: '[date+slot+index], date' });
   }
 }
 

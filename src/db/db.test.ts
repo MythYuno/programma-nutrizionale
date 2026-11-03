@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import Dexie from 'dexie';
 import { AppDb } from './schema';
 import { ensureStartup, V1_KEYS } from './migrate';
-import { activePlan, getSettings, logsBetween, putCustomItem, putExtra, putWeight, setMealDone } from './repos';
+import { activePlan, getSettings, logsBetween, putCustomItem, putExtra, putItemLog, putMealLog, putWeight, setMealDone } from './repos';
 import { exportBackup, parseBackup, restoreBackup } from './backup';
 import { SEED_FOODS } from '../domain/catalog';
 
@@ -119,7 +119,7 @@ describe('fuori piano nel database', () => {
     await putExtra(a, extra);
     await putCustomItem(a, mine);
     const exported = await exportBackup(a);
-    expect(exported.version).toBe(3);
+    expect(exported.version).toBe(4);
     const parsed = parseBackup(JSON.stringify(exported));
     if ('error' in parsed) throw new Error(parsed.error);
     expect(parsed.summary.extras).toBe(1);
@@ -168,5 +168,43 @@ describe('piano senza ricette nel database', () => {
     if ('error' in parsed) throw new Error(parsed.error);
     expect(parsed.backup.plans[0]!.days[0]!.meals[0]).not.toHaveProperty('title');
     expect(parsed.backup.plans[0]!.days[0]!.meals[0]).not.toHaveProperty('note');
+  });
+});
+
+describe('scambi e grammi nel database', () => {
+  const itemLog = { date: '2026-11-04', slot: 'cena' as const, index: 0, planFoodId: 'manzo-magro', foodId: 'pollo', grams: 253 };
+
+  it('passa allo schema 4 senza perdere dati', async () => {
+    const name = 'test-v4-' + n++;
+    const v3 = new Dexie(name);
+    v3.version(1).stores({ foods: 'id, name', plans: 'id', mealLogs: '[date+slot], date', weights: 'date', legacyWeeks: 'week', settings: 'key' });
+    v3.version(2).stores({ extras: 'id, date', customItems: 'id, name' });
+    v3.version(3).stores({});
+    await v3.table('weights').put({ date: '2026-11-01', kg: 79 });
+    v3.close();
+    const db = new AppDb(name);
+    dbs.push(db);
+    expect(await db.weights.get('2026-11-01')).toEqual({ date: '2026-11-01', kg: 79 });
+    expect(await db.itemLogs.count()).toBe(0);
+  });
+
+  it('il backup v4 porta gli scambi; un v3 si importa ancora', async () => {
+    const a = freshDb();
+    await ensureStartup(a, storage({}), '2026-11-03');
+    await putItemLog(a, itemLog);
+    await putMealLog(a, { date: '2026-11-04', slot: 'pranzo', planId: 'p', kind: 'libero' });
+    await setMealDone(a, { date: '2026-11-04', slot: 'colazione', planId: 'p' }, true);
+    const exported = await exportBackup(a);
+    expect(exported.version).toBe(4);
+    const parsed = parseBackup(JSON.stringify(exported));
+    if ('error' in parsed) throw new Error(parsed.error);
+    expect(parsed.summary).toMatchObject({ mealLogs: 1, freeMeals: 1 });
+    const b = freshDb();
+    await restoreBackup(b, parsed.backup);
+    expect(await b.itemLogs.toArray()).toEqual([itemLog]);
+    const { itemLogs: _i, ...v3 } = exported;
+    const old = parseBackup(JSON.stringify({ ...v3, version: 3 }));
+    if ('error' in old) throw new Error(old.error);
+    expect(old.backup.itemLogs).toEqual([]);
   });
 });
