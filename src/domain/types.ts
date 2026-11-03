@@ -61,6 +61,55 @@ export interface MealLog {
   date: string; // YYYY-MM-DD
   slot: Slot;
   planId: string;
+  kind?: 'libero'; // assente = pasto del piano (i dati esistenti restano validi)
+}
+
+// --- Fuori piano -----------------------------------------------------------
+
+// Origine di una voce fuori piano.
+export type ExtraOrigin = 'catalogo' | 'mia' | 'alimento' | 'manuale';
+
+export type ExtraCategory = 'Dolci' | 'Alcolici' | 'Salato';
+
+// Nomi dei file in public/emoji/ (Fluent Emoji 3D).
+export type FoodIconName =
+  | 'beer' | 'wine' | 'cocktail' | 'tumbler' | 'ice-cream' | 'soft-ice-cream' | 'cake' | 'chocolate'
+  | 'croissant' | 'pizza' | 'fries' | 'hamburger' | 'sandwich' | 'potato' | 'cheers'
+  | 'bookmark' | 'plate' | 'pencil';
+
+// Voce del catalogo degli sgarri, a porzione intera.
+export interface CatalogExtra {
+  id: string;
+  name: string;
+  portion: string;
+  category: ExtraCategory;
+  macro: Macro;
+  icon: FoodIconName;
+}
+
+// Voce propria salvata e riutilizzabile.
+export interface CustomItem {
+  id: string;
+  name: string;
+  portion: string; // descrizione libera, '' se assente (es. "1 barretta")
+  macro: Macro; // kcal sempre presente; p/c/f a 0 se non indicati
+  createdAt: string; // ISO
+}
+
+// Voce mangiata in un giorno. I valori sono copiati al momento:
+// modificare o eliminare la voce d'origine non cambia i giorni passati.
+export interface ExtraLog {
+  id: string;
+  date: string; // YYYY-MM-DD
+  name: string;
+  portion: string; // es. "2 gusti", "40 g", ''
+  qty: number; // >= 1, per voci ripetute (×2)
+  macro: Macro; // valori di UNA porzione
+  origin: ExtraOrigin;
+  refId: string | null; // id del catalogo, della CustomItem o del Food
+  grams: number | null; // solo per origin 'alimento'
+  freeSlot: Slot | null; // pasto libero a cui appartiene, null = sgarro
+  createdAt: string;
 }
 
 export interface Weight {
