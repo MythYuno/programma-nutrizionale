@@ -191,7 +191,9 @@ Modifiche a schermate esistenti:
 - **Backup**: conteggi delle voci nel riepilogo dell'import.
 
 Tutto segue `DESIGN.md` ("Colore dell'ora"): fondo nel colore dell'ora, schede
-bianche, testo e icone Phosphor, rigato bianco su fondo per le parti fuori piano.
+bianche, icone Phosphor per l'interfaccia, rigato bianco su fondo per le parti fuori piano.
+Le voci di cibo usano icone **3D Fluent Emoji** (Microsoft, MIT), coerenti con
+l'icona dell'app (scelta dell'utente: "icone premium").
 
 ## 6. Casi limite
 
