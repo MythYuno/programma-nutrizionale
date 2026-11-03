@@ -6,26 +6,35 @@
   import CaretDown from 'phosphor-svelte/lib/CaretDown';
   import { slide } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
-  import type { Meal, PlanItem } from '../domain/types';
+  import type { ExtraLog, Meal, PlanItem } from '../domain/types';
   import { SLOT_LABEL } from '../domain/types';
   import { fmtNumber, mealMacro } from '../domain/nutrition';
   import { alternativesFor } from '../domain/substitutions';
+  import { sumExtras } from '../domain/extras';
   import { app } from '../state/app.svelte';
   import { SLOT_COLOR } from '../ui/format';
+  import FreeMealBody from './extras/FreeMealBody.svelte';
 
-  let { meal, done, hero = false, skipped = false, onToggle, onSubs }: {
+  let { meal, done, hero = false, skipped = false, free = false, freeItems = [], onToggle, onSubs, onFree, onUnfree, onAddToFree }: {
     meal: Meal;
     done: boolean;
     hero?: boolean;
     skipped?: boolean;
     onToggle: () => void;
     onSubs: (item: PlanItem) => void;
+    free?: boolean;
+    freeItems?: ExtraLog[];
+    onFree?: () => void;
+    onUnfree?: () => void;
+    onAddToFree?: () => void;
   } = $props();
 
   let open = $state(false);
   let showNote = $state(false);
-  const expanded = $derived(hero || open);
+  // Un pasto libero resta aperto: si vede subito cosa si è mangiato al suo posto.
+  const expanded = $derived(hero || open || free);
   const kcal = $derived(mealMacro(meal, app.foodIndex).kcal);
+  const freeKcal = $derived(sumExtras(freeItems).kcal);
 
   function name(id: string) {
     return app.foodIndex.get(id)?.name ?? 'Alimento sconosciuto';
@@ -35,7 +44,7 @@
   }
 </script>
 
-<article class:hero class:compact={!hero} class:open class:done style="--accent: {SLOT_COLOR[meal.slot]}">
+<article class:hero class:compact={!hero} class:open={open || free} class:done style="--accent: {SLOT_COLOR[meal.slot]}">
   {#if hero}
     <div class="hero-head">
       <h2>{SLOT_LABEL[meal.slot]}</h2>
@@ -48,42 +57,47 @@
         {#if done}<CheckCircle size={24} weight="fill" />{:else}<Circle size={24} />{/if}
       </span>
       <span class="grow">
-        <span class="slot">{SLOT_LABEL[meal.slot]}{#if skipped}<span class="skip">saltato?</span>{/if}</span>
+        <span class="slot">{SLOT_LABEL[meal.slot]}{#if skipped}<span class="skip">saltato?</span>{/if}{#if free}<span class="skip">pasto libero</span>{/if}</span>
         <span class="title">{meal.title}</span>
       </span>
-      <span class="kcal num">{fmtNumber(kcal)} kcal</span>
-      <span class="caret" class:up={open}><CaretDown size={16} weight="bold" /></span>
+      <span class="kcal num">{fmtNumber(free ? freeKcal : kcal)} kcal</span>
+      {#if !free}<span class="caret" class:up={open}><CaretDown size={16} weight="bold" /></span>{/if}
     </button>
   {/if}
 
   {#if expanded}
     <div class="body" transition:slide={{ duration: hero ? 0 : 260, easing: cubicOut }}>
-      <ul class="items">
-        {#each meal.items as it, i (i)}
-          <li>
-            {#if hasSubs(it)}
-              <button class="item sub" onclick={() => onSubs(it)} aria-label="{name(it.foodId)}, {it.grams} grammi: vedi sostituzioni">
-                <span class="name">{name(it.foodId)} <ArrowsLeftRight size={15} weight="bold" /></span>
-                <b class="num">{fmtNumber(it.grams)}<small>g</small></b>
-              </button>
-            {:else}
-              <div class="item"><span class="name">{name(it.foodId)}</span><b class="num">{fmtNumber(it.grams)}<small>g</small></b></div>
-            {/if}
-          </li>
-        {/each}
-      </ul>
+      {#if free}
+        <FreeMealBody planTitle={meal.title} items={freeItems} onAdd={() => onAddToFree?.()} onUnfree={() => onUnfree?.()} />
+      {:else}
+        <ul class="items">
+          {#each meal.items as it, i (i)}
+            <li>
+              {#if hasSubs(it)}
+                <button class="item sub" onclick={() => onSubs(it)} aria-label="{name(it.foodId)}, {it.grams} grammi: vedi sostituzioni">
+                  <span class="name">{name(it.foodId)} <ArrowsLeftRight size={15} weight="bold" /></span>
+                  <b class="num">{fmtNumber(it.grams)}<small>g</small></b>
+                </button>
+              {:else}
+                <div class="item"><span class="name">{name(it.foodId)}</span><b class="num">{fmtNumber(it.grams)}<small>g</small></b></div>
+              {/if}
+            </li>
+          {/each}
+        </ul>
 
-      {#if meal.note}
-        <button class="note-toggle" onclick={() => (showNote = !showNote)} aria-expanded={showNote}>
-          {showNote ? 'Nascondi note' : 'Note e preparazione'}
+        {#if meal.note}
+          <button class="note-toggle" onclick={() => (showNote = !showNote)} aria-expanded={showNote}>
+            {showNote ? 'Nascondi note' : 'Note e preparazione'}
+          </button>
+          {#if showNote}<p class="note" transition:slide={{ duration: 200, easing: cubicOut }}>{meal.note}</p>{/if}
+        {/if}
+
+        <button class="btn" class:tinted={done} onclick={onToggle}>
+          {#if done}Annulla «fatto»{:else}<Check size={20} weight="bold" /> Fatto{/if}
         </button>
-        {#if showNote}<p class="note" transition:slide={{ duration: 200, easing: cubicOut }}>{meal.note}</p>{/if}
+        {#if onFree}<button class="link free-link" onclick={onFree}>Pasto libero</button>{/if}
+        {#if hero}<p class="foot num">{fmtNumber(kcal)} kcal stimate</p>{/if}
       {/if}
-
-      <button class="btn" class:tinted={done} onclick={onToggle}>
-        {#if done}Annulla «fatto»{:else}<Check size={20} weight="bold" /> Fatto{/if}
-      </button>
-      {#if hero}<p class="foot num">{fmtNumber(kcal)} kcal stimate</p>{/if}
     </div>
   {/if}
 </article>
@@ -132,5 +146,6 @@
 
   .note-toggle { background: none; border: 0; color: var(--accent); padding: 4px 0 12px; font-size: 15px; font-weight: 600; }
   .note { white-space: pre-line; font-size: 15px; color: var(--ink-2); margin: 0 0 12px; line-height: 1.45; }
+  .free-link { display: block; width: 100%; text-align: center; font-size: 15px; margin-top: 4px; }
   .foot { text-align: center; margin: 10px 0 0; font-size: 13px; color: var(--ink-2); }
 </style>

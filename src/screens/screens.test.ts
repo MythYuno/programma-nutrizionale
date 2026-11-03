@@ -7,6 +7,7 @@ import { extrasState } from '../state/extras.svelte';
 import { EXTRAS_CATALOG } from '../domain/extras-catalog';
 import DayView from './DayView.svelte';
 import Peso from './Peso.svelte';
+import Settimana from './Settimana.svelte';
 import PlanEditor from './plan/PlanEditor.svelte';
 
 // Un mercoledì: il piano v1 ha "Farro e lenticchie tiepido" a pranzo.
@@ -141,5 +142,30 @@ describe('Fuori piano · voce a mano e grammi', () => {
     const row = screen.getByRole('button', { name: /Gelato in coppetta/ });
     expect(row).toHaveTextContent('×2');
     expect(row).toHaveTextContent('520');
+  });
+});
+
+describe('Pasto libero', () => {
+  it('segna e annulla un pasto libero', async () => {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Pasto libero' }));
+    await waitFor(async () => expect(await db.mealLogs.get([DATE, 'colazione'])).toMatchObject({ kind: 'libero' }));
+    expect(screen.getByRole('dialog', { name: 'Pasto libero · Colazione' })).toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('button', { name: 'Aggiungi Cornetto semplice' }));
+    await waitFor(async () => expect((await db.extras.toArray())[0]).toMatchObject({ freeSlot: 'colazione' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Fine' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Annulla pasto libero' }));
+    await waitFor(async () => {
+      expect(await db.mealLogs.get([DATE, 'colazione'])).toBeUndefined();
+      expect((await db.extras.toArray())[0]!.freeSlot).toBeNull();
+    });
+  });
+
+  it('avvisa se i pasti liberi della settimana sono più di uno', async () => {
+    await extrasState.markFree('2026-10-27', 'cena');
+    await extrasState.markFree(DATE, 'cena');
+    render(Settimana, {});
+    expect(screen.getByText('Il piano ne prevede uno a settimana')).toBeInTheDocument();
+    expect(screen.getByText('2 su 1')).toBeInTheDocument();
   });
 });

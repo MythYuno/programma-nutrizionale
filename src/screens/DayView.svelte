@@ -3,7 +3,7 @@
   import { app } from '../state/app.svelte';
   import { extrasState } from '../state/extras.svelte';
   import { router } from '../state/router.svelte';
-  import type { PlanItem } from '../domain/types';
+  import type { PlanItem, Slot } from '../domain/types';
   import { nextMeal, skippedMeals, sortMeals, weekdayIndex } from '../domain/schedule';
   import { SLOT_LABEL } from '../domain/types';
   import { dayBalance } from '../domain/extras';
@@ -36,6 +36,17 @@
   let subsItem = $state<PlanItem | null>(null);
   let details = $state(false);
   let adding = $state(false);
+  let addSlot = $state<Slot | null>(null); // pasto libero a cui si aggiunge, null = sgarro
+
+  function openAdd(slot: Slot | null) {
+    addSlot = slot;
+    adding = true;
+  }
+
+  async function markFree(slot: Slot) {
+    await extrasState.markFree(date, slot);
+    openAdd(slot);
+  }
 </script>
 
 <main class="screen" class:with-fab={canAdd}>
@@ -53,7 +64,7 @@
       <a class="btn" href="#/piano">Crea il piano</a>
     </div>
   {:else if now}
-    <MealCard meal={now} done={false} hero onToggle={() => app.toggleMeal(date, now.slot)} onSubs={(it) => (subsItem = it)} />
+    <MealCard meal={now} done={false} hero onToggle={() => app.toggleMeal(date, now.slot)} onSubs={(it) => (subsItem = it)} onFree={canAdd ? () => markFree(now.slot) : undefined} />
   {:else if isToday && skipped.length}
     <div class="card complete">
       <h2>Nessun altro pasto in programma</h2>
@@ -79,18 +90,24 @@
   {#if rest.length}
     <h2 class="section-title">{now ? 'Il resto della giornata' : 'Pasti'}</h2>
     {#each rest as m (m.slot)}
-      <MealCard meal={m} done={done.has(m.slot)} skipped={skipped.includes(m.slot)} onToggle={() => app.toggleMeal(date, m.slot)} onSubs={(it) => (subsItem = it)} />
+      <MealCard
+        meal={m} done={done.has(m.slot)} skipped={skipped.includes(m.slot)}
+        free={frees.has(m.slot)} freeItems={dayExtras.filter((e) => e.freeSlot === m.slot)}
+        onToggle={() => app.toggleMeal(date, m.slot)} onSubs={(it) => (subsItem = it)}
+        onFree={canAdd ? () => markFree(m.slot) : undefined}
+        onUnfree={() => extrasState.unmarkFree(date, m.slot)} onAddToFree={() => openAdd(m.slot)}
+      />
     {/each}
   {/if}
   <ExtraList {date} />
   {#if app.plan}<p class="section-foot">Valori nutrizionali stimati da tabelle pubbliche: indicativi, non i calcoli del medico.</p>{/if}
 </main>
 
-{#if canAdd}<Fab label="Ho mangiato altro" onclick={() => (adding = true)} />{/if}
+{#if canAdd}<Fab label="Ho mangiato altro" onclick={() => openAdd(null)} />{/if}
 
 <SubsSheet bind:item={subsItem} />
 <BalanceSheet bind:open={details} {balance} />
-<AddExtraSheet bind:open={adding} {date} freeSlot={null} />
+<AddExtraSheet bind:open={adding} {date} freeSlot={addSlot} />
 
 <style>
   .back { display: flex; align-items: center; gap: 4px; margin-left: -4px; padding: 0 0 8px; }
