@@ -3,11 +3,11 @@
   import { extrasState } from '../../state/extras.svelte';
   import { parseAmount, validateExtra } from '../../domain/extras';
   import { fmtNumber, portionMacro } from '../../domain/nutrition';
-  import type { Food, Slot } from '../../domain/types';
+  import type { ExtraLog, Food, Slot } from '../../domain/types';
   import FoodIcon from '../../ui/FoodIcon.svelte';
 
   // Un alimento del catalogo dell'app, a grammi: kcal mentre scrivi.
-  let { food, date, freeSlot, onDone }: { food: Food; date: string; freeSlot: Slot | null; onDone: () => void } = $props();
+  let { food, date, freeSlot, onDone }: { food: Food; date: string; freeSlot: Slot | null; onDone: (e: ExtraLog) => void } = $props();
 
   let gramsText = $state('');
   let error = $state('');
@@ -22,8 +22,7 @@
     if (error) return;
     busy = true;
     try {
-      await extrasState.add({ kind: 'alimento', item: food }, date, { freeSlot, grams: grams! });
-      onDone();
+      onDone(await extrasState.add({ kind: 'alimento', item: food }, date, { freeSlot, grams: grams! }));
     } finally {
       busy = false;
     }

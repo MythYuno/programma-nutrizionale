@@ -10,7 +10,7 @@
   import type { ExtraCategory, ExtraLog, Food, Slot } from '../../domain/types';
   import { SLOT_LABEL } from '../../domain/types';
   import Sheet from '../../ui/Sheet.svelte';
-  import Toast from '../../ui/Toast.svelte';
+  import { toast } from '../../state/toast.svelte';
   import FoodIcon from '../../ui/FoodIcon.svelte';
   import ChoiceRow from './ChoiceRow.svelte';
   import ExtraForm from './ExtraForm.svelte';
@@ -26,8 +26,6 @@
   let cat = $state<Cat>('Dolci');
   let manualName = $state<string | null>(null); // modulo "a mano"
   let pickedFood = $state<Food | null>(null); // modulo grammi
-  let added = $state<ExtraLog | null>(null);
-  let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
   const title = $derived(freeSlot ? `Pasto libero · ${SLOT_LABEL[freeSlot]}` : 'Ho mangiato altro');
   const results = $derived(searchExtras(query, EXTRAS_CATALOG, extrasState.customItems, app.foods));
@@ -49,19 +47,22 @@
     showToast(await extrasState.add(choice, date, { freeSlot }));
   }
 
+  // "… aggiunto" con Annulla: una voce ripetuta torna indietro di uno,
+  // altrimenti sparisce.
   function showToast(e: ExtraLog) {
-    added = e;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => (added = null), 5000);
+    toast.show(`${e.name} aggiunto · ${fmtNumber(e.macro.kcal)} kcal`, {
+      label: 'Annulla',
+      run: async () => {
+        const current = extrasState.extras.find((x) => x.id === e.id);
+        if (current && current.qty > 1) await extrasState.setQty(current.id, current.qty - 1);
+        else await extrasState.remove(e.id);
+      },
+    });
   }
 
-  // Annulla: una voce ripetuta torna indietro di uno, altrimenti sparisce.
-  async function undo() {
-    if (!added) return;
-    const current = extrasState.extras.find((x) => x.id === added!.id);
-    if (current && current.qty > 1) await extrasState.setQty(current.id, current.qty - 1);
-    else await extrasState.remove(added.id);
-    added = null;
+  function done(e: ExtraLog) {
+    open = false;
+    showToast(e);
   }
 
   const iconOf = (r: ExtraChoice) => (r.kind === 'catalogo' ? r.item.icon : r.kind === 'mia' ? 'bookmark' : 'plate');
@@ -70,9 +71,9 @@
 <Sheet bind:open {title}>
   <div class="content">
     {#if manualName !== null}
-      <ExtraForm initialName={manualName} {date} {freeSlot} onDone={() => (open = false)} />
+      <ExtraForm initialName={manualName} {date} {freeSlot} onDone={done} />
     {:else if pickedFood}
-      <FoodGramsForm food={pickedFood} {date} {freeSlot} onDone={() => (open = false)} />
+      <FoodGramsForm food={pickedFood} {date} {freeSlot} onDone={done} />
     {:else}
       <label class="search">
         <MagnifyingGlass size={20} />
@@ -112,8 +113,6 @@
     {/if}
   </div>
 </Sheet>
-
-<Toast message={added ? `${added.name} aggiunto · ${fmtNumber(added.macro.kcal)} kcal` : null} action="Annulla" onAction={undo} />
 
 <style>
   /* Altezza fissa: il foglio non si accorcia e allunga mentre scrivi. */

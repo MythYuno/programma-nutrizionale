@@ -2,7 +2,7 @@
   import { untrack } from 'svelte';
   import { extrasState } from '../../state/extras.svelte';
   import { kcalFromMacros, parseAmount, validateExtra } from '../../domain/extras';
-  import type { Slot } from '../../domain/types';
+  import type { ExtraLog, Slot } from '../../domain/types';
 
   // Voce scritta a mano, per esempio dall'etichetta. Le kcal si calcolano dai
   // macro finché non le scrivi tu: da quel momento restano le tue.
@@ -10,7 +10,7 @@
     initialName: string;
     date: string;
     freeSlot: Slot | null;
-    onDone: () => void;
+    onDone: (e: ExtraLog) => void;
   } = $props();
 
   let name = $state(untrack(() => initialName));
@@ -37,8 +37,7 @@
     if (Object.keys(errors).length) return;
     busy = true;
     try {
-      await extrasState.addManual({ name, portion, macro }, date, { freeSlot, save });
-      onDone();
+      onDone(await extrasState.addManual({ name, portion, macro }, date, { freeSlot, save }));
     } finally {
       busy = false;
     }

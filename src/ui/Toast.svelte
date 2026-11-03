@@ -1,20 +1,16 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
+  import { toast } from '../state/toast.svelte';
 
-  // Avviso breve sopra la tab bar, con un'azione facoltativa (per esempio "Annulla").
-  let { message, action, onAction }: {
-    message: string | null;
-    action?: string;
-    onAction?: () => void;
-  } = $props();
+  // Mostra l'avviso condiviso (state/toast.svelte.ts) sopra la tab bar e i fogli.
 </script>
 
 <div class="wrap" aria-live="polite">
-  {#if message}
+  {#if toast.message}
     <div class="toast" transition:fly={{ y: 24, duration: 240, easing: cubicOut }}>
-      <span>{message}</span>
-      {#if action && onAction}<button onclick={onAction}>{action}</button>{/if}
+      <span>{toast.message}</span>
+      {#if toast.action}<button onclick={() => toast.runAction()}>{toast.action.label}</button>{/if}
     </div>
   {/if}
 </div>

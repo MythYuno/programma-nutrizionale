@@ -8,6 +8,7 @@
   import Segmented from '../ui/Segmented.svelte';
   import Sheet from '../ui/Sheet.svelte';
   import Toast from '../ui/Toast.svelte';
+  import { toast } from '../state/toast.svelte';
   import type { Weight } from '../domain/types';
   import { shortDate } from '../ui/format';
   import WeightChart from './WeightChart.svelte';
@@ -42,20 +43,9 @@
   }
   // Eliminare è immediato, ma per qualche secondo si può annullare.
   let editingHistory = $state(false);
-  let removed = $state<Weight | null>(null);
-  let undoTimer: ReturnType<typeof setTimeout> | undefined;
   async function remove(w: Weight) {
     await app.removeWeight(w.date);
-    removed = w;
-    clearTimeout(undoTimer);
-    undoTimer = setTimeout(() => (removed = null), 5000);
-  }
-  async function undo() {
-    if (!removed) return;
-    const w = removed;
-    removed = null;
-    clearTimeout(undoTimer);
-    await app.addWeight(w);
+    toast.show(`Pesata del ${shortDate(w.date)} eliminata`, { label: 'Annulla', run: () => app.addWeight(w) });
   }
 
   function openGoal() {
@@ -128,7 +118,7 @@
   {/if}
 </main>
 
-<Toast message={removed ? `Pesata del ${shortDate(removed.date)} eliminata` : null} action="Annulla" onAction={undo} />
+<Toast />
 
 <Sheet bind:open={adding} title="Nuova pesata">
   <label class="lab" for="kg">Peso (kg)</label>

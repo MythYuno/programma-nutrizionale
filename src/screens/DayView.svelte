@@ -17,6 +17,7 @@
   import AddExtraSheet from './extras/AddExtraSheet.svelte';
   import ExtraList from './extras/ExtraList.svelte';
   import ExtraItemSheet from './extras/ExtraItemSheet.svelte';
+  import Toast from '../ui/Toast.svelte';
 
   let { date }: { date: string } = $props();
 
@@ -113,6 +114,7 @@
 <BalanceSheet bind:open={details} {balance} />
 <AddExtraSheet bind:open={adding} {date} freeSlot={addSlot} />
 <ExtraItemSheet bind:open={itemOpen} extraId={itemId} />
+<Toast />
 
 <style>
   .back { display: flex; align-items: center; gap: 4px; margin-left: -4px; padding: 0 0 8px; }

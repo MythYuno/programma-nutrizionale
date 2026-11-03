@@ -247,3 +247,17 @@ describe('Pasti come li ha dati il medico', () => {
     expect(screen.getByRole('button', { name: /Frutta fresca, Frutta secca/ })).toBeInTheDocument();
   });
 });
+
+describe('Avviso con Annulla', () => {
+  it('anche una voce a mano si può annullare', async () => {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Ho mangiato altro' }));
+    await fireEvent.input(screen.getByLabelText('Cerca o scrivi cosa hai mangiato'), { target: { value: 'barretta' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Aggiungi «barretta» a mano' }));
+    await fireEvent.input(screen.getByLabelText('kcal'), { target: { value: '100' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Aggiungi a oggi' }));
+    await waitFor(() => expect(screen.getByText(/barretta aggiunto/)).toBeInTheDocument());
+    await fireEvent.click(screen.getByRole('button', { name: 'Annulla' }));
+    await waitFor(async () => expect(await db.extras.count()).toBe(0));
+  });
+});

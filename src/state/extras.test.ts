@@ -67,3 +67,25 @@ describe('stato fuori piano · voci tue', () => {
     expect(await db.customItems.count()).toBe(1);
   });
 });
+
+describe('stato fuori piano · righe unite', () => {
+  it('ripristinare una voce già presente somma la quantità', async () => {
+    const a = await extrasState.add({ kind: 'catalogo', item: gelato }, D, { freeSlot: null });
+    const removed = await extrasState.remove(a.id);
+    await extrasState.add({ kind: 'catalogo', item: gelato }, D, { freeSlot: null });
+    await extrasState.restore(removed!);
+    expect(extrasState.forDate(D)).toHaveLength(1);
+    expect(extrasState.forDate(D)[0]!.qty).toBe(2);
+    expect(await db.extras.count()).toBe(1);
+  });
+
+  it('annullare un pasto libero unisce le sue voci agli sgarri uguali', async () => {
+    await extrasState.add({ kind: 'catalogo', item: gelato }, D, { freeSlot: null });
+    await extrasState.markFree(D, 'cena');
+    await extrasState.add({ kind: 'catalogo', item: gelato }, D, { freeSlot: 'cena' });
+    await extrasState.unmarkFree(D, 'cena');
+    expect(extrasState.forDate(D)).toHaveLength(1);
+    expect(extrasState.forDate(D)[0]!.qty).toBe(2);
+    expect(await db.extras.count()).toBe(1);
+  });
+});

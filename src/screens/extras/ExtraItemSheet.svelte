@@ -6,25 +6,16 @@
   import { fmtNumber } from '../../domain/nutrition';
   import type { ExtraLog } from '../../domain/types';
   import Sheet from '../../ui/Sheet.svelte';
-  import Toast from '../../ui/Toast.svelte';
+  import { toast } from '../../state/toast.svelte';
 
   // Una voce fuori piano già segnata: quantità ed eliminazione, con Annulla.
   let { open = $bindable(false), extraId }: { open: boolean; extraId: string | null } = $props();
 
   const current = $derived(extrasState.extras.find((e) => e.id === extraId) ?? null);
-  let removed = $state<ExtraLog | null>(null);
-  let timer: ReturnType<typeof setTimeout> | undefined;
-
   async function remove(e: ExtraLog) {
     open = false;
-    removed = await extrasState.remove(e.id);
-    clearTimeout(timer);
-    timer = setTimeout(() => (removed = null), 5000);
-  }
-
-  async function undo() {
-    if (removed) await extrasState.restore(removed);
-    removed = null;
+    const removed = await extrasState.remove(e.id);
+    if (removed) toast.show(`${removed.name} eliminato`, { label: 'Annulla', run: () => extrasState.restore(removed) });
   }
 </script>
 
@@ -38,8 +29,6 @@
     <button class="btn danger" onclick={() => remove(current)}>Elimina</button>
   {/if}
 </Sheet>
-
-<Toast message={removed ? `${removed.name} eliminato` : null} action="Annulla" onAction={undo} />
 
 <style>
   .qty-row { display: flex; align-items: center; justify-content: space-between; margin: 8px 4px 18px; }

@@ -66,8 +66,11 @@ class ExtrasState {
     return e;
   }
 
+  // Rimette una voce eliminata; se intanto ne esiste una uguale, somma le quantità.
   async restore(e: ExtraLog) {
-    await this.put(e);
+    const same = this.sameRow(e, this.extras);
+    if (same) await this.put({ ...same, qty: same.qty + e.qty });
+    else await this.put(e);
   }
 
   async saveCustom(item: CustomItem) {
@@ -87,16 +90,35 @@ class ExtrasState {
   }
 
   // Il pasto torna da fare; quello che ci si era scritto resta, come sgarro.
+  // Le sue voci diventano sgarri, unite a quelli uguali già presenti.
   async unmarkFree(date: string, slot: Slot) {
-    const moved = this.extras.filter((x) => x.date === date && x.freeSlot === slot).map((e) => ({ ...e, freeSlot: null }));
+    const moving = this.extras.filter((x) => x.date === date && x.freeSlot === slot);
+    let rows = this.extras.filter((x) => !moving.includes(x));
+    const removed: string[] = [];
+    for (const e of moving) {
+      const moved = { ...e, freeSlot: null };
+      const same = this.sameRow(moved, rows);
+      if (same) {
+        rows = rows.map((x) => (x.id === same.id ? { ...x, qty: x.qty + e.qty } : x));
+        removed.push(e.id);
+      } else rows = [...rows, moved];
+    }
+    const changed = rows.filter((x) => !this.extras.includes(x));
     // Tutto insieme: un pasto annullato a metà lascerebbe voci senza pasto.
     await db.transaction('rw', [db.mealLogs, db.extras], async () => {
       await repo.setMealDone(db, { date, slot, planId: app.plan?.id ?? '' }, false);
-      for (const e of moved) await repo.putExtra(db, e);
+      for (const e of changed) await repo.putExtra(db, e);
+      for (const id of removed) await repo.deleteExtra(db, id);
     });
     app.logs = app.logs.filter((l) => !(l.date === date && l.slot === slot));
-    const ids = new Set(moved.map((e) => e.id));
-    this.extras = [...this.extras.filter((x) => !ids.has(x.id)), ...moved];
+    this.extras = rows;
+  }
+
+  // Una riga "uguale": stesso giorno, pasto, origine e voce. Le voci scritte al
+  // volo e gli alimenti a grammi restano sempre righe separate.
+  private sameRow(e: ExtraLog, rows: readonly ExtraLog[]): ExtraLog | undefined {
+    if (e.origin === 'manuale' || e.origin === 'alimento') return undefined;
+    return rows.find((x) => x.id !== e.id && x.date === e.date && x.origin === e.origin && x.refId === e.refId && x.freeSlot === e.freeSlot);
   }
 
   private async put(e: ExtraLog): Promise<ExtraLog> {
