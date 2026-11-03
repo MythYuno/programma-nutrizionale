@@ -2,17 +2,19 @@
   import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
   import { app } from '../state/app.svelte';
   import { extrasState } from '../state/extras.svelte';
+  import { eatenState } from '../state/eaten.svelte';
   import { router } from '../state/router.svelte';
-  import type { PlanItem, Slot } from '../domain/types';
+  import type { Meal, Slot } from '../domain/types';
   import { nextMeal, skippedMeals, sortMeals, weekdayIndex } from '../domain/schedule';
   import { SLOT_LABEL } from '../domain/types';
   import { dayBalance } from '../domain/extras';
+  import { eatenItems } from '../domain/eaten';
   import { longDate, weekdayName } from '../ui/format';
   import DayStrip from '../ui/DayStrip.svelte';
   import BalanceBar from '../ui/BalanceBar.svelte';
   import Fab from '../ui/Fab.svelte';
   import MealCard from './MealCard.svelte';
-  import SubsSheet from './SubsSheet.svelte';
+  import SubsSheet, { type SubsTarget } from './SubsSheet.svelte';
   import BalanceSheet from './extras/BalanceSheet.svelte';
   import AddExtraSheet from './extras/AddExtraSheet.svelte';
   import ExtraList from './extras/ExtraList.svelte';
@@ -29,13 +31,14 @@
   const now = $derived(isToday ? nextMeal(day, done) : null);
   const skipped = $derived(isToday ? skippedMeals(day, done).map((m) => m.slot) : []);
   const dayExtras = $derived(extrasState.forDate(date));
-  const balance = $derived(dayBalance(meals, done, frees, dayExtras, app.foodIndex));
+  const dayLogs = $derived(eatenState.forDate(date));
+  const balance = $derived(dayBalance(meals, done, frees, dayExtras, app.foodIndex, dayLogs));
   const rest = $derived(meals.filter((m) => m.slot !== now?.slot));
   const segments = $derived(meals.map((m) => ({ slot: m.slot, done: done.has(m.slot), current: m.slot === now?.slot, free: frees.has(m.slot) })));
   // Nei giorni futuri non si aggiunge niente: si mangia solo oggi o prima.
   const canAdd = $derived(date <= app.today);
 
-  let subsItem = $state<PlanItem | null>(null);
+  let subsTarget = $state<SubsTarget | null>(null);
   let details = $state(false);
   let adding = $state(false);
   let addSlot = $state<Slot | null>(null); // pasto libero a cui si aggiunge, null = sgarro
@@ -45,6 +48,12 @@
   function openAdd(slot: Slot | null) {
     addSlot = slot;
     adding = true;
+  }
+
+  // Un alimento del pasto toccato: si apre «cosa hai preso».
+  function openItem(m: Meal, index: number) {
+    const item = m.items[index];
+    if (item) subsTarget = { date, slot: m.slot, index, item };
   }
 
   async function markFree(slot: Slot) {
@@ -68,7 +77,7 @@
       <a class="btn" href="#/piano">Crea il piano</a>
     </div>
   {:else if now}
-    <MealCard meal={now} done={false} hero onToggle={() => app.toggleMeal(date, now.slot)} onSubs={(it) => (subsItem = it)} onFree={canAdd ? () => markFree(now.slot) : undefined} />
+    <MealCard meal={now} done={false} hero eaten={eatenItems(now, dayLogs, date)} onToggle={() => app.toggleMeal(date, now.slot)} onItem={(i) => openItem(now, i)} onFree={canAdd ? () => markFree(now.slot) : undefined} />
   {:else if isToday && skipped.length}
     <div class="card complete">
       <h2>Nessun altro pasto in programma</h2>
@@ -97,7 +106,8 @@
       <MealCard
         meal={m} done={done.has(m.slot)} skipped={skipped.includes(m.slot)}
         free={frees.has(m.slot)} freeItems={dayExtras.filter((e) => e.freeSlot === m.slot)}
-        onToggle={() => app.toggleMeal(date, m.slot)} onSubs={(it) => (subsItem = it)}
+        eaten={eatenItems(m, dayLogs, date)}
+        onToggle={() => app.toggleMeal(date, m.slot)} onItem={(i) => openItem(m, i)}
         onFree={canAdd ? () => markFree(m.slot) : undefined}
         onUnfree={() => extrasState.unmarkFree(date, m.slot)} onAddToFree={() => openAdd(m.slot)}
         onOpenExtra={(id) => { itemId = id; itemOpen = true; }}
@@ -110,7 +120,7 @@
 
 {#if canAdd}<Fab label="Ho mangiato altro" onclick={() => openAdd(null)} />{/if}
 
-<SubsSheet bind:item={subsItem} />
+<SubsSheet bind:target={subsTarget} />
 <BalanceSheet bind:open={details} {balance} />
 <AddExtraSheet bind:open={adding} {date} freeSlot={addSlot} />
 <ExtraItemSheet bind:open={itemOpen} extraId={itemId} />

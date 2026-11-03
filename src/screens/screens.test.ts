@@ -4,6 +4,7 @@ import { db } from '../db/schema';
 import { app } from '../state/app.svelte';
 import { editor } from '../state/editor.svelte';
 import { extrasState } from '../state/extras.svelte';
+import { toast } from '../state/toast.svelte';
 import { EXTRAS_CATALOG } from '../domain/extras-catalog';
 import DayView from './DayView.svelte';
 import Peso from './Peso.svelte';
@@ -18,6 +19,7 @@ beforeEach(async () => {
   await db.open();
   localStorage.clear();
   editor.draft = null;
+  toast.dismiss(); // l'avviso è globale: quello del test prima non deve valere qui
   await app.load();
   await extrasState.load();
   app.today = DATE;
@@ -259,5 +261,38 @@ describe('Avviso con Annulla', () => {
     await waitFor(() => expect(screen.getByText(/barretta aggiunto/)).toBeInTheDocument());
     await fireEvent.click(screen.getByRole('button', { name: 'Annulla' }));
     await waitFor(async () => expect(await db.extras.count()).toBe(0));
+  });
+});
+
+describe('Scambi e grammi reali', () => {
+  // Mercoledì: a cena manzo magro 220 g, con lo scambio del medico pollo 253 g.
+  async function openManzo() {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: /^Cena/ }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Manzo magro, 220 grammi: cosa hai preso' }));
+  }
+
+  it('segna lo scambio del medico e la scheda lo mostra', async () => {
+    await openManzo();
+    expect(screen.getByRole('dialog', { name: 'Manzo magro · 220 g' })).toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('radio', { name: /Pollo/ }));
+    await waitFor(async () => expect(await db.itemLogs.get([DATE, 'cena', 0])).toMatchObject({ foodId: 'pollo', grams: 253, planFoodId: 'manzo-magro' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Fine' }));
+    expect(screen.getByText('al posto di Manzo magro 220 g')).toBeInTheDocument();
+    expect(await db.mealLogs.get([DATE, 'cena'])).toBeUndefined();
+  });
+
+  it('accetta i grammi con la virgola e torna al piano', async () => {
+    await openManzo();
+    await fireEvent.input(screen.getByLabelText('Grammi mangiati'), { target: { value: '180,5' } });
+    await waitFor(async () => expect(await db.itemLogs.get([DATE, 'cena', 0])).toMatchObject({ foodId: 'manzo-magro', grams: 180.5 }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Torna al piano' }));
+    await waitFor(async () => expect(await db.itemLogs.count()).toBe(0));
+  });
+
+  it('i pulsanti − e + cambiano i grammi di 5', async () => {
+    await openManzo();
+    await fireEvent.click(screen.getByRole('button', { name: '5 grammi in più' }));
+    await waitFor(async () => expect((await db.itemLogs.get([DATE, 'cena', 0]))?.grams).toBe(225));
   });
 });

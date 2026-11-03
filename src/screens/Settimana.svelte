@@ -7,6 +7,7 @@
   import { addDays, isoWeek, mondayOf, sortMeals, weekDates, weekdayIndex } from '../domain/schedule';
   import { fmtNumber } from '../domain/nutrition';
   import { dayBalance, FREE_MEALS_PER_WEEK, weekSummary } from '../domain/extras';
+  import { eatenState } from '../state/eaten.svelte';
   import { dayMonth, shortDate } from '../ui/format';
   import DayStrip from '../ui/DayStrip.svelte';
 
@@ -20,7 +21,7 @@
     const meals = sortMeals(app.plan?.days[weekdayIndex(date)]?.meals ?? []);
     const done = app.done(date);
     const frees = app.frees(date);
-    const b = dayBalance(meals, done, frees, extrasState.forDate(date), app.foodIndex);
+    const b = dayBalance(meals, done, frees, extrasState.forDate(date), app.foodIndex, eatenState.forDate(date));
     const segments = meals.map((m) => ({ slot: m.slot, done: done.has(m.slot), free: frees.has(m.slot) }));
     const extra = Math.round(b.offPlan.kcal + b.free.kcal);
     return { date, total: meals.length, done: segments.filter((s) => s.done).length, kcal: b.total.kcal, extra, segments };
