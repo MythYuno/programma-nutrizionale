@@ -169,3 +169,13 @@ describe('Pasto libero', () => {
     expect(screen.getByText('2 su 1')).toBeInTheDocument();
   });
 });
+
+describe('Foglio Ho mangiato altro', () => {
+  it("i recenti non spostano l'elenco mentre si aggiunge", async () => {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Ho mangiato altro' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Aggiungi Cornetto semplice' }));
+    await waitFor(async () => expect(await db.extras.count()).toBe(1));
+    expect(screen.queryByText('Recenti')).toBeNull();
+  });
+});

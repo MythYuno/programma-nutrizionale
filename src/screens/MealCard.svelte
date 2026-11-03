@@ -58,7 +58,7 @@
       </span>
       <span class="grow">
         <span class="slot">{SLOT_LABEL[meal.slot]}{#if skipped}<span class="skip">saltato?</span>{/if}{#if free}<span class="skip">pasto libero</span>{/if}</span>
-        <span class="title">{meal.title}</span>
+        <span class="title">{free ? freeItems.map((e) => e.name).join(', ') || 'Cosa hai mangiato?' : meal.title}</span>
       </span>
       <span class="kcal num">{fmtNumber(free ? freeKcal : kcal)} kcal</span>
       {#if !free}<span class="caret" class:up={open}><CaretDown size={16} weight="bold" /></span>{/if}

@@ -84,7 +84,7 @@
           {#if r.total}<DayStrip segments={r.segments} size="sm" />{/if}
         </span>
         {#if r.date <= app.today || r.done}
-          <span class="value"><b>{r.done}/{r.total}</b>{#if r.done || r.extra}<br /><span class="small">{fmtNumber(r.kcal)} kcal{#if r.extra} · +{fmtNumber(r.extra)}{/if}</span>{/if}</span>
+          <span class="value"><b>{r.done}/{r.total}</b>{#if r.done || r.extra}<br /><span class="small">{fmtNumber(r.kcal)} kcal{#if r.extra}&nbsp;· +{fmtNumber(r.extra)}{/if}</span>{/if}</span>
         {/if}
         <CaretRight size={16} weight="bold" class="chev" />
       </button>
@@ -113,6 +113,7 @@
   /* Riepilogo del fuori piano: righe velate sul fondo, come gli sgarri in Oggi. */
   .week { display: grid; gap: 8px; margin: 0 0 16px; }
   .wrow { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-row); background: var(--veil); font-size: 15px; font-weight: 650; }
+  .wrow .grow { flex: 1; min-width: 0; }
   .wrow small { display: block; font-size: 13px; font-weight: 600; color: var(--on-hour-2); }
   .wrow b { color: var(--on-hour-2); font-weight: 700; }
   .wrow.over b { color: var(--on-hour); }

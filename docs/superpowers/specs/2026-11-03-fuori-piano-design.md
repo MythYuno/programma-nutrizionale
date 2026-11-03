@@ -1,6 +1,6 @@
 # Fuori piano e pasto libero — design
 
-Data: 2026-11-03 · Stato: approvato in chat, da pianificare
+Data: 2026-11-03 · Stato: implementato sul branch `v2`
 
 ![Mockup approvato](img/2026-11-03-fuori-piano-mockup.png)
 

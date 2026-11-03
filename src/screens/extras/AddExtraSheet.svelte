@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
   import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
   import { app } from '../../state/app.svelte';
@@ -30,14 +31,17 @@
 
   const title = $derived(freeSlot ? `Pasto libero · ${SLOT_LABEL[freeSlot]}` : 'Ho mangiato altro');
   const results = $derived(searchExtras(query, EXTRAS_CATALOG, extrasState.customItems, app.foods));
-  const recents = $derived(recentItems(extrasState.extras, extrasState.customItems, EXTRAS_CATALOG, app.foodIndex));
+  // I recenti si fissano all'apertura: se cambiassero mentre aggiungi, l'elenco
+  // sotto il dito si sposterebbe e il tocco dopo cadrebbe sulla voce sbagliata.
+  let recents = $state<ExtraChoice[]>([]);
   const list = $derived<ExtraChoice[]>(cat === 'Le mie'
     ? extrasState.customItems.map((item) => ({ kind: 'mia', item }))
     : EXTRAS_CATALOG.filter((x) => x.category === cat).map((item) => ({ kind: 'catalogo', item })));
 
-  // Ogni volta che il foglio si chiude riparte pulito.
+  // All'apertura si fissano i recenti; alla chiusura il foglio riparte pulito.
   $effect(() => {
-    if (!open) { query = ''; manualName = null; pickedFood = null; }
+    if (open) recents = untrack(() => recentItems(extrasState.extras, extrasState.customItems, EXTRAS_CATALOG, app.foodIndex));
+    else { query = ''; manualName = null; pickedFood = null; }
   });
 
   async function pick(choice: ExtraChoice) {
@@ -64,52 +68,56 @@
 </script>
 
 <Sheet bind:open {title}>
-  {#if manualName !== null}
-    <ExtraForm initialName={manualName} {date} {freeSlot} onDone={() => (open = false)} />
-  {:else if pickedFood}
-    <FoodGramsForm food={pickedFood} {date} {freeSlot} onDone={() => (open = false)} />
-  {:else}
-    <label class="search">
-      <MagnifyingGlass size={20} />
-      <input bind:value={query} placeholder="Cerca o scrivi cosa hai mangiato…" aria-label="Cerca o scrivi cosa hai mangiato" autocomplete="off" />
-    </label>
-
-    {#if query.trim()}
-      <div class="group results">
-        {#each results as r (r.kind + r.item.id)}<ChoiceRow choice={r} onAdd={() => pick(r)} />{/each}
-        <button class="manual" aria-label="Aggiungi «{query.trim()}» a mano" onclick={() => (manualName = query.trim())}>
-          <span class="pen"><PencilSimple size={18} weight="bold" /></span>
-          <span><b>Aggiungi «{query.trim()}» a mano</b><small>Nome, kcal e macro come sull’etichetta</small></span>
-        </button>
-      </div>
+  <div class="content">
+    {#if manualName !== null}
+      <ExtraForm initialName={manualName} {date} {freeSlot} onDone={() => (open = false)} />
+    {:else if pickedFood}
+      <FoodGramsForm food={pickedFood} {date} {freeSlot} onDone={() => (open = false)} />
     {:else}
-      {#if recents.length}
-        <h3 class="lab">Recenti</h3>
-        <div class="recent">
-          {#each recents as r (r.kind + r.item.id)}
-            <button class="rc" aria-label="{r.item.name}, recente: aggiungi" onclick={() => pick(r)}>
-              <FoodIcon name={iconOf(r)} size={30} />
-              <b>{r.item.name}</b>
-              <small class="num">{r.kind === 'alimento' ? 'per grammi' : `${fmtNumber(r.item.macro.kcal)} kcal`}</small>
-            </button>
-          {/each}
+      <label class="search">
+        <MagnifyingGlass size={20} />
+        <input bind:value={query} placeholder="Cerca o scrivi cosa hai mangiato…" aria-label="Cerca o scrivi cosa hai mangiato" autocomplete="off" />
+      </label>
+  
+      {#if query.trim()}
+        <div class="group results">
+          {#each results as r (r.kind + r.item.id)}<ChoiceRow choice={r} onAdd={() => pick(r)} />{/each}
+          <button class="manual" aria-label="Aggiungi «{query.trim()}» a mano" onclick={() => (manualName = query.trim())}>
+            <span class="pen"><PencilSimple size={18} weight="bold" /></span>
+            <span><b>Aggiungi «{query.trim()}» a mano</b><small>Nome, kcal e macro come sull’etichetta</small></span>
+          </button>
+        </div>
+      {:else}
+        {#if recents.length}
+          <h3 class="lab">Recenti</h3>
+          <div class="recent">
+            {#each recents as r (r.kind + r.item.id)}
+              <button class="rc" aria-label="{r.item.name}, recente: aggiungi" onclick={() => pick(r)}>
+                <FoodIcon name={iconOf(r)} size={30} />
+                <b>{r.item.name}</b>
+                <small class="num">{r.kind === 'alimento' ? 'per grammi' : `${fmtNumber(r.item.macro.kcal)} kcal`}</small>
+              </button>
+            {/each}
+          </div>
+        {/if}
+        <h3 class="lab">Sgarri comuni</h3>
+        <div class="cats">
+          {#each CATS as c (c)}<button class="cat" aria-pressed={cat === c} onclick={() => (cat = c)}>{c}</button>{/each}
+        </div>
+        <div class="group">
+          {#each list as r (r.item.id)}<ChoiceRow choice={r} onAdd={() => pick(r)} />{:else}<p class="empty muted">Le voci che salvi a mano compaiono qui.</p>{/each}
         </div>
       {/if}
-      <h3 class="lab">Sgarri comuni</h3>
-      <div class="cats">
-        {#each CATS as c (c)}<button class="cat" aria-pressed={cat === c} onclick={() => (cat = c)}>{c}</button>{/each}
-      </div>
-      <div class="group">
-        {#each list as r (r.item.id)}<ChoiceRow choice={r} onAdd={() => pick(r)} />{:else}<p class="empty muted">Le voci che salvi a mano compaiono qui.</p>{/each}
-      </div>
+      <p class="section-foot">Valori stimati per porzioni tipiche: indicativi, non del medico.</p>
     {/if}
-    <p class="section-foot">Valori stimati per porzioni tipiche: indicativi, non del medico.</p>
-  {/if}
+  </div>
 </Sheet>
 
 <Toast message={added ? `${added.name} aggiunto · ${fmtNumber(added.macro.kcal)} kcal` : null} action="Annulla" onAction={undo} />
 
 <style>
+  /* Altezza fissa: il foglio non si accorcia e allunga mentre scrivi. */
+  .content { min-height: 62vh; }
   .search { display: flex; align-items: center; gap: 10px; padding: 12px 14px; margin-bottom: 4px; border-radius: 14px; background: var(--card); color: var(--ink-3); box-shadow: 0 0 0 1px var(--sep); }
   .search:focus-within { box-shadow: 0 0 0 2px var(--act); }
   .search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font-size: 17px; color: var(--ink); }

@@ -59,6 +59,20 @@ settimana) va sotto il titolo, in `.subtitle`.
   "Annulla" dopo aver eliminato una pesata).
 - Le note di un pasto nell'editor si modificano dal menu «···», non nella scheda.
 
+## Fuori piano e pasto libero (novembre 2026)
+- `ui/BalanceBar.svelte`: il conto del giorno sul fondo. Parte piena = piano
+  fatto, parte rigata (`--hatch`) = sgarri e pasto libero, tacca = kcal del
+  piano. Mai rosso: lo scarto è un'informazione, non un rimprovero.
+- `ui/Fab.svelte`: "Ho mangiato altro", fisso in basso a destra sopra la tab
+  bar, scheda bianca col testo nel colore dell'ora. La pagina ha spazio sotto.
+- `ui/FoodIcon.svelte`: icone 3D Fluent Emoji (MIT) in `public/emoji/`, solo
+  per le voci di cibo; tutto il resto resta Phosphor.
+- Foglio "Ho mangiato altro" (`screens/extras/AddExtraSheet.svelte`): una sola
+  ricerca su voci tue, sgarri e alimenti; recenti fissati all'apertura (non si
+  spostano sotto il dito); categorie a pillola; altezza minima 62vh.
+- Sgarri del giorno come righe velate sul fondo; pasto libero come scheda
+  aperta con la pillola "pasto libero" e segmento rigato nella striscia.
+
 ## Icona
 «Mela-agenda» in 3D lucido (scelta dell'utente il 28/10/2026): una mela verde
 la cui polpa è una pagina d'agenda ad anelli, con le righe nei colori dei
