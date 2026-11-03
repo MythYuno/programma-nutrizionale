@@ -8,6 +8,7 @@
   import { LEGACY_DEFAULT_PLAN } from '../../domain/legacy-default';
   import { mondayOf } from '../../domain/schedule';
   import { app } from '../../state/app.svelte';
+  import { extrasState } from '../../state/extras.svelte';
   import { editor } from '../../state/editor.svelte';
   import { router } from '../../state/router.svelte';
   import Sheet from '../../ui/Sheet.svelte';
@@ -53,6 +54,7 @@
     confirmOpen = false;
     editor.draft = null;
     await app.reload();
+    await extrasState.load();
     message = 'Backup importato.';
   }
 
@@ -108,6 +110,7 @@
       <div class="row"><span class="grow">Alimenti</span><span class="value">{pending.summary.foods}</span></div>
       <div class="row"><span class="grow">Pasti fatti</span><span class="value">{pending.summary.mealLogs}</span></div>
       <div class="row"><span class="grow">Pesate</span><span class="value">{pending.summary.weights}</span></div>
+      <div class="row"><span class="grow">Voci fuori piano</span><span class="value">{pending.summary.extras}</span></div>
     </div>
     <p class="section-foot">Tutti i dati attuali vengono sostituiti. Prima scarico in automatico una copia di quelli di adesso.</p>
     <button class="btn" onclick={doImport}>Sostituisci i dati</button>

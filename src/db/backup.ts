@@ -1,10 +1,10 @@
 import type { AppDb } from './schema';
-import type { Food, LegacyWeek, MealLog, Plan, Settings, Weight } from '../domain/types';
+import type { CustomItem, ExtraLog, Food, LegacyWeek, MealLog, Plan, Settings, Weight } from '../domain/types';
 import { getSettings } from './repos';
 
 export interface Backup {
   app: 'programma-nutrizionale';
-  version: 2;
+  version: 2 | 3; // la 3 aggiunge le voci fuori piano
   exportedAt: string;
   foods: Food[];
   plans: Plan[];
@@ -12,12 +12,14 @@ export interface Backup {
   weights: Weight[];
   legacyWeeks: LegacyWeek[];
   settings: Settings;
+  extras: ExtraLog[];
+  customItems: CustomItem[];
 }
 
 export async function exportBackup(db: AppDb, now = new Date()): Promise<Backup> {
   return {
     app: 'programma-nutrizionale',
-    version: 2,
+    version: 3,
     exportedAt: now.toISOString(),
     foods: await db.foods.toArray(),
     plans: await db.plans.toArray(),
@@ -25,6 +27,8 @@ export async function exportBackup(db: AppDb, now = new Date()): Promise<Backup>
     weights: await db.weights.toArray(),
     legacyWeeks: await db.legacyWeeks.toArray(),
     settings: await getSettings(db),
+    extras: await db.extras.toArray(),
+    customItems: await db.customItems.toArray(),
   };
 }
 
@@ -33,6 +37,7 @@ export interface BackupSummary {
   foods: number;
   mealLogs: number;
   weights: number;
+  extras: number;
   exportedAt: string;
 }
 
@@ -43,27 +48,36 @@ export function parseBackup(text: string): { backup: Backup; summary: BackupSumm
   try { raw = JSON.parse(text); } catch { return { error: 'Il file non è un JSON valido.' }; }
   const b = raw as Partial<Backup>;
   if (!b || b.app !== 'programma-nutrizionale') return { error: 'Non è un backup di Programma Nutrizionale.' };
-  if (b.version !== 2) return { error: `Versione del backup non supportata (${String(b.version)}).` };
+  if (b.version !== 2 && b.version !== 3) return { error: `Versione del backup non supportata (${String(b.version)}).` };
   const arrays = ['foods', 'plans', 'mealLogs', 'weights', 'legacyWeeks'] as const;
   for (const k of arrays) if (!Array.isArray(b[k])) return { error: `Nel backup manca "${k}".` };
   if (!b.settings || typeof b.settings !== 'object') return { error: 'Nel backup mancano le impostazioni.' };
   if (b.plans!.some((p) => !Array.isArray(p.days) || p.days.length !== 7)) return { error: 'Un piano nel backup non ha 7 giorni.' };
-  const backup = b as Backup;
+  // Un backup della versione 2 non ha voci fuori piano.
+  const extras = Array.isArray(b.extras) ? b.extras : [];
+  const customItems = Array.isArray(b.customItems) ? b.customItems : [];
+  const backup = { ...(b as Backup), extras, customItems };
   return {
     backup,
-    summary: { plans: backup.plans.length, foods: backup.foods.length, mealLogs: backup.mealLogs.length, weights: backup.weights.length, exportedAt: backup.exportedAt },
+    summary: {
+      plans: backup.plans.length, foods: backup.foods.length, mealLogs: backup.mealLogs.length,
+      weights: backup.weights.length, extras: extras.length, exportedAt: backup.exportedAt,
+    },
   };
 }
 
 export async function restoreBackup(db: AppDb, b: Backup) {
-  await db.transaction('rw', [db.foods, db.plans, db.mealLogs, db.weights, db.legacyWeeks, db.settings], async () => {
-    await Promise.all([db.foods.clear(), db.plans.clear(), db.mealLogs.clear(), db.weights.clear(), db.legacyWeeks.clear(), db.settings.clear()]);
+  const tables = [db.foods, db.plans, db.mealLogs, db.weights, db.legacyWeeks, db.settings, db.extras, db.customItems];
+  await db.transaction('rw', tables, async () => {
+    await Promise.all(tables.map((t) => t.clear()));
     await db.foods.bulkPut(b.foods);
     await db.plans.bulkPut(b.plans);
     await db.mealLogs.bulkPut(b.mealLogs);
     await db.weights.bulkPut(b.weights);
     await db.legacyWeeks.bulkPut(b.legacyWeeks);
     await db.settings.put({ key: 'settings', ...b.settings, migratedFromV1: true });
+    await db.extras.bulkPut(b.extras ?? []);
+    await db.customItems.bulkPut(b.customItems ?? []);
   });
 }
 

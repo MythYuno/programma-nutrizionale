@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import Dexie from 'dexie';
 import { AppDb } from './schema';
 import { ensureStartup, V1_KEYS } from './migrate';
-import { activePlan, getSettings, logsBetween, putWeight, setMealDone } from './repos';
+import { activePlan, getSettings, logsBetween, putCustomItem, putExtra, putWeight, setMealDone } from './repos';
 import { exportBackup, parseBackup, restoreBackup } from './backup';
 import { SEED_FOODS } from '../domain/catalog';
 
@@ -89,5 +90,53 @@ describe('backup', () => {
     await setMealDone(db, log, true);
     await setMealDone(db, log, false);
     expect(await db.mealLogs.count()).toBe(0);
+  });
+});
+
+describe('fuori piano nel database', () => {
+  const extra = {
+    id: 'e1', date: '2026-11-03', name: 'Gelato in coppetta', portion: '2 gusti', qty: 2,
+    macro: { kcal: 260, p: 4, c: 32, f: 12 }, origin: 'catalogo' as const, refId: 'gelato',
+    grams: null, freeSlot: null, createdAt: '2026-11-03T10:00:00.000Z',
+  };
+  const mine = { id: 'c1', name: 'Barretta', portion: '1 barretta', macro: { kcal: 190, p: 20, c: 18, f: 6 }, createdAt: '2026-11-03T10:00:00.000Z' };
+
+  it('passa dallo schema 1 al 2 senza perdere dati', async () => {
+    const name = 'test-upgrade-' + n++;
+    const v1 = new Dexie(name);
+    v1.version(1).stores({ foods: 'id, name', plans: 'id', mealLogs: '[date+slot], date', weights: 'date', legacyWeeks: 'week', settings: 'key' });
+    await v1.table('weights').put({ date: '2026-11-01', kg: 79 });
+    v1.close();
+    const db = new AppDb(name);
+    dbs.push(db);
+    expect(await db.weights.get('2026-11-01')).toEqual({ date: '2026-11-01', kg: 79 });
+    expect(await db.extras.count()).toBe(0);
+  });
+
+  it('il backup v3 contiene voci fuori piano e voci tue', async () => {
+    const a = freshDb();
+    await ensureStartup(a, storage({}), '2026-11-03');
+    await putExtra(a, extra);
+    await putCustomItem(a, mine);
+    const exported = await exportBackup(a);
+    expect(exported.version).toBe(3);
+    const parsed = parseBackup(JSON.stringify(exported));
+    if ('error' in parsed) throw new Error(parsed.error);
+    expect(parsed.summary.extras).toBe(1);
+    const b = freshDb();
+    await restoreBackup(b, parsed.backup);
+    expect(await b.extras.toArray()).toEqual([extra]);
+    expect(await b.customItems.toArray()).toEqual([mine]);
+  });
+
+  it('importa ancora un backup v2', async () => {
+    const a = freshDb();
+    await ensureStartup(a, storage({}), '2026-11-03');
+    const { extras: _e, customItems: _c, ...rest } = await exportBackup(a);
+    const parsed = parseBackup(JSON.stringify({ ...rest, version: 2 }));
+    if ('error' in parsed) throw new Error(parsed.error);
+    expect(parsed.backup.extras).toEqual([]);
+    expect(parsed.backup.customItems).toEqual([]);
+    expect(parsed.summary.extras).toBe(0);
   });
 });

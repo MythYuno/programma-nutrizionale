@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from '../domain/types';
 import { indexFoods } from '../domain/nutrition';
 import { doneSlots, isoDate } from '../domain/schedule';
 import { upsertWeight } from '../domain/weight';
+import { freeSlots } from '../domain/extras';
 
 class AppState {
   ready = $state(false);
@@ -40,6 +41,11 @@ class AppState {
 
   done(date: string): Set<Slot> {
     return doneSlots(this.logs, date);
+  }
+
+  // Pasti segnati come liberi: contano come fatti, ma non nel totale del piano.
+  frees(date: string): Set<Slot> {
+    return freeSlots(this.logs, date);
   }
 
   async toggleMeal(date: string, slot: Slot) {

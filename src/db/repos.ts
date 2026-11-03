@@ -1,5 +1,5 @@
 import type { AppDb } from './schema';
-import type { Food, MealLog, Plan, Settings, Slot, Weight } from '../domain/types';
+import type { CustomItem, ExtraLog, Food, MealLog, Plan, Settings, Slot, Weight } from '../domain/types';
 import { DEFAULT_SETTINGS } from '../domain/types';
 
 export async function getSettings(db: AppDb): Promise<Settings> {
@@ -58,4 +58,26 @@ export function mealsUsingFood(plans: readonly Plan[], foodId: string): { day: n
 
 function $plain<T>(v: T): T {
   return JSON.parse(JSON.stringify(v));
+}
+
+// --- Fuori piano ------------------------------------------------------------
+
+export function putExtra(db: AppDb, e: ExtraLog) {
+  return db.extras.put($plain(e));
+}
+
+export function deleteExtra(db: AppDb, id: string) {
+  return db.extras.delete(id);
+}
+
+export function putCustomItem(db: AppDb, i: CustomItem) {
+  return db.customItems.put($plain(i));
+}
+
+export function deleteCustomItem(db: AppDb, id: string) {
+  return db.customItems.delete(id);
+}
+
+export function putMealLog(db: AppDb, log: MealLog) {
+  return db.mealLogs.put($plain(log));
 }

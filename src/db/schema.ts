@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { Food, LegacyWeek, MealLog, Plan, Settings, Weight } from '../domain/types';
+import type { CustomItem, ExtraLog, Food, LegacyWeek, MealLog, Plan, Settings, Weight } from '../domain/types';
 
 export type SettingsRow = Settings & { key: 'settings' };
 
@@ -10,6 +10,8 @@ export class AppDb extends Dexie {
   weights!: EntityTable<Weight, 'date'>;
   legacyWeeks!: EntityTable<LegacyWeek, 'week'>;
   settings!: EntityTable<SettingsRow, 'key'>;
+  extras!: EntityTable<ExtraLog, 'id'>;
+  customItems!: EntityTable<CustomItem, 'id'>;
 
   constructor(name = 'programma-nutrizionale') {
     super(name);
@@ -21,6 +23,8 @@ export class AppDb extends Dexie {
       legacyWeeks: 'week',
       settings: 'key',
     });
+    // Fuori piano: le tabelle della versione 1 restano come sono.
+    this.version(2).stores({ extras: 'id, date', customItems: 'id, name' });
   }
 }
 
