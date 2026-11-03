@@ -7,11 +7,12 @@
   import FoodIcon from '../../ui/FoodIcon.svelte';
 
   // Contenuto di un pasto segnato come libero: quello che si è mangiato al suo posto.
-  let { planTitle, items, onAdd, onUnfree }: {
+  let { planTitle, items, onAdd, onUnfree, onOpen }: {
     planTitle: string;
     items: ExtraLog[];
     onAdd: () => void;
     onUnfree: () => void;
+    onOpen: (id: string) => void; // il foglio della voce sta fuori dalla scheda, che lo taglierebbe
   } = $props();
 </script>
 
@@ -20,9 +21,11 @@
   <ul class="items">
     {#each items as e (e.id)}
       <li>
-        <span class="ic"><FoodIcon name={iconFor(e, EXTRAS_CATALOG)} size={32} /></span>
-        <span class="n">{e.name}{#if e.qty > 1} ×{e.qty}{/if}</span>
-        <b class="num">{fmtNumber(extraTotal(e).kcal)}<small>kcal</small></b>
+        <button class="it" onclick={() => onOpen(e.id)}>
+          <span class="ic"><FoodIcon name={iconFor(e, EXTRAS_CATALOG)} size={32} /></span>
+          <span class="n">{e.name}{#if e.qty > 1} ×{e.qty}{/if}</span>
+          <b class="num">{fmtNumber(extraTotal(e).kcal)}<small>kcal</small></b>
+        </button>
       </li>
     {/each}
   </ul>
@@ -35,8 +38,9 @@
 <style>
   .instead { margin: 0 0 6px; font-size: 14px; color: var(--ink-2); }
   .items { list-style: none; margin: 0 0 10px; padding: 0; }
-  li { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--sep); }
+  li { border-top: 1px solid var(--sep); }
   li:first-child { border-top: 0; }
+  .it { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 0; border: 0; background: none; color: var(--ink); text-align: left; }
   .ic { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 12px; background: var(--fill); }
   .n { flex: 1; min-width: 0; font-size: 16px; font-weight: 600; }
   b { font-size: 18px; font-weight: 800; }

@@ -22,16 +22,26 @@
   let save = $state(true);
   let errors = $state<ReturnType<typeof validateExtra>>({});
 
+  // Per il calcolo automatico un campo illeggibile vale 0; al salvataggio no:
+  // un campo pieno ma illeggibile diventa NaN e fa comparire l'errore.
   const num = (s: string) => parseAmount(s) ?? 0;
+  const strict = (s: string) => (s.trim() ? (parseAmount(s) ?? NaN) : 0);
   const auto = $derived(kcalFromMacros(num(p), num(c), num(f)));
+  let busy = $state(false);
   const kcalText = $derived(kcalTyped ?? (p || c || f ? String(auto) : ''));
 
   async function submit() {
-    const macro = { kcal: parseAmount(kcalText) ?? NaN, p: num(p), c: num(c), f: num(f) };
+    if (busy) return; // un doppio tocco non aggiunge due volte
+    const macro = { kcal: parseAmount(kcalText) ?? NaN, p: strict(p), c: strict(c), f: strict(f) };
     errors = validateExtra({ name, macro, grams: null, origin: 'manuale' });
     if (Object.keys(errors).length) return;
-    await extrasState.addManual({ name, portion, macro }, date, { freeSlot, save });
-    onDone();
+    busy = true;
+    try {
+      await extrasState.addManual({ name, portion, macro }, date, { freeSlot, save });
+      onDone();
+    } finally {
+      busy = false;
+    }
   }
 </script>
 
@@ -49,7 +59,7 @@
 {#if errors.macro}<p class="err">{errors.macro}</p>{/if}
 
 <label class="kcal">
-  <input inputmode="decimal" value={kcalText} oninput={(e) => (kcalTyped = e.currentTarget.value)} placeholder="0" aria-label="kcal" autocomplete="off" />
+  <input inputmode="decimal" value={kcalText} oninput={(e) => (kcalTyped = e.currentTarget.value.trim() ? e.currentTarget.value : null)} placeholder="0" aria-label="kcal" autocomplete="off" />
   <span class="u">kcal</span>
   <small>{kcalTyped === null ? 'calcolate dai macro, puoi correggerle' : 'scritte da te'}</small>
 </label>
@@ -60,7 +70,7 @@
   <input type="checkbox" role="switch" bind:checked={save} />
 </label>
 
-<button class="btn add" onclick={submit}>{freeSlot ? 'Aggiungi a questo pasto' : 'Aggiungi a oggi'}</button>
+<button class="btn add" disabled={busy} onclick={submit}>{freeSlot ? 'Aggiungi a questo pasto' : 'Aggiungi a oggi'}</button>
 
 <style>
   .lab { width: 92px; color: var(--ink-2); }

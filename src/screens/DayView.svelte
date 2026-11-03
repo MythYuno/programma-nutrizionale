@@ -16,6 +16,7 @@
   import BalanceSheet from './extras/BalanceSheet.svelte';
   import AddExtraSheet from './extras/AddExtraSheet.svelte';
   import ExtraList from './extras/ExtraList.svelte';
+  import ExtraItemSheet from './extras/ExtraItemSheet.svelte';
 
   let { date }: { date: string } = $props();
 
@@ -37,6 +38,8 @@
   let details = $state(false);
   let adding = $state(false);
   let addSlot = $state<Slot | null>(null); // pasto libero a cui si aggiunge, null = sgarro
+  let itemId = $state<string | null>(null); // voce di un pasto libero aperta
+  let itemOpen = $state(false);
 
   function openAdd(slot: Slot | null) {
     addSlot = slot;
@@ -96,6 +99,7 @@
         onToggle={() => app.toggleMeal(date, m.slot)} onSubs={(it) => (subsItem = it)}
         onFree={canAdd ? () => markFree(m.slot) : undefined}
         onUnfree={() => extrasState.unmarkFree(date, m.slot)} onAddToFree={() => openAdd(m.slot)}
+        onOpenExtra={(id) => { itemId = id; itemOpen = true; }}
       />
     {/each}
   {/if}
@@ -108,6 +112,7 @@
 <SubsSheet bind:item={subsItem} />
 <BalanceSheet bind:open={details} {balance} />
 <AddExtraSheet bind:open={adding} {date} freeSlot={addSlot} />
+<ExtraItemSheet bind:open={itemOpen} extraId={itemId} />
 
 <style>
   .back { display: flex; align-items: center; gap: 4px; margin-left: -4px; padding: 0 0 8px; }

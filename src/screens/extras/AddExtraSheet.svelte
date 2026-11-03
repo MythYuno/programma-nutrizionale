@@ -105,7 +105,7 @@
           {#each CATS as c (c)}<button class="cat" aria-pressed={cat === c} onclick={() => (cat = c)}>{c}</button>{/each}
         </div>
         <div class="group">
-          {#each list as r (r.item.id)}<ChoiceRow choice={r} onAdd={() => pick(r)} />{:else}<p class="empty muted">Le voci che salvi a mano compaiono qui.</p>{/each}
+          {#each list as r (r.item.id)}<ChoiceRow choice={r} onAdd={() => pick(r)} onDelete={r.kind === 'mia' ? () => extrasState.deleteCustom(r.item.id) : undefined} />{:else}<p class="empty muted">Le voci che salvi a mano compaiono qui.</p>{/each}
         </div>
       {/if}
       <p class="section-foot">Valori stimati per porzioni tipiche: indicativi, non del medico.</p>

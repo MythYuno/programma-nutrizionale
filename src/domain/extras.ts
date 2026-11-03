@@ -68,8 +68,11 @@ export function dayBalance(
 ): DayBalance {
   const planned = sumMacro(meals, foods);
   const fromPlan = sumMacro(meals.filter((m) => done.has(m.slot) && !frees.has(m.slot)), foods);
-  const free = sumExtras(dayExtras.filter((e) => e.freeSlot !== null));
-  const offPlan = sumExtras(dayExtras.filter((e) => e.freeSlot === null));
+  // Una voce legata a un pasto che non è (più) libero conta come sgarro: così
+  // resta visibile ed eliminabile nella sezione Fuori piano.
+  const inFree = (e: ExtraLog) => e.freeSlot !== null && frees.has(e.freeSlot);
+  const free = sumExtras(dayExtras.filter(inFree));
+  const offPlan = sumExtras(dayExtras.filter((e) => !inFree(e)));
   const total = add(add(fromPlan, free), offPlan);
   return { planned, fromPlan, free, offPlan, total, delta: Math.round(total.kcal) - Math.round(planned.kcal) };
 }

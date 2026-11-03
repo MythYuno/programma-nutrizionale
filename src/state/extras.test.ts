@@ -57,3 +57,13 @@ describe('stato fuori piano', () => {
     expect(f).toMatchObject({ origin: 'manuale', refId: null });
   });
 });
+
+describe('stato fuori piano · voci tue', () => {
+  it('salvare due volte la stessa voce a mano non crea doppioni', async () => {
+    await extrasState.addManual({ name: 'Barretta', portion: '', macro: { kcal: 185, p: 4, c: 22, f: 9 } }, D, { freeSlot: null, save: true });
+    await extrasState.addManual({ name: ' barretta ', portion: '1 pezzo', macro: { kcal: 190, p: 5, c: 22, f: 9 } }, D, { freeSlot: null, save: true });
+    expect(extrasState.customItems).toHaveLength(1);
+    expect(extrasState.customItems[0]).toMatchObject({ macro: { kcal: 190 }, portion: '1 pezzo' });
+    expect(await db.customItems.count()).toBe(1);
+  });
+});

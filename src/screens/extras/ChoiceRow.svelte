@@ -1,5 +1,6 @@
 <script lang="ts">
   import Plus from 'phosphor-svelte/lib/Plus';
+  import Trash from 'phosphor-svelte/lib/Trash';
   import type { ExtraChoice } from '../../domain/extras';
   import type { FoodIconName } from '../../domain/types';
   import { fmtDecimal, fmtNumber } from '../../domain/nutrition';
@@ -7,7 +8,7 @@
 
   // Una voce scelta da catalogo, voci tue o alimenti. Il "+" aggiunge subito;
   // per un alimento apre i grammi (lo decide chi usa la riga).
-  let { choice, onAdd }: { choice: ExtraChoice; onAdd: () => void } = $props();
+  let { choice, onAdd, onDelete }: { choice: ExtraChoice; onAdd: () => void; onDelete?: () => void } = $props();
 
   const icon = $derived<FoodIconName>(choice.kind === 'catalogo' ? choice.item.icon : choice.kind === 'mia' ? 'bookmark' : 'plate');
   const tag = $derived(choice.kind === 'mia' ? 'tua' : choice.kind === 'alimento' ? 'alimento' : '');
@@ -25,6 +26,7 @@
     <span class="t">{choice.item.name}{#if tag}<span class="src">{tag}</span>{/if}</span>
     <span class="s num">{detail}</span>
   </span>
+  {#if onDelete}<button class="del" aria-label="Elimina {choice.item.name} dalle mie voci" onclick={onDelete}><Trash size={18} /></button>{/if}
   <button class="add" aria-label="Aggiungi {choice.item.name}" onclick={onAdd}><Plus size={18} weight="bold" /></button>
 </div>
 
@@ -40,4 +42,5 @@
     background: color-mix(in srgb, var(--act) 12%, transparent); color: var(--act);
   }
   .add:active { transform: scale(0.92); }
+  .del { flex: none; width: 36px; height: 36px; border: 0; border-radius: 50%; display: grid; place-items: center; background: none; color: var(--ink-3); }
 </style>

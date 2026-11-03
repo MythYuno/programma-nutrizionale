@@ -128,3 +128,12 @@ describe('extras · bilancio', () => {
     expect(e).toMatchObject({ name: 'Gelato in coppetta', portion: '2 gusti', macro: gelatoMacro, refId: 'gelato', freeSlot: 'cena', grams: null, createdAt: now.toISOString() });
   });
 });
+
+describe('extras · voci orfane', () => {
+  it('una voce di un pasto libero che non esiste più conta come sgarro', () => {
+    const orfana = log({ macro: gelatoMacro, freeSlot: 'cena' });
+    const b = dayBalance([], new Set(), new Set(), [orfana], foods);
+    expect(b.free.kcal).toBe(0);
+    expect(b.offPlan.kcal).toBe(260);
+  });
+});

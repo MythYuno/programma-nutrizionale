@@ -15,7 +15,7 @@
   import { SLOT_COLOR } from '../ui/format';
   import FreeMealBody from './extras/FreeMealBody.svelte';
 
-  let { meal, done, hero = false, skipped = false, free = false, freeItems = [], onToggle, onSubs, onFree, onUnfree, onAddToFree }: {
+  let { meal, done, hero = false, skipped = false, free = false, freeItems = [], onToggle, onSubs, onFree, onUnfree, onAddToFree, onOpenExtra }: {
     meal: Meal;
     done: boolean;
     hero?: boolean;
@@ -27,6 +27,7 @@
     onFree?: () => void;
     onUnfree?: () => void;
     onAddToFree?: () => void;
+    onOpenExtra?: (id: string) => void;
   } = $props();
 
   let open = $state(false);
@@ -68,7 +69,7 @@
   {#if expanded}
     <div class="body" transition:slide={{ duration: hero ? 0 : 260, easing: cubicOut }}>
       {#if free}
-        <FreeMealBody planTitle={meal.title} items={freeItems} onAdd={() => onAddToFree?.()} onUnfree={() => onUnfree?.()} />
+        <FreeMealBody planTitle={meal.title} items={freeItems} onAdd={() => onAddToFree?.()} onUnfree={() => onUnfree?.()} onOpen={(id) => onOpenExtra?.(id)} />
       {:else}
         <ul class="items">
           {#each meal.items as it, i (i)}

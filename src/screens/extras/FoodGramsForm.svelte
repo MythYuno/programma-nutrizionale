@@ -11,15 +11,22 @@
 
   let gramsText = $state('');
   let error = $state('');
+  let busy = $state(false);
   const grams = $derived(parseAmount(gramsText));
   const kcal = $derived(grams && grams > 0 ? portionMacro({ foodId: food.id, grams }, app.foodIndex).kcal : 0);
 
   async function submit() {
+    if (busy) return; // un doppio tocco non aggiunge due volte
     const errs = validateExtra({ name: food.name, macro: { kcal, p: 0, c: 0, f: 0 }, grams, origin: 'alimento' });
     error = errs.grams ?? errs.kcal ?? '';
     if (error) return;
-    await extrasState.add({ kind: 'alimento', item: food }, date, { freeSlot, grams: grams! });
-    onDone();
+    busy = true;
+    try {
+      await extrasState.add({ kind: 'alimento', item: food }, date, { freeSlot, grams: grams! });
+      onDone();
+    } finally {
+      busy = false;
+    }
   }
 </script>
 
@@ -35,7 +42,7 @@
 </label>
 {#if error}<p class="err">{error}</p>{/if}
 
-<button class="btn add" onclick={submit}>Aggiungi</button>
+<button class="btn add" disabled={busy} onclick={submit}>Aggiungi</button>
 
 <style>
   .head { display: flex; align-items: center; gap: 12px; margin: 4px 4px 14px; }

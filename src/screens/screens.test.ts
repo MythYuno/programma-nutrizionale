@@ -179,3 +179,60 @@ describe('Foglio Ho mangiato altro', () => {
     expect(screen.queryByText('Recenti')).toBeNull();
   });
 });
+
+describe('Correzioni dalla revisione', () => {
+  const cornetto = () => EXTRAS_CATALOG.find((x) => x.id === 'cornetto')!;
+  const typeIn = (label: string, value: string) => fireEvent.input(screen.getByLabelText(label), { target: { value } });
+  async function openManual(name: string) {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Ho mangiato altro' }));
+    await typeIn('Cerca o scrivi cosa hai mangiato', name);
+    await fireEvent.click(screen.getByRole('button', { name: `Aggiungi «${name}» a mano` }));
+  }
+
+  it('una voce di un pasto libero si può eliminare dalla scheda del pasto', async () => {
+    await extrasState.markFree(DATE, 'colazione');
+    await extrasState.add({ kind: 'catalogo', item: cornetto() }, DATE, { freeSlot: 'colazione' });
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: /^Cornetto semplice/ }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Elimina' }));
+    await waitFor(async () => expect(await db.extras.count()).toBe(0));
+  });
+
+  it('una voce tua si elimina da Le mie', async () => {
+    await extrasState.addManual({ name: 'Barretta', portion: '', macro: { kcal: 185, p: 0, c: 0, f: 0 } }, DATE, { freeSlot: null, save: true });
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Ho mangiato altro' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Le mie' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Elimina Barretta dalle mie voci' }));
+    await waitFor(async () => expect(await db.customItems.count()).toBe(0));
+  });
+
+  it('un macro scritto male mostra un errore invece di valere 0', async () => {
+    await openManual('barretta');
+    await typeIn('kcal', '100');
+    await typeIn('Grassi', 'abc');
+    await fireEvent.click(screen.getByRole('button', { name: 'Aggiungi a oggi' }));
+    expect(screen.getByText('Proteine, carboidrati e grassi non possono essere negativi.')).toBeInTheDocument();
+    expect(await db.extras.count()).toBe(0);
+  });
+
+  it('cancellando le kcal torna il calcolo dai macro', async () => {
+    await openManual('barretta');
+    for (const [l, v] of [['Proteine', '4'], ['Carboidrati', '22'], ['Grassi', '9']] as const) await typeIn(l, v);
+    await typeIn('kcal', '200');
+    await typeIn('kcal', '');
+    expect(screen.getByLabelText('kcal')).toHaveValue('185');
+  });
+
+  it('un doppio tocco su Aggiungi a oggi aggiunge una volta sola', async () => {
+    await openManual('barretta');
+    await typeIn('kcal', '100');
+    const btn = screen.getByRole('button', { name: 'Aggiungi a oggi' });
+    await Promise.all([fireEvent.click(btn), fireEvent.click(btn)]);
+    await waitFor(async () => expect(await db.extras.count()).toBe(1));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(await db.extras.count()).toBe(1);
+    expect(await db.customItems.count()).toBe(1);
+  });
+});

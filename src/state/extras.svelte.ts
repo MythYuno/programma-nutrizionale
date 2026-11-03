@@ -7,6 +7,7 @@ import { newExtra, type ExtraChoice } from '../domain/extras';
 import { app } from './app.svelte';
 
 const uid = () => crypto.randomUUID();
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 class ExtrasState {
   extras = $state<ExtraLog[]>([]);
@@ -39,9 +40,10 @@ class ExtrasState {
     const now = new Date().toISOString();
     let refId: string | null = null;
     if (opts.save) {
-      const item: CustomItem = { id: uid(), name, portion: input.portion.trim(), macro: { ...input.macro }, createdAt: now };
-      this.customItems = [...this.customItems, item];
-      await repo.putCustomItem(db, item);
+      // Una voce con lo stesso nome si aggiorna invece di duplicarsi in "Le mie".
+      const same = this.customItems.find((x) => sameName(x.name, name));
+      const item: CustomItem = { id: same?.id ?? uid(), name, portion: input.portion.trim(), macro: { ...input.macro }, createdAt: same?.createdAt ?? now };
+      await this.saveCustom(item);
       refId = item.id;
     }
     return this.put({
@@ -86,9 +88,15 @@ class ExtrasState {
 
   // Il pasto torna da fare; quello che ci si era scritto resta, come sgarro.
   async unmarkFree(date: string, slot: Slot) {
+    const moved = this.extras.filter((x) => x.date === date && x.freeSlot === slot).map((e) => ({ ...e, freeSlot: null }));
+    // Tutto insieme: un pasto annullato a metà lascerebbe voci senza pasto.
+    await db.transaction('rw', [db.mealLogs, db.extras], async () => {
+      await repo.setMealDone(db, { date, slot, planId: app.plan?.id ?? '' }, false);
+      for (const e of moved) await repo.putExtra(db, e);
+    });
     app.logs = app.logs.filter((l) => !(l.date === date && l.slot === slot));
-    await repo.setMealDone(db, { date, slot, planId: app.plan?.id ?? '' }, false);
-    for (const e of this.extras.filter((x) => x.date === date && x.freeSlot === slot)) await this.put({ ...e, freeSlot: null });
+    const ids = new Set(moved.map((e) => e.id));
+    this.extras = [...this.extras.filter((x) => !ids.has(x.id)), ...moved];
   }
 
   private async put(e: ExtraLog): Promise<ExtraLog> {
