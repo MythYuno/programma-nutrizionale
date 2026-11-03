@@ -1,8 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { db } from '../db/schema';
 import { app } from '../state/app.svelte';
 import { editor } from '../state/editor.svelte';
+import { extrasState } from '../state/extras.svelte';
+import { EXTRAS_CATALOG } from '../domain/extras-catalog';
 import DayView from './DayView.svelte';
 import Peso from './Peso.svelte';
 import PlanEditor from './plan/PlanEditor.svelte';
@@ -16,8 +18,13 @@ beforeEach(async () => {
   localStorage.clear();
   editor.draft = null;
   await app.load();
+  await extrasState.load();
   app.today = DATE;
 });
+
+// Senza le globali di Vitest la pulizia automatica non scatta: i componenti di
+// un test resterebbero montati nel successivo.
+afterEach(() => cleanup());
 
 describe('Oggi', () => {
   it('mostra il primo pasto e lo segna come fatto', async () => {
@@ -57,6 +64,16 @@ describe('Editor del piano', () => {
       const pranzo = saved!.days[2]!.meals.find((m) => m.slot === 'pranzo')!;
       expect(pranzo.items).toHaveLength(before + 1);
       expect(pranzo.items.at(-1)).toEqual({ foodId: 'grana', grams: 10, subs: [] });
+      // Il salvataggio aggiorna anche le impostazioni: si aspetta che finisca.
+      expect(editor.dirty).toBe(false);
     });
+  });
+});
+
+describe('Fuori piano', () => {
+  it('il bilancio somma le voci fuori piano', async () => {
+    await extrasState.add({ kind: 'catalogo', item: EXTRAS_CATALOG.find((x) => x.id === 'gelato')! }, DATE, { freeSlot: null });
+    render(DayView, { date: DATE });
+    expect(screen.getByRole('button', { name: 'Bilancio del giorno: dettagli' })).toHaveTextContent('Fuori piano 260');
   });
 });

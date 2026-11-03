@@ -82,6 +82,8 @@
   --on-hour-2: color-mix(in srgb, var(--on-hour) 80%, var(--hour));
   --veil: color-mix(in srgb, var(--on-hour) 13%, transparent);
   --veil-2: color-mix(in srgb, var(--on-hour) 22%, transparent);
+  /* Rigato per le parti fuori piano (sgarri, pasto libero) sul fondo colorato */
+  --hatch: repeating-linear-gradient(-45deg, var(--on-hour) 0 5px, color-mix(in srgb, var(--on-hour) 35%, transparent) 5px 9px);
   --shadow-card:
     0 1px 2px color-mix(in srgb, var(--hour-deep) 30%, transparent),
     0 22px 44px -18px color-mix(in srgb, var(--hour-deep) 85%, #000 15%);
