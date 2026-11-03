@@ -73,6 +73,20 @@ settimana) va sotto il titolo, in `.subtitle`.
 - Sgarri del giorno come righe velate sul fondo; pasto libero come scheda
   aperta con la pillola "pasto libero" e segmento rigato nella striscia.
 
+## Scambi e grammi reali (novembre 2026)
+- Le schede mostrano solo gli alimenti del Dott. Occhino: niente titoli di
+  piatti, preparazioni o note. Le ricette avranno una schermata loro.
+- Ogni alimento della scheda è un pulsante: apre il foglio «cosa hai preso»
+  (`screens/SubsSheet.svelte`) con «Come da piano», gli scambi del medico
+  (radio native) e i grammi mangiati (campo grande, − e + di 5 g, virgola
+  accettata). «Torna al piano» compare solo se qualcosa è cambiato.
+- Quello che è diverso dal piano prende il colore del pasto: nome con la
+  pillola «scambio» e la riga «al posto di …», oppure i grammi con «… g nel
+  piano». Sotto la scheda: «N kcal stimate (piano M)».
+- Cambiare scambio o grammi non segna il pasto come fatto.
+- `ui/BalanceBar.svelte` senza piano mostra solo il totale; l'etichetta per
+  VoiceOver dice i numeri per esteso.
+
 ## Icona
 «Mela-agenda» in 3D lucido (scelta dell'utente il 28/10/2026): una mela verde
 la cui polpa è una pagina d'agenda ad anelli, con le righe nei colori dei

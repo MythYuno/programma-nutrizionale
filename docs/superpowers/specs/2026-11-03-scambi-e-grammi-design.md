@@ -1,6 +1,6 @@
 # Scambi del medico e grammi reali — design
 
-Data: 2026-11-03 · Stato: approvato in chat («Sì, procedi»), da realizzare
+Data: 2026-11-03 · Stato: approvato in chat («Sì, procedi»), realizzato sul branch v2 (non pubblicato)
 
 ![Mockup approvato](img/2026-11-03-scambi-mockup.png)
 

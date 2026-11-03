@@ -97,7 +97,7 @@
           {#if done}Annulla «fatto»{:else}<Check size={20} weight="bold" /> Fatto{/if}
         </button>
         {#if onFree}<button class="link free-link" onclick={onFree}>Pasto libero</button>{/if}
-        {#if hero || modified}<p class="foot num">{fmtNumber(eatenKcal)} kcal stimate{#if modified} (piano {fmtNumber(kcal)}){/if}</p>{/if}
+        {#if hero || modified}<p class="foot num">{fmtNumber(eatenKcal)} kcal stimate{#if modified}&nbsp;(piano {fmtNumber(kcal)}){/if}</p>{/if}
       {/if}
     </div>
   {/if}
