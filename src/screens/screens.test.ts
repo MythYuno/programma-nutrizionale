@@ -77,7 +77,7 @@ describe('Fuori piano', () => {
   it('il bilancio somma le voci fuori piano', async () => {
     await extrasState.add({ kind: 'catalogo', item: EXTRAS_CATALOG.find((x) => x.id === 'gelato')! }, DATE, { freeSlot: null });
     render(DayView, { date: DATE });
-    expect(screen.getByRole('button', { name: 'Bilancio del giorno: dettagli' })).toHaveTextContent('Fuori piano 260');
+    expect(screen.getByRole('button', { name: /^Bilancio del giorno/ })).toHaveTextContent('Fuori piano 260');
   });
 
   it('aggiunge uno sgarro dal catalogo e lo conta nel bilancio', async () => {
@@ -86,7 +86,7 @@ describe('Fuori piano', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Aggiungi Cornetto semplice' }));
     await waitFor(async () => expect((await db.extras.toArray())[0]).toMatchObject({ name: 'Cornetto semplice', qty: 1, origin: 'catalogo' }));
     expect(screen.getByText(/Cornetto semplice aggiunto/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Bilancio del giorno: dettagli' })).toHaveTextContent('Fuori piano 300');
+    expect(screen.getByRole('button', { name: /^Bilancio del giorno/ })).toHaveTextContent('Fuori piano 300');
   });
 
   it('la ricerca trova le voci senza accenti', async () => {
@@ -294,5 +294,22 @@ describe('Scambi e grammi reali', () => {
     await openManzo();
     await fireEvent.click(screen.getByRole('button', { name: '5 grammi in più' }));
     await waitFor(async () => expect((await db.itemLogs.get([DATE, 'cena', 0]))?.grams).toBe(225));
+  });
+});
+
+describe('Bilancio senza piano', () => {
+  it('senza piano mostra solo il totale, e VoiceOver legge i numeri', async () => {
+    app.plan = null;
+    await extrasState.add({ kind: 'catalogo', item: EXTRAS_CATALOG.find((x) => x.id === 'gelato')! }, DATE, { freeSlot: null });
+    render(DayView, { date: DATE });
+    const bar = screen.getByRole('button', { name: 'Bilancio del giorno: 260 kcal, di cui 260 fuori piano. Dettagli' });
+    expect(bar).not.toHaveTextContent('di 0 kcal');
+    expect(bar).not.toHaveTextContent(/Piano/);
+    expect(screen.getByText(/Valori nutrizionali stimati/)).toBeInTheDocument();
+  });
+
+  it('con il piano VoiceOver sente anche le kcal previste', async () => {
+    render(DayView, { date: DATE });
+    expect(screen.getByRole('button', { name: /^Bilancio del giorno: 0 kcal di \d[\d.]* previste\. Dettagli$/ })).toBeInTheDocument();
   });
 });

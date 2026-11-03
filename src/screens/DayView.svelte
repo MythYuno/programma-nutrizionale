@@ -115,7 +115,7 @@
     {/each}
   {/if}
   <ExtraList {date} />
-  {#if app.plan}<p class="section-foot">Valori nutrizionali stimati da tabelle pubbliche: indicativi, non i calcoli del medico.</p>{/if}
+  {#if meals.length || dayExtras.length}<p class="section-foot">Valori nutrizionali stimati da tabelle pubbliche: indicativi, non i calcoli del medico.</p>{/if}
 </main>
 
 {#if canAdd}<Fab label="Ho mangiato altro" onclick={() => openAdd(null)} />{/if}

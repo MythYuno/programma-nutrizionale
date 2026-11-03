@@ -8,20 +8,31 @@
 
   const extra = $derived(balance.free.kcal + balance.offPlan.kcal);
   const scale = $derived(Math.max(balance.planned.kcal, balance.total.kcal, 1));
+  const hasPlan = $derived(balance.planned.kcal > 0);
+  // VoiceOver non vede la barra: i numeri vanno detti per esteso.
+  const label = $derived.by(() => {
+    const parts = [];
+    if (balance.offPlan.kcal > 0) parts.push(`${fmtNumber(balance.offPlan.kcal)} fuori piano`);
+    if (balance.free.kcal > 0) parts.push(`${fmtNumber(balance.free.kcal)} da pasto libero`);
+    return `Bilancio del giorno: ${fmtNumber(balance.total.kcal)} kcal`
+      + (hasPlan ? ` di ${fmtNumber(balance.planned.kcal)} previste` : '')
+      + (parts.length ? `, di cui ${parts.join(' e ')}` : '') + '. Dettagli';
+  });
   const pct = (k: number) => `${Math.min(100, (k / scale) * 100)}%`;
 </script>
 
-<button class="bal" aria-label="Bilancio del giorno: dettagli" onclick={onDetails}>
+<button class="bal" aria-label={label} onclick={onDetails}>
   <span class="num">
     <b class="n">{fmtNumber(balance.total.kcal)}</b>
-    <span class="of">di {fmtNumber(balance.planned.kcal)} kcal{#if balance.delta > 0}&nbsp;· +{fmtNumber(balance.delta)}{/if}</span>
+    <!-- Senza piano non c'è un "di quanto": solo il totale. -->
+    <span class="of">{#if hasPlan}di {fmtNumber(balance.planned.kcal)} kcal{#if balance.delta > 0}&nbsp;· +{fmtNumber(balance.delta)}{/if}{:else}kcal{/if}</span>
   </span>
   <span class="bar" aria-hidden="true">
     <i class="p" style:width={pct(balance.fromPlan.kcal)}></i><i class="x" style:width={pct(extra)}></i>
-    {#if balance.planned.kcal > 0}<i class="tick" style:left={pct(balance.planned.kcal)}></i>{/if}
+    {#if hasPlan}<i class="tick" style:left={pct(balance.planned.kcal)}></i>{/if}
   </span>
   <span class="leg">
-    <span><i class="sw"></i>Piano {fmtNumber(balance.fromPlan.kcal)}</span>
+    {#if hasPlan}<span><i class="sw"></i>Piano {fmtNumber(balance.fromPlan.kcal)}</span>{/if}
     {#if balance.offPlan.kcal > 0}<span><i class="sw h"></i>Fuori piano {fmtNumber(balance.offPlan.kcal)}</span>{/if}
     {#if balance.free.kcal > 0}<span><i class="sw h"></i>Pasto libero {fmtNumber(balance.free.kcal)}</span>{/if}
   </span>
