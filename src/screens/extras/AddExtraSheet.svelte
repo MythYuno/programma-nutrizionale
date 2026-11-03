@@ -12,6 +12,8 @@
   import Toast from '../../ui/Toast.svelte';
   import FoodIcon from '../../ui/FoodIcon.svelte';
   import ChoiceRow from './ChoiceRow.svelte';
+  import ExtraForm from './ExtraForm.svelte';
+  import FoodGramsForm from './FoodGramsForm.svelte';
 
   // Un'unica ricerca su voci tue, sgarri del catalogo e alimenti dell'app.
   let { open = $bindable(false), date, freeSlot }: { open: boolean; date: string; freeSlot: Slot | null } = $props();
@@ -62,8 +64,10 @@
 </script>
 
 <Sheet bind:open {title}>
-  {#if manualName !== null || pickedFood}
-    <p class="muted">In arrivo.</p>
+  {#if manualName !== null}
+    <ExtraForm initialName={manualName} {date} {freeSlot} onDone={() => (open = false)} />
+  {:else if pickedFood}
+    <FoodGramsForm food={pickedFood} {date} {freeSlot} onDone={() => (open = false)} />
   {:else}
     <label class="search">
       <MagnifyingGlass size={20} />

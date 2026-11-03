@@ -15,6 +15,7 @@
   import SubsSheet from './SubsSheet.svelte';
   import BalanceSheet from './extras/BalanceSheet.svelte';
   import AddExtraSheet from './extras/AddExtraSheet.svelte';
+  import ExtraList from './extras/ExtraList.svelte';
 
   let { date }: { date: string } = $props();
 
@@ -81,6 +82,7 @@
       <MealCard meal={m} done={done.has(m.slot)} skipped={skipped.includes(m.slot)} onToggle={() => app.toggleMeal(date, m.slot)} onSubs={(it) => (subsItem = it)} />
     {/each}
   {/if}
+  <ExtraList {date} />
   {#if app.plan}<p class="section-foot">Valori nutrizionali stimati da tabelle pubbliche: indicativi, non i calcoli del medico.</p>{/if}
 </main>
 

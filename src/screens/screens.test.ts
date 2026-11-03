@@ -94,3 +94,52 @@ describe('Fuori piano', () => {
     expect(screen.getByRole('button', { name: 'Aggiungi «tiramisu» a mano' })).toBeInTheDocument();
   });
 });
+
+describe('Fuori piano · voce a mano e grammi', () => {
+  async function openManual(name: string) {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Ho mangiato altro' }));
+    await fireEvent.input(screen.getByLabelText('Cerca o scrivi cosa hai mangiato'), { target: { value: name } });
+    await fireEvent.click(screen.getByRole('button', { name: `Aggiungi «${name}» a mano` }));
+  }
+  const typeIn = (label: string, value: string) => fireEvent.input(screen.getByLabelText(label), { target: { value } });
+
+  it('aggiunge una voce a mano con le kcal dai macro', async () => {
+    await openManual('barretta');
+    for (const [l, v] of [['Proteine', '4'], ['Carboidrati', '22'], ['Grassi', '9']] as const) await typeIn(l, v);
+    expect(screen.getByLabelText('kcal')).toHaveValue('185');
+    await fireEvent.click(screen.getByRole('button', { name: 'Aggiungi a oggi' }));
+    await waitFor(async () => {
+      expect((await db.extras.toArray())[0]).toMatchObject({ name: 'barretta', origin: 'mia', macro: { kcal: 185, p: 4, c: 22, f: 9 } });
+      expect(await db.customItems.count()).toBe(1);
+    });
+  });
+
+  it('le kcal scritte a mano non vengono sovrascritte dai macro', async () => {
+    await openManual('barretta');
+    for (const [l, v] of [['Proteine', '4'], ['Carboidrati', '22'], ['Grassi', '9']] as const) await typeIn(l, v);
+    await typeIn('kcal', '200');
+    await typeIn('Grassi', '10');
+    expect(screen.getByLabelText('kcal')).toHaveValue('200');
+  });
+
+  it('accetta i grammi con la virgola', async () => {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Ho mangiato altro' }));
+    await typeIn('Cerca o scrivi cosa hai mangiato', 'pane integrale');
+    await fireEvent.click(screen.getByRole('button', { name: 'Aggiungi Pane integrale' }));
+    await typeIn('Grammi', '40,5');
+    await fireEvent.click(screen.getByRole('button', { name: 'Aggiungi' }));
+    await waitFor(async () => expect((await db.extras.toArray())[0]).toMatchObject({ origin: 'alimento', grams: 40.5, refId: 'pane-integrale' }));
+  });
+
+  it("l'elenco del giorno mostra le voci ripetute come ×2", async () => {
+    const gelato = EXTRAS_CATALOG.find((x) => x.id === 'gelato')!;
+    await extrasState.add({ kind: 'catalogo', item: gelato }, DATE, { freeSlot: null });
+    await extrasState.add({ kind: 'catalogo', item: gelato }, DATE, { freeSlot: null });
+    render(DayView, { date: DATE });
+    const row = screen.getByRole('button', { name: /Gelato in coppetta/ });
+    expect(row).toHaveTextContent('×2');
+    expect(row).toHaveTextContent('520');
+  });
+});
