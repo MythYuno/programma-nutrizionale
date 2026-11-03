@@ -112,6 +112,17 @@ export interface ExtraLog {
   createdAt: string;
 }
 
+// Cosa si è preso al posto di un alimento del piano, in un giorno. Il piano non
+// cambia: se in quella posizione non c'è più planFoodId, il log si ignora.
+export interface ItemLog {
+  date: string; // YYYY-MM-DD
+  slot: Slot;
+  index: number; // posizione dell'alimento nel pasto del piano
+  planFoodId: string;
+  foodId: string; // lo stesso del piano o uno dei suoi scambi
+  grams: number; // > 0
+}
+
 export interface Weight {
   date: string; // YYYY-MM-DD
   kg: number;

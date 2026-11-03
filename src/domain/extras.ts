@@ -1,5 +1,6 @@
 // Calcoli per le voci fuori piano e il pasto libero. Tutti i valori sono stime.
-import type { CatalogExtra, CustomItem, ExtraLog, ExtraOrigin, Food, FoodIconName, Macro, Meal, MealLog, Slot } from './types';
+import type { CatalogExtra, CustomItem, ExtraLog, ExtraOrigin, Food, FoodIconName, ItemLog, Macro, Meal, MealLog, Slot } from './types';
+import { eatenMealMacro } from './eaten';
 import { add, fmtDecimal, portionMacro, sumMacro, ZERO, type FoodIndex } from './nutrition';
 
 // Il piano del Dott. Occhino prevede un pasto libero a settimana.
@@ -61,13 +62,17 @@ export interface DayBalance {
   delta: number; // kcal sopra (+) o sotto (−) il piano
 }
 
-// `dayExtras` sono già le voci di quel giorno.
+// `dayExtras` e `itemLogs` sono già quelli del giorno. I pasti fatti usano quello
+// che si è mangiato davvero (scambi e grammi), il previsto resta il piano.
 export function dayBalance(
   meals: readonly Meal[], done: ReadonlySet<Slot>, frees: ReadonlySet<Slot>,
-  dayExtras: readonly ExtraLog[], foods: FoodIndex,
+  dayExtras: readonly ExtraLog[], foods: FoodIndex, itemLogs: readonly ItemLog[] = [],
 ): DayBalance {
   const planned = sumMacro(meals, foods);
-  const fromPlan = sumMacro(meals.filter((m) => done.has(m.slot) && !frees.has(m.slot)), foods);
+  const date = itemLogs[0]?.date ?? '';
+  const fromPlan = meals
+    .filter((m) => done.has(m.slot) && !frees.has(m.slot))
+    .reduce((acc, m) => add(acc, eatenMealMacro(m, itemLogs, date, foods)), ZERO);
   // Una voce legata a un pasto che non è (più) libero conta come sgarro: così
   // resta visibile ed eliminabile nella sezione Fuori piano.
   const inFree = (e: ExtraLog) => e.freeSlot !== null && frees.has(e.freeSlot);
@@ -88,10 +93,12 @@ export interface WeekSummary {
 export function weekSummary(dates: readonly string[], logs: readonly MealLog[], extras: readonly ExtraLog[]): WeekSummary {
   const inWeek = new Set(dates);
   const weekExtras = extras.filter((e) => inWeek.has(e.date));
-  const sgarri = weekExtras.filter((e) => e.freeSlot === null);
+  // Come in dayBalance: conta come pasto libero solo una voce il cui pasto è libero.
+  const isFree = (e: ExtraLog) => e.freeSlot !== null && logs.some((l) => l.kind === 'libero' && l.date === e.date && l.slot === e.freeSlot);
+  const sgarri = weekExtras.filter((e) => !isFree(e));
   return {
     offPlanKcal: Math.round(sumExtras(sgarri).kcal),
-    freeKcal: Math.round(sumExtras(weekExtras.filter((e) => e.freeSlot !== null)).kcal),
+    freeKcal: Math.round(sumExtras(weekExtras.filter(isFree)).kcal),
     freeMeals: logs.filter((l) => l.kind === 'libero' && inWeek.has(l.date)).length,
     offPlanDays: new Set(sgarri.map((e) => e.date)).size,
   };
