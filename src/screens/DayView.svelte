@@ -11,10 +11,10 @@
   import DayStrip from '../ui/DayStrip.svelte';
   import BalanceBar from '../ui/BalanceBar.svelte';
   import Fab from '../ui/Fab.svelte';
-  import Sheet from '../ui/Sheet.svelte';
   import MealCard from './MealCard.svelte';
   import SubsSheet from './SubsSheet.svelte';
   import BalanceSheet from './extras/BalanceSheet.svelte';
+  import AddExtraSheet from './extras/AddExtraSheet.svelte';
 
   let { date }: { date: string } = $props();
 
@@ -88,7 +88,7 @@
 
 <SubsSheet bind:item={subsItem} />
 <BalanceSheet bind:open={details} {balance} />
-<Sheet bind:open={adding} title="Ho mangiato altro"><p class="muted">In arrivo.</p></Sheet>
+<AddExtraSheet bind:open={adding} {date} freeSlot={null} />
 
 <style>
   .back { display: flex; align-items: center; gap: 4px; margin-left: -4px; padding: 0 0 8px; }

@@ -76,4 +76,21 @@ describe('Fuori piano', () => {
     render(DayView, { date: DATE });
     expect(screen.getByRole('button', { name: 'Bilancio del giorno: dettagli' })).toHaveTextContent('Fuori piano 260');
   });
+
+  it('aggiunge uno sgarro dal catalogo e lo conta nel bilancio', async () => {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Ho mangiato altro' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Aggiungi Cornetto semplice' }));
+    await waitFor(async () => expect((await db.extras.toArray())[0]).toMatchObject({ name: 'Cornetto semplice', qty: 1, origin: 'catalogo' }));
+    expect(screen.getByText(/Cornetto semplice aggiunto/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bilancio del giorno: dettagli' })).toHaveTextContent('Fuori piano 300');
+  });
+
+  it('la ricerca trova le voci senza accenti', async () => {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Ho mangiato altro' }));
+    await fireEvent.input(screen.getByLabelText('Cerca o scrivi cosa hai mangiato'), { target: { value: 'tiramisu' } });
+    expect(screen.getByRole('button', { name: 'Aggiungi Tiramisù' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Aggiungi «tiramisu» a mano' })).toBeInTheDocument();
+  });
 });

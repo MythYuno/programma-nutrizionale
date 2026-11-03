@@ -21,7 +21,7 @@
 
 <style>
   .wrap {
-    position: fixed; left: 0; right: 0; z-index: 30; pointer-events: none;
+    position: fixed; left: 0; right: 0; z-index: 45; pointer-events: none;
     bottom: calc(env(safe-area-inset-bottom) + 84px);
     display: flex; justify-content: center; padding: 0 16px;
   }
