@@ -51,20 +51,42 @@ export function doneSlots(logs: readonly MealLog[], date: string): Set<Slot> {
   return new Set(logs.filter((l) => l.date === date).map((l) => l.slot));
 }
 
-// Il pasto "adesso" è il primo non fatto dopo l'ultimo pasto segnato.
-// Non si guarda l'ora: se salti la colazione e segni il pranzo, "adesso"
-// passa allo spuntino del pomeriggio e la colazione risulta saltata.
-export function nextMeal(day: Day | undefined, done: ReadonlySet<Slot>): Meal | null {
-  if (!day) return null;
-  const meals = sortMeals(day.meals);
-  return meals.slice(lastDoneIndex(meals, done) + 1).find((m) => !done.has(m.slot)) ?? null;
+export function minutesOf(d: Date): number {
+  return d.getHours() * 60 + d.getMinutes();
 }
 
-// Pasti non segnati che vengono prima dell'ultimo pasto fatto.
-export function skippedMeals(day: Day | undefined, done: ReadonlySet<Slot>): Meal[] {
+// Da che ora tocca ogni pasto, in minuti dalla mezzanotte. Il piano del medico
+// non ha orari: queste fasce sono dell'app e valgono per tutti i giorni.
+const SLOT_FROM: Record<Slot, number> = {
+  colazione: 0,
+  spuntinoMattino: 10 * 60,
+  pranzo: 12 * 60,
+  spuntinoPomeriggio: 15 * 60 + 30,
+  cena: 18 * 60 + 30,
+};
+
+export function slotAt(minutes: number): Slot {
+  return [...SLOTS].reverse().find((s) => SLOT_FROM[s] <= minutes) ?? 'colazione';
+}
+
+// Il pasto "adesso": il primo non fatto a partire dalla fascia dell'ora e
+// dall'ultimo pasto segnato, quale dei due viene dopo. Alle 20 senza niente
+// segnato è la cena; segnato il pranzo alle 8, è lo spuntino del pomeriggio.
+export function nextMeal(day: Day | undefined, done: ReadonlySet<Slot>, minutes: number): Meal | null {
+  if (!day) return null;
+  const meals = sortMeals(day.meals);
+  const last = lastDoneIndex(meals, done);
+  const hour = SLOTS.indexOf(slotAt(minutes));
+  return meals.find((m, i) => i > last && SLOTS.indexOf(m.slot) >= hour && !done.has(m.slot)) ?? null;
+}
+
+// Pasti non segnati che vengono prima della fascia dell'ora o dell'ultimo pasto fatto.
+export function skippedMeals(day: Day | undefined, done: ReadonlySet<Slot>, minutes: number): Meal[] {
   if (!day) return [];
   const meals = sortMeals(day.meals);
-  return meals.slice(0, Math.max(0, lastDoneIndex(meals, done))).filter((m) => !done.has(m.slot));
+  const last = lastDoneIndex(meals, done);
+  const hour = SLOTS.indexOf(slotAt(minutes));
+  return meals.filter((m, i) => !done.has(m.slot) && (i < last || SLOTS.indexOf(m.slot) < hour));
 }
 
 function lastDoneIndex(meals: readonly Meal[], done: ReadonlySet<Slot>): number {

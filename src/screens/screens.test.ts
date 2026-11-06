@@ -24,6 +24,8 @@ beforeEach(async () => {
   await app.load();
   await extrasState.load();
   app.today = DATE;
+  app.minutes = 8 * 60;
+  location.hash = '';
 });
 
 // Senza le globali di Vitest la pulizia automatica non scatta: i componenti di
@@ -347,5 +349,91 @@ describe('Bilancio senza piano', () => {
   it('con il piano VoiceOver sente anche le kcal previste', async () => {
     render(DayView, { date: DATE });
     expect(screen.getByRole('button', { name: /^Bilancio del giorno: 0 kcal di \d[\d.]* previste\. Dettagli$/ })).toBeInTheDocument();
+  });
+});
+
+describe("Il pasto dell'ora", () => {
+  it('alle 20 senza niente segnato apre la cena', async () => {
+    app.minutes = 20 * 60;
+    render(DayView, { date: DATE });
+    expect(screen.getByRole('heading', { level: 2, name: 'Cena' })).toBeInTheDocument();
+    expect(screen.getByText('Gli altri pasti')).toBeInTheDocument();
+    expect(screen.getAllByText('non segnato').length).toBeGreaterThan(0);
+    expect(screen.queryByText('saltato?')).not.toBeInTheDocument();
+  });
+
+  it('a cena fatta elenca i pasti non segnati con le virgole', async () => {
+    app.minutes = 20 * 60;
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Fatto' }));
+    await waitFor(() => expect(screen.getByText(/Non hai segnato colazione, spuntino mattino, pranzo e spuntino pomeriggio\./)).toBeInTheDocument());
+  });
+});
+
+describe('Gli altri giorni', () => {
+  const TOMORROW = '2026-10-29';
+  const NEXT_WEDNESDAY = '2026-11-04';
+
+  it('dalle frecce si passa a domani e si torna a oggi', async () => {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: 'Giorno successivo' }));
+    expect(location.hash).toBe('#/giorno/' + TOMORROW);
+    cleanup();
+    render(DayView, { date: TOMORROW });
+    expect(screen.getByRole('heading', { level: 1, name: 'Domani' })).toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('button', { name: 'Giorno precedente' }));
+    expect(location.hash).toBe('#/oggi');
+  });
+
+  it('scorrendo di lato si cambia giorno', async () => {
+    render(DayView, { date: DATE });
+    const main = screen.getByRole('main');
+    await fireEvent.touchStart(main, { touches: [{ clientX: 300, clientY: 100 }] });
+    await fireEvent.touchEnd(main, { changedTouches: [{ clientX: 100, clientY: 110 }] });
+    expect(location.hash).toBe('#/giorno/' + TOMORROW);
+  });
+
+  it('un giorno futuro mostra tutti gli alimenti senza toccare nulla e senza niente da segnare', async () => {
+    render(DayView, { date: NEXT_WEDNESDAY });
+    expect(screen.getByRole('heading', { level: 2, name: 'Colazione' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Cena' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Manzo magro, 220 grammi: vedi gli scambi' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Fatto' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Pasto libero' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Bilancio del giorno/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/kcal stimate/)).toBeInTheDocument();
+  });
+
+  it('nel giorno futuro il foglio fa vedere gli scambi ma non registra niente', async () => {
+    render(DayView, { date: NEXT_WEDNESDAY });
+    await fireEvent.click(screen.getByRole('button', { name: 'Manzo magro, 220 grammi: vedi gli scambi' }));
+    expect(screen.getByRole('dialog', { name: 'Manzo magro · 220 g' })).toHaveTextContent('Pollo');
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Grammi mangiati')).not.toBeInTheDocument();
+    expect(await db.itemLogs.count()).toBe(0);
+  });
+
+  it('il foglio di un giorno passato non dice «oggi»', async () => {
+    render(DayView, { date: '2026-10-21' });
+    await fireEvent.click(screen.getByRole('button', { name: /^Cena/ }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Manzo magro, 220 grammi: cosa hai preso' }));
+    expect(screen.getByRole('dialog', { name: 'Manzo magro · 220 g' })).not.toHaveTextContent('oggi');
+  });
+
+  it('il ritorno porta alla settimana di quel giorno', async () => {
+    render(DayView, { date: NEXT_WEDNESDAY });
+    await fireEvent.click(screen.getByRole('button', { name: 'Settimana' }));
+    expect(location.hash).toBe('#/settimana/2026-11-02');
+  });
+
+  it('in Settimana si va alla settimana dopo, senza conteggi che lì non hanno senso', async () => {
+    render(Settimana, {});
+    await fireEvent.click(screen.getByRole('button', { name: 'Settimana successiva' }));
+    expect(location.hash).toBe('#/settimana/2026-11-02');
+    cleanup();
+    render(Settimana, { week: '2026-11-02' });
+    expect(screen.queryByText(/di \d+ pasti/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Pasto libero usato')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Mer 4/ })).toBeInTheDocument();
   });
 });

@@ -1,15 +1,18 @@
 <script lang="ts">
   import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
+  import CaretRight from 'phosphor-svelte/lib/CaretRight';
   import { app } from '../state/app.svelte';
   import { extrasState } from '../state/extras.svelte';
   import { eatenState } from '../state/eaten.svelte';
   import { router } from '../state/router.svelte';
   import type { Meal, Slot } from '../domain/types';
-  import { nextMeal, skippedMeals, sortMeals, weekdayIndex } from '../domain/schedule';
+  import { addDays, mondayOf, nextMeal, skippedMeals, sortMeals, weekdayIndex } from '../domain/schedule';
   import { SLOT_LABEL } from '../domain/types';
   import { dayBalance } from '../domain/extras';
   import { eatenItems } from '../domain/eaten';
+  import { fmtNumber } from '../domain/nutrition';
   import { longDate, weekdayName } from '../ui/format';
+  import { swipe } from '../ui/swipe';
   import DayStrip from '../ui/DayStrip.svelte';
   import BalanceBar from '../ui/BalanceBar.svelte';
   import Fab from '../ui/Fab.svelte';
@@ -28,8 +31,12 @@
   const meals = $derived(day ? sortMeals(day.meals) : []);
   const done = $derived(app.done(date));
   const frees = $derived(app.frees(date));
-  const now = $derived(isToday ? nextMeal(day, done) : null);
-  const skipped = $derived(isToday ? skippedMeals(day, done).map((m) => m.slot) : []);
+  const now = $derived(isToday ? nextMeal(day, done, app.minutes) : null);
+  const skipped = $derived(isToday ? skippedMeals(day, done, app.minutes).map((m) => m.slot) : []);
+  const skippedNames = $derived(new Intl.ListFormat('it').format(skipped.map((s) => SLOT_LABEL[s].toLowerCase())));
+  // Un giorno che deve ancora venire si legge soltanto: non c'è niente da segnare.
+  const future = $derived(date > app.today);
+  const title = $derived(isToday ? 'Oggi' : date === addDays(app.today, 1) ? 'Domani' : date === addDays(app.today, -1) ? 'Ieri' : weekdayName(date));
   const dayExtras = $derived(extrasState.forDate(date));
   const dayLogs = $derived(eatenState.forDate(date));
   const balance = $derived(dayBalance(meals, done, frees, dayExtras, app.foodIndex, dayLogs));
@@ -50,6 +57,11 @@
     adding = true;
   }
 
+  function goDay(direction: number) {
+    const d = addDays(date, direction);
+    router.go(d === app.today ? 'oggi' : 'giorno/' + d);
+  }
+
   // Un alimento del pasto toccato: si apre «cosa hai preso».
   function openItem(m: Meal, index: number) {
     const item = m.items[index];
@@ -62,12 +74,18 @@
   }
 </script>
 
-<main class="screen" class:with-fab={canAdd}>
+<main class="screen" class:with-fab={canAdd} {@attach swipe(goDay)}>
   {#if !isToday}
-    <button class="back ground-link" onclick={() => router.back('settimana')}><CaretLeft size={20} weight="bold" /> Settimana</button>
+    <button class="back ground-link" onclick={() => router.go('settimana/' + mondayOf(date))}><CaretLeft size={20} weight="bold" /> Settimana</button>
   {/if}
-  <h1 class="large-title">{isToday ? 'Oggi' : weekdayName(date)}</h1>
-  <p class="subtitle">{longDate(date)}</p>
+  <div class="title-row">
+    <h1 class="large-title">{title}</h1>
+    <div class="title-nav">
+      <button class="icon-btn" aria-label="Giorno precedente" onclick={() => goDay(-1)}><CaretLeft size={22} weight="bold" /></button>
+      <button class="icon-btn" aria-label="Giorno successivo" onclick={() => goDay(1)}><CaretRight size={22} weight="bold" /></button>
+    </div>
+  </div>
+  <p class="subtitle">{longDate(date)}{#if future && meals.length}&nbsp;· {fmtNumber(balance.planned.kcal)} kcal stimate{/if}</p>
 
   {#each app.notices as n, i (i)}<div class="notice">{n}</div>{/each}
 
@@ -82,7 +100,7 @@
     <div class="card complete">
       <h2>Nessun altro pasto in programma</h2>
       <p class="muted">
-        Non hai segnato {skipped.map((s) => SLOT_LABEL[s].toLowerCase()).join(' e ')}.
+        Non hai segnato {skippedNames}.
         {skipped.length > 1 ? 'Se li hai mangiati, segnali qui sotto.' : 'Se l’hai mangiato, segnalo qui sotto.'}
       </p>
     </div>
@@ -93,7 +111,7 @@
     </div>
   {/if}
 
-  {#if meals.length || dayExtras.length}
+  {#if !future && (meals.length || dayExtras.length)}
     <div class="totals">
       {#if meals.length}<DayStrip {segments} ground />{/if}
       <BalanceBar {balance} onDetails={() => (details = true)} />
@@ -101,10 +119,10 @@
   {/if}
 
   {#if rest.length}
-    <h2 class="section-title">{now ? 'Il resto della giornata' : 'Pasti'}</h2>
+    {#if !future}<h2 class="section-title">{now ? 'Gli altri pasti' : 'Pasti'}</h2>{/if}
     {#each rest as m (m.slot)}
       <MealCard
-        meal={m} done={done.has(m.slot)} skipped={skipped.includes(m.slot)}
+        meal={m} done={done.has(m.slot)} skipped={skipped.includes(m.slot)} readonly={future}
         free={frees.has(m.slot)} freeItems={dayExtras.filter((e) => e.freeSlot === m.slot)}
         eaten={eatenItems(m, dayLogs, date)}
         onToggle={() => app.toggleMeal(date, m.slot)} onItem={(i) => openItem(m, i)}

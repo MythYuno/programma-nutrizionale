@@ -12,6 +12,7 @@
   import Segmented from '../ui/Segmented.svelte';
   import { SLOT_LABEL } from '../domain/types';
   import { fmtDecimal, fmtGrams } from '../domain/nutrition';
+  import { shortDate } from '../ui/format';
   import { choiceGrams, validLog } from '../domain/eaten';
   import { parseAmount } from '../domain/extras';
   import { ALTERNATIVE_SOURCES, alternativesFor } from '../domain/substitutions';
@@ -27,6 +28,8 @@
   let tab = $state<'medico' | 'alt'>('medico');
   let last = $state<SubsTarget | null>(null);
 
+  // In un giorno che deve ancora venire gli scambi si leggono, non si segnano.
+  const future = $derived(last ? last.date > app.today : false);
   const name = (id: string) => app.foodIndex.get(id)?.name ?? 'Alimento sconosciuto';
   const log = $derived(last ? validLog(last.item, eatenState.forDate(last.date), last.date, last.slot, last.index) : undefined);
   const foodId = $derived(last ? (log?.foodId ?? last.item.foodId) : '');
@@ -77,18 +80,32 @@
 
 <Sheet bind:open title={last ? `${name(last.item.foodId)} · ${fmtGrams(last.item.grams)}` : ''}>
   {#if last}
-    <p class="sub">Cosa hai preso oggi per {SLOT_LABEL[last.slot].toLowerCase()}</p>
+    {@const meal = SLOT_LABEL[last.slot].toLowerCase()}
+    <p class="sub">
+      {#if future}Gli scambi del Dott. Occhino per {meal}
+      {:else if last.date === app.today}Cosa hai preso oggi per {meal}
+      {:else}Cosa hai preso per {meal}, {shortDate(last.date)}{/if}
+    </p>
     {#if alts.length}
       <Segmented bind:value={tab} options={[{ value: 'medico', label: 'Dott. Occhino' }, { value: 'alt', label: 'Alternative' }]} />
     {/if}
 
-    {#if tab === 'medico'}
-      <div class="group" role="radiogroup" aria-label="Alimento preso">
+    {#snippet choice(o: { foodId: string; grams: number }, i: number)}
+      <span class="grow">{i === 0 ? 'Come da piano' : name(o.foodId)}{#if i === 0}<small>{name(o.foodId)}</small>{/if}</span>
+      <b class="num">{fmtGrams(o.grams)}</b>
+    {/snippet}
+
+    {#if tab === 'medico' && future}
+      <div class="group opts">
+        {#each options as o, i (o.foodId)}<div class="row">{@render choice(o, i)}</div>{/each}
+      </div>
+      {#if last.item.subs.length}<p class="section-foot">Gli scambi sono quelli scritti nel piano dal Dott. Occhino.</p>{/if}
+    {:else if tab === 'medico'}
+      <div class="group opts" role="radiogroup" aria-label="Alimento preso">
         {#each options as o, i (o.foodId)}
           <label class="row opt">
             <input type="radio" name="scelta" checked={foodId === o.foodId} onchange={() => choose(o.foodId)} />
-            <span class="grow">{i === 0 ? 'Come da piano' : name(o.foodId)}{#if i === 0}<small>{name(o.foodId)}</small>{/if}</span>
-            <b class="num">{fmtGrams(o.grams)}</b>
+            {@render choice(o, i)}
           </label>
         {/each}
       </div>
@@ -126,7 +143,7 @@
   .sub { margin: 0 4px 14px; font-size: 14px; color: var(--ink-2); }
   .opt { cursor: pointer; }
   .opt input { width: 22px; height: 22px; margin: 0; accent-color: var(--act); flex: none; }
-  .opt small { display: block; font-size: 13px; color: var(--ink-2); }
+  .opts small { display: block; font-size: 13px; color: var(--ink-2); }
   .grams { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-radius: 18px; background: var(--card); box-shadow: 0 0 0 2px var(--act); }
   .step { width: 48px; height: 48px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; background: var(--fill); color: var(--act); }
   .step:disabled { opacity: 0.35; }

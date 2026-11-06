@@ -6,13 +6,14 @@ import { ensureStartup, requestPersistence } from '../db/migrate';
 import type { Food, LegacyWeek, MealLog, Plan, Settings, Slot, Weight } from '../domain/types';
 import { DEFAULT_SETTINGS } from '../domain/types';
 import { indexFoods } from '../domain/nutrition';
-import { doneSlots, isoDate } from '../domain/schedule';
+import { doneSlots, isoDate, minutesOf } from '../domain/schedule';
 import { upsertWeight } from '../domain/weight';
 import { freeSlots } from '../domain/extras';
 
 class AppState {
   ready = $state(false);
   today = $state(isoDate(new Date()));
+  minutes = $state(minutesOf(new Date())); // l'ora di quando si è aperta l'app
   foods = $state<Food[]>([]);
   plan = $state<Plan | null>(null);
   logs = $state<MealLog[]>([]);
@@ -45,8 +46,10 @@ class AppState {
     this.ready = true;
   }
 
+  // Solo alla riapertura: il pasto aperto non deve cambiare mentre lo si legge.
   refreshToday() {
     this.today = isoDate(new Date());
+    this.minutes = minutesOf(new Date());
   }
 
   done(date: string): Set<Slot> {

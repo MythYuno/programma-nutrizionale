@@ -27,7 +27,7 @@
   // Il fondo dell'app ha il colore del pasto di adesso; a giornata finita resta quello della cena.
   const hour = $derived.by<Slot>(() => {
     const day = app.plan?.days[weekdayIndex(app.today)];
-    return nextMeal(day, app.done(app.today))?.slot ?? 'cena';
+    return nextMeal(day, app.done(app.today), app.minutes)?.slot ?? 'cena';
   });
 
   $effect(() => {

@@ -117,6 +117,8 @@ input, textarea { caret-color: var(--act); }
 
 /* Testata sul fondo colorato: titolo grande, sotto la riga di contesto */
 .large-title { font-size: 34px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.05; margin: 0; }
+.title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.title-nav { display: flex; gap: 8px; flex: none; }
 .subtitle { font-size: 15px; font-weight: 600; color: var(--on-hour-2); margin: 4px 0 18px; }
 .head-gap { margin-bottom: 18px; }
 .section-title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--on-hour); margin: 26px 4px 10px; }

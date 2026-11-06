@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SEED_FOODS, findSeedFoodId } from './catalog';
 import { fmtGrams, indexFoods, mealMacro, portionMacro, rounded, sumMacro } from './nutrition';
-import { addDays, isoWeek, mondayOf, nextMeal, skippedMeals, weekDates, weekdayIndex } from './schedule';
+import { addDays, isoWeek, mondayOf, nextMeal, skippedMeals, slotAt, weekDates, weekdayIndex } from './schedule';
 import { alternativesFor, roundTo5 } from './substitutions';
 import { inRange, parseKg, trailingAverage, upsertWeight, weeklyChange } from './weight';
 import { stripRecipes, validatePlan } from './validate';
@@ -65,9 +65,9 @@ describe('schedule', () => {
       { slot: 'colazione', items: [] },
       { slot: 'pranzo', items: [] },
     ] as Meal[] };
-    expect(nextMeal(day, new Set())?.slot).toBe('colazione');
-    expect(nextMeal(day, new Set(['colazione']))?.slot).toBe('pranzo');
-    expect(nextMeal(day, new Set(['colazione', 'pranzo', 'cena']))).toBeNull();
+    expect(nextMeal(day, new Set(), 0)?.slot).toBe('colazione');
+    expect(nextMeal(day, new Set(['colazione']), 0)?.slot).toBe('pranzo');
+    expect(nextMeal(day, new Set(['colazione', 'pranzo', 'cena']), 0)).toBeNull();
   });
 
   it('un pasto saltato non blocca "adesso"', () => {
@@ -78,12 +78,56 @@ describe('schedule', () => {
       { slot: 'cena', items: [] },
     ] as Meal[] };
     // Colazione e spuntino saltati, pranzo fatto: adesso è la cena.
-    expect(nextMeal(day, new Set(['pranzo']))?.slot).toBe('cena');
-    expect(skippedMeals(day, new Set(['pranzo'])).map((m) => m.slot)).toEqual(['colazione', 'spuntinoMattino']);
+    expect(nextMeal(day, new Set(['pranzo']), 0)?.slot).toBe('cena');
+    expect(skippedMeals(day, new Set(['pranzo']), 0).map((m) => m.slot)).toEqual(['colazione', 'spuntinoMattino']);
     // Cena fatta e colazione no: nessun pasto "adesso", la colazione è saltata.
-    expect(nextMeal(day, new Set(['spuntinoMattino', 'pranzo', 'cena']))).toBeNull();
-    expect(skippedMeals(day, new Set(['spuntinoMattino', 'pranzo', 'cena'])).map((m) => m.slot)).toEqual(['colazione']);
-    expect(skippedMeals(day, new Set())).toEqual([]);
+    expect(nextMeal(day, new Set(['spuntinoMattino', 'pranzo', 'cena']), 0)).toBeNull();
+    expect(skippedMeals(day, new Set(['spuntinoMattino', 'pranzo', 'cena']), 0).map((m) => m.slot)).toEqual(['colazione']);
+    expect(skippedMeals(day, new Set(), 0)).toEqual([]);
+  });
+});
+
+describe("il pasto dell'ora", () => {
+  const at = (h: number, m = 0) => h * 60 + m;
+  const day = { meals: (['colazione', 'spuntinoMattino', 'pranzo', 'spuntinoPomeriggio', 'cena'] as const).map((slot) => ({ slot, items: [] })) };
+
+  it('ogni fascia comincia alla sua ora', () => {
+    expect(slotAt(at(8))).toBe('colazione');
+    expect(slotAt(at(9, 59))).toBe('colazione');
+    expect(slotAt(at(10))).toBe('spuntinoMattino');
+    expect(slotAt(at(12))).toBe('pranzo');
+    expect(slotAt(at(15, 29))).toBe('pranzo');
+    expect(slotAt(at(15, 30))).toBe('spuntinoPomeriggio');
+    expect(slotAt(at(18, 30))).toBe('cena');
+    expect(slotAt(at(23, 59))).toBe('cena');
+  });
+
+  it('alle 20 senza niente segnato tocca la cena, e i pasti prima risultano non segnati', () => {
+    expect(nextMeal(day, new Set(), at(20))?.slot).toBe('cena');
+    expect(skippedMeals(day, new Set(), at(20)).map((m) => m.slot)).toEqual(['colazione', 'spuntinoMattino', 'pranzo', 'spuntinoPomeriggio']);
+  });
+
+  it("segnando il pasto dell'ora si passa al successivo, anche se la sua fascia non è ancora cominciata", () => {
+    expect(nextMeal(day, new Set(['colazione']), at(8))?.slot).toBe('spuntinoMattino');
+    expect(skippedMeals(day, new Set(['colazione']), at(8))).toEqual([]);
+  });
+
+  it("un pasto segnato più avanti dell'ora conta più dell'orologio", () => {
+    expect(nextMeal(day, new Set(['pranzo']), at(8))?.slot).toBe('spuntinoPomeriggio');
+    expect(skippedMeals(day, new Set(['pranzo']), at(8)).map((m) => m.slot)).toEqual(['colazione', 'spuntinoMattino']);
+  });
+
+  it('a cena fatta non tocca più niente, anche se i pasti prima non sono segnati', () => {
+    expect(nextMeal(day, new Set(['cena']), at(21))).toBeNull();
+    expect(skippedMeals(day, new Set(['cena']), at(21))).toHaveLength(4);
+  });
+
+  it('un giorno senza il pasto di quella fascia passa al successivo, o a nessuno', () => {
+    const noSnacks = { meals: day.meals.filter((m) => !m.slot.startsWith('spuntino')) };
+    expect(nextMeal(noSnacks, new Set(), at(11))?.slot).toBe('pranzo');
+    const noDinner = { meals: day.meals.filter((m) => m.slot !== 'cena') };
+    expect(nextMeal(noDinner, new Set(), at(20))).toBeNull();
+    expect(skippedMeals(noDinner, new Set(), at(20))).toHaveLength(4);
   });
 });
 

@@ -16,11 +16,12 @@
   import { SLOT_COLOR } from '../ui/format';
   import FreeMealBody from './extras/FreeMealBody.svelte';
 
-  let { meal, done, hero = false, skipped = false, free = false, freeItems = [], eaten = [], onToggle, onItem, onFree, onUnfree, onAddToFree, onOpenExtra }: {
+  let { meal, done, hero = false, skipped = false, readonly = false, free = false, freeItems = [], eaten = [], onToggle, onItem, onFree, onUnfree, onAddToFree, onOpenExtra }: {
     meal: Meal;
     done: boolean;
     hero?: boolean;
     skipped?: boolean;
+    readonly?: boolean; // giorno futuro: tutto aperto, niente da segnare
     onToggle: () => void;
     eaten?: EatenItem[]; // quello che si è preso davvero (scambi e grammi); vuoto = piano
     onItem: (index: number) => void;
@@ -34,7 +35,7 @@
 
   let open = $state(false);
   // Un pasto libero resta aperto: si vede subito cosa si è mangiato al suo posto.
-  const expanded = $derived(hero || open || free);
+  const expanded = $derived(hero || open || free || readonly);
   const kcal = $derived(mealMacro(meal, app.foodIndex).kcal);
   const rows = $derived(meal.items.map((item, i) => ({ item, e: eaten[i] ?? null })));
   const eatenKcal = $derived(rows.reduce((s, r) => s + portionMacro(r.e ?? r.item, app.foodIndex).kcal, 0));
@@ -51,6 +52,7 @@
     const eaten = `${name(e?.foodId ?? it.foodId)}, ${e?.grams ?? it.grams} grammi`;
     const extra = e?.swapped ? `, scambio al posto di ${name(it.foodId)} ${it.grams} grammi`
       : e?.changed ? `, ${it.grams} grammi nel piano` : '';
+    if (readonly) return hasSubs(it) ? `${eaten}: vedi gli scambi` : eaten;
     return `${eaten}${extra}: cosa hai preso`;
   }
   function hasSubs(it: PlanItem) {
@@ -58,11 +60,16 @@
   }
 </script>
 
-<article class:hero class:compact={!hero} class:open={open || free} class:done style="--accent: {SLOT_COLOR[meal.slot]}">
+<article class:hero class:compact={!hero} class:open={open || free || readonly} class:read={readonly} class:done style="--accent: {SLOT_COLOR[meal.slot]}">
   {#if hero}
     <div class="hero-head">
       <h2>{SLOT_LABEL[meal.slot]}</h2>
       <span class="now">adesso</span>
+    </div>
+  {:else if readonly}
+    <div class="read-head">
+      <h2>{SLOT_LABEL[meal.slot]}</h2>
+      <span class="kcal num">{fmtNumber(eatenKcal)} kcal</span>
     </div>
   {:else}
     <button class="head" onclick={() => (open = !open)} aria-expanded={open}>
@@ -70,7 +77,7 @@
         {#if done}<CheckCircle size={24} weight="fill" />{:else}<Circle size={24} />{/if}
       </span>
       <span class="grow">
-        <span class="slot">{SLOT_LABEL[meal.slot]}{#if skipped}<span class="skip">saltato?</span>{/if}{#if free}<span class="skip">pasto libero</span>{/if}</span>
+        <span class="slot">{SLOT_LABEL[meal.slot]}{#if skipped}<span class="skip">non segnato</span>{/if}{#if free}<span class="skip">pasto libero</span>{/if}</span>
         <span class="title">{free ? freeItems.map((e) => e.name).join(', ') || 'Cosa hai mangiato?' : foods}</span>
       </span>
       <span class="kcal num">{fmtNumber(free ? freeKcal : eatenKcal)} kcal</span>
@@ -79,7 +86,7 @@
   {/if}
 
   {#if expanded}
-    <div class="body" transition:slide={{ duration: hero ? 0 : 260, easing: cubicOut }}>
+    <div class="body" transition:slide={{ duration: hero || readonly ? 0 : 260, easing: cubicOut }}>
       {#if free}
         <FreeMealBody planTitle={foods} items={freeItems} onAdd={() => onAddToFree?.()} onUnfree={() => onUnfree?.()} onOpen={(id) => onOpenExtra?.(id)} />
       {:else}
@@ -88,7 +95,7 @@
             {@const f = e?.foodId ?? it.foodId}
             {@const g = e?.grams ?? it.grams}
             <li>
-              <button class="item" class:sub={hasSubs(it)} onclick={() => onItem(i)} aria-label={itemLabel(it, e)}>
+              <button class="item" class:sub={hasSubs(it)} disabled={readonly && !hasSubs(it)} onclick={() => onItem(i)} aria-label={itemLabel(it, e)}>
                 <span class="name">
                   <span class:chg={e?.swapped}>{name(f)}{#if e?.swapped}<span class="tag">scambio</span>{:else if hasSubs(it)} <ArrowsLeftRight size={15} weight="bold" />{/if}</span>
                   {#if e?.swapped}<small>al posto di {name(it.foodId)} {fmtNumber(it.grams)} g</small>
@@ -100,11 +107,13 @@
           {/each}
         </ul>
 
-        <button class="btn" class:tinted={done} onclick={onToggle}>
-          {#if done}Annulla «fatto»{:else}<Check size={20} weight="bold" /> Fatto{/if}
-        </button>
-        {#if onFree}<button class="link free-link" onclick={onFree}>Pasto libero</button>{/if}
-        {#if hero || modified}<p class="foot num">{fmtNumber(eatenKcal)} kcal stimate{#if modified}&nbsp;(piano {fmtNumber(kcal)}){/if}</p>{/if}
+        {#if !readonly}
+          <button class="btn" class:tinted={done} onclick={onToggle}>
+            {#if done}Annulla «fatto»{:else}<Check size={20} weight="bold" /> Fatto{/if}
+          </button>
+          {#if onFree}<button class="link free-link" onclick={onFree}>Pasto libero</button>{/if}
+        {/if}
+        {#if !readonly && (hero || modified)}<p class="foot num">{fmtNumber(eatenKcal)} kcal stimate{#if modified}&nbsp;(piano {fmtNumber(kcal)}){/if}</p>{/if}
       {/if}
     </div>
   {/if}
@@ -125,13 +134,16 @@
   h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.025em; margin: 0; color: var(--accent); }
   .now { font-size: 13px; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 4px 10px; border-radius: 999px; }
 
+  /* Giorno futuro: il nome del pasto è il titolo della scheda, si scorre leggendo. */
+  .read-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 16px 4px; }
+  .read-head h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; }
   .head { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 14px; background: none; border: 0; text-align: left; color: inherit; }
   .dot { display: flex; color: var(--on-hour); }
   .open .dot { color: var(--accent); }
   .grow { flex: 1; min-width: 0; }
-  .slot { display: block; font-size: 13px; font-weight: 700; color: var(--on-hour-2); }
+  .slot { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: 13px; font-weight: 700; color: var(--on-hour-2); }
   .open .slot { color: var(--accent); }
-  .skip { margin-left: 8px; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--veil-2); color: var(--on-hour); }
+  .skip { white-space: nowrap; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--veil-2); color: var(--on-hour); }
   .open .skip { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
   .title { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .kcal { font-size: 14px; color: var(--on-hour-2); }
@@ -141,10 +153,13 @@
   .open .caret { color: var(--ink-3); }
   .caret.up { transform: rotate(180deg); }
   .compact .body { padding: 0 16px 16px; }
+  .read .body { padding-bottom: 6px; }
+  .read .items { margin-bottom: 0; }
 
   .items { list-style: none; margin: 0 0 10px; padding: 0; }
   .item { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; min-height: 48px; padding: 10px 0; border: 0; background: none; text-align: left; border-top: 1px solid var(--sep); font-size: 17px; color: var(--ink); }
   li:first-child .item { border-top: 0; }
+  .item:disabled { opacity: 1; color: var(--ink); }
   .name { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
   .name > span { display: inline-flex; align-items: center; gap: 6px; }
   .name small { font-size: 13px; font-weight: 600; color: var(--ink-2); margin-top: 2px; }

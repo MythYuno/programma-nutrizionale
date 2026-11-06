@@ -9,6 +9,7 @@
   import { dayBalance, FREE_MEALS_PER_WEEK, weekSummary } from '../domain/extras';
   import { eatenState } from '../state/eaten.svelte';
   import { dayMonth, shortDate } from '../ui/format';
+  import { swipe } from '../ui/swipe';
   import DayStrip from '../ui/DayStrip.svelte';
 
   let { week }: { week?: string } = $props();
@@ -33,34 +34,20 @@
   const legacy = $derived([...app.legacyWeeks].sort((a, b) => b.week.localeCompare(a.week)));
 
   const goWeek = (n: number) => router.go('settimana/' + addDays(mondayOf(anchor), n * 7));
-
-  // Swipe orizzontale per cambiare settimana; le frecce restano per chi non lo usa.
-  let start: { x: number; y: number } | null = null;
-  function onTouchStart(e: TouchEvent) {
-    const t = e.touches[0];
-    start = t ? { x: t.clientX, y: t.clientY } : null;
-  }
-  function onTouchEnd(e: TouchEvent) {
-    const t = e.changedTouches[0];
-    if (!start || !t) return;
-    const dx = t.clientX - start.x, dy = t.clientY - start.y;
-    start = null;
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 2) return;
-    if (dx > 0) goWeek(-1);
-    else if (!isCurrent) goWeek(1);
-  }
 </script>
 
-<main class="screen" ontouchstart={onTouchStart} ontouchend={onTouchEnd}>
+<main class="screen" {@attach swipe(goWeek)}>
   <div class="title-row">
     <h1 class="large-title">Settimana</h1>
-    <div class="nav">
+    <div class="title-nav">
       <button class="icon-btn" aria-label="Settimana precedente" onclick={() => goWeek(-1)}><CaretLeft size={22} weight="bold" /></button>
-      <button class="icon-btn" aria-label="Settimana successiva" disabled={isCurrent} onclick={() => goWeek(1)}><CaretRight size={22} weight="bold" /></button>
+      <button class="icon-btn" aria-label="Settimana successiva" onclick={() => goWeek(1)}><CaretRight size={22} weight="bold" /></button>
     </div>
   </div>
   <p class="subtitle">Settimana {isoWeek(anchor).split('-W')[1]}, dal {dayMonth(dates[0]!)} al {dayMonth(dates[6]!)}</p>
 
+  <!-- Una settimana che deve ancora cominciare non ha niente da contare. -->
+  {#if past.length}
   <div class="adherence">
     <div class="big num">{doneCount}<span>di {totalCount} pasti {isCurrent ? 'finora' : 'nella settimana'}</span></div>
     <div class="bar"><i style="width:{totalCount ? (doneCount / totalCount) * 100 : 0}%"></i></div>
@@ -76,6 +63,7 @@
       <b class="num">{summary.offPlanKcal ? `${fmtNumber(summary.offPlanKcal)} kcal in ${summary.offPlanDays} ${summary.offPlanDays === 1 ? 'giorno' : 'giorni'}` : 'nessuno'}</b>
     </div>
   </div>
+  {/if}
 
   <div class="group">
     {#each rows as r (r.date)}
@@ -104,8 +92,6 @@
 </main>
 
 <style>
-  .title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .nav { display: flex; gap: 8px; }
   .adherence { padding: 0 4px 18px; }
   .big { font-size: 40px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
   .big span { font-size: 15px; font-weight: 600; letter-spacing: 0; color: var(--on-hour-2); margin-left: 8px; }

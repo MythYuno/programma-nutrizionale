@@ -14,8 +14,8 @@ Rifiutato di proposito: schede bianche su grigio, colori di sistema iOS,
 anelli di avanzamento, etichette in maiuscolo sopra i titoli, metafore a tema.
 
 ## Colore
-`App.svelte` imposta `data-hour` su `<html>` con la fascia del prossimo pasto
-non fatto di oggi (a giornata finita: `cena`). Ogni fascia definisce:
+`App.svelte` imposta `data-hour` su `<html>` con la fascia del pasto di adesso
+(a giornata finita: `cena`). Ogni fascia definisce:
 
 | Fascia | Fondo chiaro | Testo sul fondo | Fondo scuro | Colore sulle schede (chiaro / scuro) |
 |---|---|---|---|---|
@@ -86,6 +86,22 @@ settimana) va sotto il titolo, in `.subtitle`.
 - Cambiare scambio o grammi non segna il pasto come fatto.
 - `ui/BalanceBar.svelte` senza piano mostra solo il totale; l'etichetta per
   VoiceOver dice i numeri per esteso.
+
+## Il pasto dell'ora e gli altri giorni (novembre 2026)
+- Il pasto di adesso è il primo non segnato a partire dalla fascia dell'ora e
+  dall'ultimo pasto segnato, quale dei due viene dopo. Fasce in
+  `domain/schedule.ts`: colazione fino alle 10, spuntino fino alle 12, pranzo
+  fino alle 15:30, spuntino fino alle 18:30, poi cena. L'ora si rilegge solo
+  alla riapertura: il pasto aperto non cambia mentre lo si legge.
+- I pasti passati e non segnati hanno la pillola «non segnato», mai «saltato»:
+  non averlo segnato non vuol dire non averlo mangiato.
+- Titolo con frecce ‹ › e scorrimento di lato (`ui/swipe.ts`) tra i giorni;
+  «Oggi», «Domani», «Ieri», poi il nome del giorno. Il ritorno porta alla
+  settimana di quel giorno.
+- Un giorno futuro si legge soltanto: schede tutte aperte con il nome del pasto
+  a 19/800, niente «Fatto», «Pasto libero» né bilancio; il totale stimato sta
+  nel sottotitolo. Il foglio mostra gli scambi senza registrare.
+- Settimana va anche in avanti; una settimana non cominciata non ha conteggi.
 
 ## Icona
 «Mela-agenda» in 3D lucido (scelta dell'utente il 28/10/2026): una mela verde
