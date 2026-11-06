@@ -4,6 +4,7 @@ import { db } from '../db/schema';
 import { app } from '../state/app.svelte';
 import { editor } from '../state/editor.svelte';
 import { extrasState } from '../state/extras.svelte';
+import { eatenState } from '../state/eaten.svelte';
 import { toast } from '../state/toast.svelte';
 import { EXTRAS_CATALOG } from '../domain/extras-catalog';
 import DayView from './DayView.svelte';
@@ -284,10 +285,45 @@ describe('Scambi e grammi reali', () => {
 
   it('accetta i grammi con la virgola e torna al piano', async () => {
     await openManzo();
-    await fireEvent.input(screen.getByLabelText('Grammi mangiati'), { target: { value: '180,5' } });
+    const field = screen.getByLabelText('Grammi mangiati');
+    await fireEvent.input(field, { target: { value: '180,5' } });
+    await fireEvent.change(field);
     await waitFor(async () => expect(await db.itemLogs.get([DATE, 'cena', 0])).toMatchObject({ foodId: 'manzo-magro', grams: 180.5 }));
     await fireEvent.click(screen.getByRole('button', { name: 'Torna al piano' }));
     await waitFor(async () => expect(await db.itemLogs.count()).toBe(0));
+  });
+
+  it('cancellando il campo non salva i valori di passaggio', async () => {
+    await openManzo();
+    const field = screen.getByLabelText('Grammi mangiati');
+    for (const value of ['22', '2', '']) await fireEvent.input(field, { target: { value } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Fine' }));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(await db.itemLogs.count()).toBe(0);
+    await fireEvent.click(screen.getByRole('button', { name: 'Manzo magro, 220 grammi: cosa hai preso' }));
+    expect(screen.getByLabelText('Grammi mangiati')).toHaveValue('220');
+  });
+
+  it('chiudendo il foglio salva i grammi scritti anche senza uscire dal campo', async () => {
+    await openManzo();
+    await fireEvent.input(screen.getByLabelText('Grammi mangiati'), { target: { value: '180,5' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Fine' }));
+    await waitFor(async () => expect((await db.itemLogs.get([DATE, 'cena', 0]))?.grams).toBe(180.5));
+  });
+
+  it('uno scambio tolto dal piano non resta scelto nel foglio', async () => {
+    await eatenState.set(DATE, 'cena', 0, { foodId: 'manzo-magro', grams: 220, subs: [] }, 'riso', 90);
+    await openManzo();
+    expect(screen.getByRole('radio', { name: /Come da piano/ })).toBeChecked();
+    expect(screen.getByLabelText('Grammi mangiati')).toHaveValue('220');
+    expect(screen.queryByRole('button', { name: 'Torna al piano' })).not.toBeInTheDocument();
+  });
+
+  it('VoiceOver legge quello che si è preso, non il piano', async () => {
+    await openManzo();
+    await fireEvent.click(screen.getByRole('radio', { name: /Pollo/ }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Fine' }));
+    expect(screen.getByRole('button', { name: 'Pollo, 253 grammi, scambio al posto di Manzo magro 220 grammi: cosa hai preso' })).toBeInTheDocument();
   });
 
   it('i pulsanti − e + cambiano i grammi di 5', async () => {

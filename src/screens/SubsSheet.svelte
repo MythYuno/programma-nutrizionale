@@ -5,13 +5,14 @@
 </script>
 
 <script lang="ts">
+  import { untrack } from 'svelte';
   import Minus from 'phosphor-svelte/lib/Minus';
   import Plus from 'phosphor-svelte/lib/Plus';
   import Sheet from '../ui/Sheet.svelte';
   import Segmented from '../ui/Segmented.svelte';
   import { SLOT_LABEL } from '../domain/types';
   import { fmtDecimal, fmtGrams } from '../domain/nutrition';
-  import { choiceGrams } from '../domain/eaten';
+  import { choiceGrams, validLog } from '../domain/eaten';
   import { parseAmount } from '../domain/extras';
   import { ALTERNATIVE_SOURCES, alternativesFor } from '../domain/substitutions';
   import { app } from '../state/app.svelte';
@@ -27,12 +28,13 @@
   let last = $state<SubsTarget | null>(null);
 
   const name = (id: string) => app.foodIndex.get(id)?.name ?? 'Alimento sconosciuto';
-  const log = $derived(last ? eatenState.forDate(last.date).find((l) => l.slot === last!.slot && l.index === last!.index && l.planFoodId === last!.item.foodId) : undefined);
+  const log = $derived(last ? validLog(last.item, eatenState.forDate(last.date), last.date, last.slot, last.index) : undefined);
   const foodId = $derived(last ? (log?.foodId ?? last.item.foodId) : '');
   const grams = $derived(last ? (log?.grams ?? last.item.grams) : 0);
   const options = $derived(last ? [{ foodId: last.item.foodId, grams: last.item.grams }, ...last.item.subs] : []);
-  // Il campo dei grammi segue la scelta; scrivendoci lo si sovrascrive.
-  let gramsText = $derived(fmtDecimal(grams));
+  // Quello che si sta scrivendo nel campo dei grammi: vale solo a fine scrittura,
+  // così cancellando «220» non si salvano 22 e 2 di passaggio.
+  let typed = $state<string | null>(null);
   const alts = $derived(last ? alternativesFor(name(last.item.foodId), last.item.grams) : []);
 
   $effect(() => {
@@ -43,7 +45,10 @@
     }
   });
   $effect(() => {
-    if (!open) target = null;
+    if (!open) {
+      untrack(commitTyped); // «Fine» su iPhone non toglie il fuoco dal campo
+      target = null;
+    }
   });
 
   function save(f: string, g: number) {
@@ -51,14 +56,23 @@
     eatenState.set(last.date, last.slot, last.index, last.item, f, g);
   }
   function choose(f: string) {
+    typed = null;
     save(f, choiceGrams(last!.item, f) ?? grams);
   }
-  function typed(text: string) {
-    gramsText = text;
-    const g = parseAmount(text);
+  // Campo vuoto o scritto male: restano i grammi di prima.
+  function commitTyped() {
+    const g = typed === null ? null : parseAmount(typed);
+    typed = null;
     if (g !== null && g > 0) save(foodId, g);
   }
-  const step = (d: number) => save(foodId, Math.max(5, Math.round((grams + d) / 5) * 5));
+  function step(d: number) {
+    commitTyped();
+    save(foodId, Math.max(5, Math.round((grams + d) / 5) * 5));
+  }
+  function backToPlan() {
+    typed = null;
+    eatenState.reset(last!.date, last!.slot, last!.index);
+  }
 </script>
 
 <Sheet bind:open title={last ? `${name(last.item.foodId)} · ${fmtGrams(last.item.grams)}` : ''}>
@@ -84,12 +98,12 @@
       <div class="grams">
         <button class="step" aria-label="5 grammi in meno" disabled={grams <= 5} onclick={() => step(-5)}><Minus size={20} weight="bold" /></button>
         <label class="gv">
-          <span class="field-row"><input inputmode="decimal" value={gramsText} oninput={(e) => typed(e.currentTarget.value)} aria-label="Grammi mangiati" autocomplete="off" /><i>g</i></span>
+          <span class="field-row"><input inputmode="decimal" value={typed ?? fmtDecimal(grams)} oninput={(e) => (typed = e.currentTarget.value)} onchange={commitTyped} onkeydown={(e) => e.key === 'Enter' && e.currentTarget.blur()} enterkeyhint="done" aria-label="Grammi mangiati" autocomplete="off" /><i>g</i></span>
           <small>di {name(foodId).toLowerCase()} · {fmtGrams(choiceGrams(last.item, foodId) ?? last.item.grams)} previsti</small>
         </label>
         <button class="step" aria-label="5 grammi in più" onclick={() => step(5)}><Plus size={20} weight="bold" /></button>
       </div>
-      {#if log}<button class="btn plain" onclick={() => eatenState.reset(last!.date, last!.slot, last!.index)}>Torna al piano</button>{/if}
+      {#if log}<button class="btn plain" onclick={backToPlan}>Torna al piano</button>{/if}
     {:else}
       <div class="group">
         {#each alts as a (a.name)}

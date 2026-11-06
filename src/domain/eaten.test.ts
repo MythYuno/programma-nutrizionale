@@ -42,6 +42,10 @@ describe('alimenti mangiati', () => {
     expect(e[0]!.foodId).toBe('manzo-magro');
   });
 
+  it('ignora tutto il log se quello scambio non è più nel piano: i suoi grammi non valgono per un altro alimento', () => {
+    expect(eatenItems(cena, [log({ foodId: 'riso', grams: 90 })], D)).toEqual(eatenItems(cena, [], D));
+  });
+
   it('i macro del pasto usano quello che si è mangiato', () => {
     const logs = [log({ foodId: 'pollo', grams: 253 })];
     const pollo = SEED_FOODS.find((f) => f.id === 'pollo')!;

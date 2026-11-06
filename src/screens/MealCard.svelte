@@ -46,6 +46,13 @@
   function name(id: string) {
     return app.foodIndex.get(id)?.name ?? 'Alimento sconosciuto';
   }
+  // VoiceOver deve sentire quello che si vede: ciò che si è preso, non il piano.
+  function itemLabel(it: PlanItem, e: EatenItem | null) {
+    const eaten = `${name(e?.foodId ?? it.foodId)}, ${e?.grams ?? it.grams} grammi`;
+    const extra = e?.swapped ? `, scambio al posto di ${name(it.foodId)} ${it.grams} grammi`
+      : e?.changed ? `, ${it.grams} grammi nel piano` : '';
+    return `${eaten}${extra}: cosa hai preso`;
+  }
   function hasSubs(it: PlanItem) {
     return it.subs.length > 0 || alternativesFor(name(it.foodId), it.grams).length > 0;
   }
@@ -81,7 +88,7 @@
             {@const f = e?.foodId ?? it.foodId}
             {@const g = e?.grams ?? it.grams}
             <li>
-              <button class="item" class:sub={hasSubs(it)} onclick={() => onItem(i)} aria-label="{name(it.foodId)}, {it.grams} grammi: cosa hai preso">
+              <button class="item" class:sub={hasSubs(it)} onclick={() => onItem(i)} aria-label={itemLabel(it, e)}>
                 <span class="name">
                   <span class:chg={e?.swapped}>{name(f)}{#if e?.swapped}<span class="tag">scambio</span>{:else if hasSubs(it)} <ArrowsLeftRight size={15} weight="bold" />{/if}</span>
                   {#if e?.swapped}<small>al posto di {name(it.foodId)} {fmtNumber(it.grams)} g</small>
