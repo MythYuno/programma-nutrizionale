@@ -52,3 +52,17 @@ export function parseKg(input: string): number | null {
 export function fmtKg(kg: number): string {
   return kg.toLocaleString('it-IT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
+
+export interface MonthGroup { month: string; items: Weight[] } // month = YYYY-MM
+
+// Lo storico diviso per mese, dalla pesata più recente.
+export function monthGroups(ws: readonly Weight[]): MonthGroup[] {
+  const groups: MonthGroup[] = [];
+  for (const w of sortByDate(ws).reverse()) {
+    const month = w.date.slice(0, 7);
+    const last = groups.at(-1);
+    if (last?.month === month) last.items.push(w);
+    else groups.push({ month, items: [w] });
+  }
+  return groups;
+}

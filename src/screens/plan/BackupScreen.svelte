@@ -62,7 +62,7 @@
     await app.savePlan(plan);
     editor.reset();
     resetOpen = false;
-    message = 'Piano di esempio ripristinato.';
+    message = 'Piano originale ripristinato.';
   }
 
   const fmtDate = (iso: string) => new Date(iso).toLocaleString('it-IT', { dateStyle: 'medium', timeStyle: 'short' });
@@ -85,9 +85,9 @@
     {#if app.settings.lastBackupAt}Ultimo backup: {fmtDate(app.settings.lastBackupAt)}.{:else}Non hai ancora fatto un backup.{/if}
   </p>
 
-  <h2 class="section-title">Archiviazione</h2>
+  <h2 class="section-title">Spazio sul telefono</h2>
   <div class="group">
-    <div class="row"><span class="grow">Archiviazione persistente</span><span class="value">{app.persisted ? 'Attiva' : 'Non concessa'}</span></div>
+    <div class="row"><span class="grow">Dati protetti dalla pulizia</span><span class="value">{app.persisted ? 'Sì' : 'No'}</span></div>
   </div>
   <p class="section-foot">
     {#if app.persisted}Il sistema non cancellerà i dati per liberare spazio.{:else}Il sistema potrebbe cancellare i dati se manca spazio o se non usi l'app per settimane: aggiungila alla schermata Home e tieni un backup.{/if}
@@ -95,7 +95,7 @@
 
   <h2 class="section-title">Piano</h2>
   <div class="group">
-    <button class="row danger" onclick={() => (resetOpen = true)}>Ripristina il piano di esempio</button>
+    <button class="row danger" onclick={() => (resetOpen = true)}>Ripristina il piano originale</button>
   </div>
   <p class="section-foot">Crea un nuovo piano dal piano originale del Dott. Occhino e lo rende attivo. Pesate e pasti fatti restano.</p>
 </main>
@@ -107,6 +107,7 @@
       <div class="row"><span class="grow">Piani</span><span class="value">{pending.summary.plans}</span></div>
       <div class="row"><span class="grow">Alimenti</span><span class="value">{pending.summary.foods}</span></div>
       <div class="row"><span class="grow">Pasti fatti</span><span class="value">{pending.summary.mealLogs}</span></div>
+      <div class="row"><span class="grow">Scambi e grammi segnati</span><span class="value">{pending.summary.itemLogs}</span></div>
       <div class="row"><span class="grow">Pesate</span><span class="value">{pending.summary.weights}</span></div>
       <div class="row"><span class="grow">Pasti liberi</span><span class="value">{pending.summary.freeMeals}</span></div>
       <div class="row"><span class="grow">Voci fuori piano</span><span class="value">{pending.summary.extras}</span></div>
@@ -116,7 +117,7 @@
   {/if}
 </Sheet>
 
-<Sheet bind:open={resetOpen} title="Ripristinare il piano di esempio?">
+<Sheet bind:open={resetOpen} title="Ripristinare il piano originale?">
   <p>Il piano attivo diventa quello originale. Le modifiche non salvate nell'editor vanno perse.</p>
   <button class="btn" onclick={resetSample}>Ripristina</button>
 </Sheet>

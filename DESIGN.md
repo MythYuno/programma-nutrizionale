@@ -63,8 +63,9 @@ settimana) va sotto il titolo, in `.subtitle`.
 - `ui/BalanceBar.svelte`: il conto del giorno sul fondo. Parte piena = piano
   fatto, parte rigata (`--hatch`) = sgarri e pasto libero, tacca = kcal del
   piano. Mai rosso: lo scarto è un'informazione, non un rimprovero.
-- `ui/Fab.svelte`: "Ho mangiato altro", fisso in basso a destra sopra la tab
-  bar, scheda bianca col testo nel colore dell'ora. La pagina ha spazio sotto.
+- "Ho mangiato altro": pulsante bianco sul fondo subito sotto il conto del
+  giorno (`.btn.on-ground`, come «Pesata»). Era fisso in basso a destra, ma
+  copriva la prima riga dei pasti: tolto a novembre 2026.
 - `ui/FoodIcon.svelte`: icone 3D Fluent Emoji (MIT) in `public/emoji/`, solo
   per le voci di cibo; tutto il resto resta Phosphor.
 - Foglio "Ho mangiato altro" (`screens/extras/AddExtraSheet.svelte`): una sola
@@ -102,6 +103,24 @@ settimana) va sotto il titolo, in `.subtitle`.
   a 19/800, niente «Fatto», «Pasto libero» né bilancio; il totale stimato sta
   nel sottotitolo. Il foglio mostra gli scambi senza registrare.
 - Settimana va anche in avanti; una settimana non cominciata non ha conteggi.
+
+## Ordine (novembre 2026)
+- Oggi: le righe chiuse dei pasti sono tutte alte uguali (fascia e pillola su
+  una riga, alimenti sulla seconda) e non hanno le kcal, che compaiono nel piede
+  quando la riga si apre. Il conto è a 24/800 con «kcal»; la legenda compare
+  solo se c'è qualcosa fuori piano.
+- Settimana: ogni giorno è una griglia, nome e numeri sopra e striscia sotto a
+  tutta larghezza, così le striscette sono allineate. Pasto libero e sgarri in
+  una sola riga velata con due numeri. Date con le preposizioni giuste
+  («dal 2 all'8 nov», «al 1° nov»).
+- Piano: apre sul giorno di oggi; «Alimenti» e «Backup» sono pillole sotto il
+  titolo (con «Backup da fare» e un punto quando serve); il nome del piano sta in
+  fondo; nelle righe solo i grammi.
+- Foglio «cosa hai preso»: il titolo è il solo alimento; il campo dei grammi ha
+  il bordo nel colore del pasto solo mentre si scrive.
+- Peso: storico diviso per mese (anno solo se diverso), le ultime 14 pesate
+  subito e il resto con «Mostra tutte le N pesate».
+- Separatori delle righe rientrati da entrambi i lati, ovunque.
 
 ## Icona
 «Mela-agenda» in 3D lucido (scelta dell'utente il 28/10/2026): una mela verde

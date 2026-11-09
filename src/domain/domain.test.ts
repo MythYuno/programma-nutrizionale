@@ -3,8 +3,9 @@ import { SEED_FOODS, findSeedFoodId } from './catalog';
 import { fmtGrams, indexFoods, mealMacro, portionMacro, rounded, sumMacro } from './nutrition';
 import { addDays, isoWeek, mondayOf, nextMeal, skippedMeals, slotAt, weekDates, weekdayIndex } from './schedule';
 import { alternativesFor, roundTo5 } from './substitutions';
-import { inRange, parseKg, trailingAverage, upsertWeight, weeklyChange } from './weight';
-import { stripRecipes, validatePlan } from './validate';
+import { inRange, monthGroups, parseKg, trailingAverage, upsertWeight, weeklyChange } from './weight';
+import { weekRange } from '../ui/format';
+import { repeatedSub, stripRecipes, validatePlan } from './validate';
 import type { Meal, Plan } from './types';
 
 const foods = indexFoods(SEED_FOODS);
@@ -213,6 +214,18 @@ describe('validate', () => {
     expect(msgs).toContain('Giovedì, Pranzo: fascia ripetuta.');
     expect(msgs).toContain('Giovedì, Pranzo: nessun alimento.');
   });
+
+  it('trova lo scambio ripetuto o uguale all\'alimento', () => {
+    expect(repeatedSub('riso', [{ foodId: 'pane-integrale' }, { foodId: 'patate' }])).toBeNull();
+    expect(repeatedSub('riso', [{ foodId: 'pane-integrale' }, { foodId: 'pane-integrale' }])).toBe('pane-integrale');
+    expect(repeatedSub('riso', [{ foodId: 'riso' }])).toBe('riso');
+  });
+
+  it('segnala gli scambi doppi in un piano', () => {
+    const p = ok();
+    p.days[0]!.meals[0]!.items[0]!.subs = [{ foodId: 'patate', grams: 300 }, { foodId: 'patate', grams: 300 }];
+    expect(validatePlan(p, SEED_FOODS).map((i) => i.message)).toEqual(['Lunedì, Pranzo: uno scambio è ripetuto.']);
+  });
 });
 
 describe('catalog', () => {
@@ -235,5 +248,22 @@ describe('piano senza ricette', () => {
       days: [{ meals: [{ slot: 'pranzo', title: 'Pasta caprese', note: 'Basilico', items: [{ foodId: 'riso', grams: 80, subs: [{ foodId: 'pane-integrale', grams: 100 }] }] }] }],
     } as unknown as Plan;
     expect(stripRecipes(old).days[0]!.meals[0]).toEqual({ slot: 'pranzo', items: [{ foodId: 'riso', grams: 80, subs: [{ foodId: 'pane-integrale', grams: 100 }] }] });
+  });
+});
+
+describe('ordine delle schermate', () => {
+  it('raggruppa le pesate per mese, dalla più recente', () => {
+    const groups = monthGroups([{ date: '2026-10-30', kg: 79 }, { date: '2026-11-05', kg: 78.5 }, { date: '2026-11-02', kg: 78.8 }]);
+    expect(groups.map((g) => g.month)).toEqual(['2026-11', '2026-10']);
+    expect(groups[0]!.items.map((w) => w.date)).toEqual(['2026-11-05', '2026-11-02']);
+  });
+
+  it('dice i giorni della settimana con le preposizioni giuste', () => {
+    expect(weekRange('2026-11-02', '2026-11-08')).toBe("dal 2 all'8 nov");
+    expect(weekRange('2026-10-26', '2026-11-01')).toBe('dal 26 ott al 1° nov');
+    expect(weekRange('2026-06-08', '2026-06-14')).toBe("dall'8 al 14 giu");
+    expect(weekRange('2026-12-28', '2027-01-03')).toBe('dal 28 dic al 3 gen');
+    expect(weekRange('2026-06-01', '2026-06-07')).toBe('dal 1° al 7 giu');
+    expect(weekRange('2026-05-11', '2026-05-17')).toBe("dall'11 al 17 mag");
   });
 });

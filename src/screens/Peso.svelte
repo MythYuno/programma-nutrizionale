@@ -4,13 +4,13 @@
   import TrendDown from 'phosphor-svelte/lib/TrendDown';
   import TrendUp from 'phosphor-svelte/lib/TrendUp';
   import { app } from '../state/app.svelte';
-  import { fmtKg, inRange, parseKg, sortByDate, trailingAverage, trend, weeklyChange, type Range } from '../domain/weight';
+  import { fmtKg, inRange, monthGroups, parseKg, sortByDate, trailingAverage, trend, weeklyChange, type Range } from '../domain/weight';
   import Segmented from '../ui/Segmented.svelte';
   import Sheet from '../ui/Sheet.svelte';
   import Toast from '../ui/Toast.svelte';
   import { toast } from '../state/toast.svelte';
   import type { Weight } from '../domain/types';
-  import { shortDate } from '../ui/format';
+  import { monthTitle, shortDate } from '../ui/format';
   import WeightChart from './WeightChart.svelte';
 
   let range = $state<Range>('3M');
@@ -26,6 +26,10 @@
   const shown = $derived(inRange(app.weights, range, app.today));
   const points = $derived(trend(app.weights).filter((p) => shown.some((w) => w.date === p.date)));
   const history = $derived(sortByDate(app.weights).reverse());
+  // Le ultime due settimane subito, il resto a richiesta, diviso per mese.
+  const RECENT = 14;
+  let showAll = $state(false);
+  const months = $derived(monthGroups(showAll ? history : history.slice(0, RECENT)));
 
   function openAdd() {
     const last = history[0];
@@ -104,17 +108,23 @@
       <h2 class="section-title">Storico</h2>
       <button class="ground-link" aria-pressed={editingHistory} onclick={() => (editingHistory = !editingHistory)}>{editingHistory ? 'Fine' : 'Modifica'}</button>
     </div>
-    <div class="group">
-      {#each history as w (w.date)}
-        <div class="row">
-          <span class="grow">{shortDate(w.date)} <span class="muted small">{w.date.slice(0, 4) !== app.today.slice(0, 4) ? w.date.slice(0, 4) : ''}</span></span>
-          <b class="num">{fmtKg(w.kg)} kg</b>
-          {#if editingHistory}
-            <button class="del" aria-label="Elimina pesata del {shortDate(w.date)}" onclick={() => remove(w)}><Trash size={18} /></button>
-          {/if}
-        </div>
-      {/each}
-    </div>
+    {#each months as m (m.month)}
+      <h3 class="month">{monthTitle(m.month, app.today)}</h3>
+      <div class="group">
+        {#each m.items as w (w.date)}
+          <div class="row">
+            <span class="grow">{shortDate(w.date)}</span>
+            <b class="num">{fmtKg(w.kg)} kg</b>
+            {#if editingHistory}
+              <button class="del" aria-label="Elimina pesata del {shortDate(w.date)}" onclick={() => remove(w)}><Trash size={18} /></button>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    {/each}
+    {#if !showAll && history.length > RECENT}
+      <button class="btn plain more" onclick={() => (showAll = true)}>Mostra tutte le {history.length} pesate</button>
+    {/if}
   {/if}
 </main>
 
@@ -153,6 +163,9 @@
   .add { margin: 0 0 14px; }
   .hist-head { display: flex; align-items: baseline; justify-content: space-between; margin-right: 4px; }
   .hist-head .ground-link { font-size: 15px; }
+  .month { font-size: 15px; font-weight: 700; color: var(--on-hour-2); margin: 16px 4px 8px; }
+  .hist-head + .month { margin-top: 0; }
+  .more { color: var(--on-hour); }
   .del { border: 0; background: none; color: var(--danger); padding: 8px; margin-right: -8px; display: flex; }
   .lab { display: block; font-size: 14px; font-weight: 600; color: var(--ink-2); margin: 12px 4px 6px; }
   .big-field { font-size: 30px; font-weight: 750; }

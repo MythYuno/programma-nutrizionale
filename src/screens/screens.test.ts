@@ -8,9 +8,11 @@ import { eatenState } from '../state/eaten.svelte';
 import { toast } from '../state/toast.svelte';
 import { EXTRAS_CATALOG } from '../domain/extras-catalog';
 import DayView from './DayView.svelte';
+import MealCard from './MealCard.svelte';
 import Peso from './Peso.svelte';
 import Settimana from './Settimana.svelte';
 import PlanEditor from './plan/PlanEditor.svelte';
+import { addDays as addDaysIso } from '../domain/schedule';
 
 // Un mercoledì: il piano v1 ha "Farro e lenticchie tiepido" a pranzo.
 const DATE = '2026-10-28';
@@ -166,6 +168,13 @@ describe('Pasto libero', () => {
     });
   });
 
+  it('«Al posto di» nomina il piano, non lo scambio scelto prima', () => {
+    const meal = { slot: 'cena' as const, items: [{ foodId: 'manzo-magro', grams: 220, subs: [{ foodId: 'pollo', grams: 253 }] }] };
+    const eaten = [{ index: 0, foodId: 'pollo', grams: 253, planFoodId: 'manzo-magro', planGrams: 220, swapped: true, changed: false }];
+    render(MealCard, { meal, done: false, free: true, eaten, onToggle: () => {}, onItem: () => {} });
+    expect(screen.getByText('Al posto di: Manzo magro')).toBeInTheDocument();
+  });
+
   it('avvisa se i pasti liberi della settimana sono più di uno', async () => {
     await extrasState.markFree('2026-10-27', 'cena');
     await extrasState.markFree(DATE, 'cena');
@@ -277,7 +286,7 @@ describe('Scambi e grammi reali', () => {
 
   it('segna lo scambio del medico e la scheda lo mostra', async () => {
     await openManzo();
-    expect(screen.getByRole('dialog', { name: 'Manzo magro · 220 g' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Manzo magro' })).toBeInTheDocument();
     await fireEvent.click(screen.getByRole('radio', { name: /Pollo/ }));
     await waitFor(async () => expect(await db.itemLogs.get([DATE, 'cena', 0])).toMatchObject({ foodId: 'pollo', grams: 253, planFoodId: 'manzo-magro' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Fine' }));
@@ -407,7 +416,7 @@ describe('Gli altri giorni', () => {
   it('nel giorno futuro il foglio fa vedere gli scambi ma non registra niente', async () => {
     render(DayView, { date: NEXT_WEDNESDAY });
     await fireEvent.click(screen.getByRole('button', { name: 'Manzo magro, 220 grammi: vedi gli scambi' }));
-    expect(screen.getByRole('dialog', { name: 'Manzo magro · 220 g' })).toHaveTextContent('Pollo');
+    expect(screen.getByRole('dialog', { name: 'Manzo magro' })).toHaveTextContent('Pollo');
     expect(screen.queryByRole('radio')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Grammi mangiati')).not.toBeInTheDocument();
     expect(await db.itemLogs.count()).toBe(0);
@@ -417,7 +426,7 @@ describe('Gli altri giorni', () => {
     render(DayView, { date: '2026-10-21' });
     await fireEvent.click(screen.getByRole('button', { name: /^Cena/ }));
     await fireEvent.click(screen.getByRole('button', { name: 'Manzo magro, 220 grammi: cosa hai preso' }));
-    expect(screen.getByRole('dialog', { name: 'Manzo magro · 220 g' })).not.toHaveTextContent('oggi');
+    expect(screen.getByRole('dialog', { name: 'Manzo magro' })).not.toHaveTextContent('oggi');
   });
 
   it('il ritorno porta alla settimana di quel giorno', async () => {
@@ -433,7 +442,54 @@ describe('Gli altri giorni', () => {
     cleanup();
     render(Settimana, { week: '2026-11-02' });
     expect(screen.queryByText(/di \d+ pasti/)).not.toBeInTheDocument();
-    expect(screen.queryByText('Pasto libero usato')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sgarri')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Mer 4/ })).toBeInTheDocument();
+  });
+});
+
+describe('Ordine delle schermate', () => {
+  it('Oggi: righe chiuse senza kcal, bilancio senza ripetizioni, «Ho mangiato altro» nella pagina', async () => {
+    render(DayView, { date: DATE });
+    const pranzo = screen.getByRole('button', { name: /^Pranzo/ });
+    expect(pranzo).not.toHaveTextContent('kcal');
+    expect(screen.getByRole('button', { name: /^Bilancio del giorno/ })).not.toHaveTextContent('Piano');
+    expect(screen.getByRole('main')).toContainElement(screen.getByRole('button', { name: 'Ho mangiato altro' }));
+    await fireEvent.click(pranzo);
+    expect(screen.getAllByText(/kcal stimate/)).toHaveLength(2); // il pasto di adesso e quello aperto
+  });
+
+  it('il bilancio a zero dice che non c\'è niente di segnato, senza tabella di zeri', async () => {
+    render(DayView, { date: DATE });
+    await fireEvent.click(screen.getByRole('button', { name: /^Bilancio del giorno/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Bilancio del giorno' });
+    expect(sheet).toHaveTextContent('Niente di segnato in questo giorno');
+    expect(sheet.querySelector('table')).toBeNull();
+  });
+
+  it('Settimana: date con le preposizioni giuste, fuori piano in una riga', () => {
+    render(Settimana, {});
+    expect(screen.getByText(/dal 26 ott al 1° nov/)).toBeInTheDocument();
+    expect(screen.getByText('Pasto libero')).toBeInTheDocument();
+    expect(screen.getByText('Sgarri')).toBeInTheDocument();
+  });
+
+  it('Piano: apre sul giorno di oggi, collegamenti in alto, righe con i soli grammi', () => {
+    editor.day = 0;
+    render(PlanEditor);
+    expect(screen.getByText('Mercoledì')).toBeInTheDocument();
+    const alimenti = screen.getByRole('link', { name: /^Alimenti/ });
+    const firstAdd = screen.getAllByRole('button', { name: 'Aggiungi alimento' })[0]!;
+    expect(alimenti.compareDocumentPosition(firstAdd) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Backup da fare' })).toBeInTheDocument();
+    expect(screen.queryAllByRole('button', { name: /g · \d+ kcal/ })).toHaveLength(0);
+  });
+
+  it('Peso: storico per mese, i più vecchi a richiesta', async () => {
+    for (let i = 0; i < 20; i++) await app.addWeight({ date: addDaysIso('2026-09-20', i * 2), kg: 79 });
+    render(Peso);
+    expect(screen.getByRole('heading', { name: 'Ottobre' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Settembre' })).not.toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('button', { name: 'Mostra tutte le 20 pesate' }));
+    expect(screen.getByRole('heading', { name: 'Settembre' })).toBeInTheDocument();
   });
 });

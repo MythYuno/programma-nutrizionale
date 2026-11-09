@@ -5,6 +5,7 @@
   import { fmtNumber, portionMacro, rounded } from '../../domain/nutrition';
   import { app } from '../../state/app.svelte';
   import { editor } from '../../state/editor.svelte';
+  import { repeatedSub } from '../../domain/validate';
   import Sheet from '../../ui/Sheet.svelte';
   import FoodPicker from './FoodPicker.svelte';
 
@@ -46,6 +47,8 @@
     const g = num(grams);
     if (!foodId) { error = 'Scegli un alimento.'; return; }
     if (!(g > 0)) { error = 'Inserisci i grammi.'; return; }
+    const dup = repeatedSub(foodId, subs);
+    if (dup) { error = dup === foodId ? `${name(dup)} è già l'alimento: non serve come scambio.` : `${name(dup)} è già tra gli scambi.`; return; }
     const cleanSubs: Portion[] = [];
     for (const s of subs) {
       const sg = num(s.grams);

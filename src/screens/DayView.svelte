@@ -15,7 +15,7 @@
   import { swipe } from '../ui/swipe';
   import DayStrip from '../ui/DayStrip.svelte';
   import BalanceBar from '../ui/BalanceBar.svelte';
-  import Fab from '../ui/Fab.svelte';
+  import Plus from 'phosphor-svelte/lib/Plus';
   import MealCard from './MealCard.svelte';
   import SubsSheet, { type SubsTarget } from './SubsSheet.svelte';
   import BalanceSheet from './extras/BalanceSheet.svelte';
@@ -74,7 +74,7 @@
   }
 </script>
 
-<main class="screen" class:with-fab={canAdd} {@attach swipe(goDay)}>
+<main class="screen" {@attach swipe(goDay)}>
   {#if !isToday}
     <button class="back ground-link" onclick={() => router.go('settimana/' + mondayOf(date))}><CaretLeft size={20} weight="bold" /> Settimana</button>
   {/if}
@@ -117,6 +117,8 @@
       <BalanceBar {balance} onDetails={() => (details = true)} />
     </div>
   {/if}
+  <!-- Sta col conto del giorno, che è quello che cambia: niente pulsante fisso sopra le righe. -->
+  {#if canAdd}<button class="btn on-ground add" onclick={() => openAdd(null)}><Plus size={20} weight="bold" /> Ho mangiato altro</button>{/if}
 
   {#if rest.length}
     {#if !future}<h2 class="section-title">{now ? 'Gli altri pasti' : 'Pasti'}</h2>{/if}
@@ -136,8 +138,6 @@
   {#if meals.length || dayExtras.length}<p class="section-foot">Valori nutrizionali stimati da tabelle pubbliche: indicativi, non i calcoli del medico.</p>{/if}
 </main>
 
-{#if canAdd}<Fab label="Ho mangiato altro" onclick={() => openAdd(null)} />{/if}
-
 <SubsSheet bind:target={subsTarget} />
 <BalanceSheet bind:open={details} {balance} />
 <AddExtraSheet bind:open={adding} {date} freeSlot={addSlot} />
@@ -153,6 +153,5 @@
 
   /* Il conto sta sul fondo, senza scheda: la scheda resta solo al pasto di adesso. */
   .totals { display: grid; gap: 14px; padding: 4px 4px 0; }
-  /* Spazio in fondo perché il pulsante fisso non copra l'ultima voce. */
-  .with-fab { padding-bottom: calc(env(safe-area-inset-bottom) + 172px); }
+  .add { margin: 18px 0 4px; }
 </style>

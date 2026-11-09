@@ -4,7 +4,7 @@ import { app } from './app.svelte';
 import type { Meal, Plan, PlanItem, Slot } from '../domain/types';
 import { SLOTS } from '../domain/types';
 import { validatePlan, type PlanIssue } from '../domain/validate';
-import { sortMeals, mondayOf } from '../domain/schedule';
+import { sortMeals, mondayOf, weekdayIndex } from '../domain/schedule';
 
 function emptyPlan(): Plan {
   return { id: 'piano-' + Date.now(), name: 'Il mio piano', startDate: mondayOf(app.today), days: Array.from({ length: 7 }, () => ({ meals: [] })) };
@@ -16,8 +16,11 @@ class Editor {
   day = $state(0);
   issues = $state<PlanIssue[]>([]);
 
+  // La prima volta si apre sul giorno di oggi; poi resta quello scelto.
   ensure() {
-    if (!this.draft) this.reset();
+    if (this.draft) return;
+    this.reset();
+    this.day = weekdayIndex(app.today);
   }
 
   reset() {

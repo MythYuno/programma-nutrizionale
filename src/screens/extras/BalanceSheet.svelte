@@ -15,6 +15,10 @@
 </script>
 
 <Sheet bind:open title="Bilancio del giorno">
+  <!-- Una tabella di soli zeri non dice niente: basta una frase. -->
+  {#if balance.total.kcal === 0}
+    <p class="none">Niente di segnato in questo giorno.</p>
+  {:else}
   <table class="group">
     <thead><tr><th></th><th>Piano</th><th>Fuori piano</th><th>Totale</th></tr></thead>
     <tbody>
@@ -34,10 +38,12 @@
       </tr>
     </tbody>
   </table>
+  {/if}
   <p class="section-foot">Il piano prevede {Math.round(balance.planned.kcal)} kcal. Valori stimati: indicativi, non i calcoli del medico.</p>
 </Sheet>
 
 <style>
+  .none { margin: 4px 4px 0; font-size: 17px; color: var(--ink); }
   table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 15px; }
   th, td { padding: 12px 10px; text-align: right; }
   th:first-child { text-align: left; font-weight: 600; }

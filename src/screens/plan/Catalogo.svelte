@@ -35,6 +35,7 @@
     <h1 class="large-title">Alimenti</h1>
     <button class="icon-btn" aria-label="Nuovo alimento" onclick={() => edit(null)}><Plus size={22} weight="bold" /></button>
   </div>
+  <p class="subtitle">Valori ogni 100 g, a crudo</p>
 
   <label class="search">
     <MagnifyingGlass size={18} />
@@ -65,7 +66,7 @@
 
 <style>
   .back { display: flex; align-items: center; gap: 4px; margin-left: -4px; padding: 0 0 8px; }
-  .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .top { display: flex; align-items: center; justify-content: space-between; }
   .empty { color: var(--on-hour-2); }
   .search { display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 14px; padding: 11px 14px; color: var(--ink-2); box-shadow: var(--shadow-row); }
   .search input { flex: 1; border: 0; background: none; outline: none; font-size: 17px; color: var(--ink); }

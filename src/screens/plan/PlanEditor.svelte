@@ -52,14 +52,13 @@
     </div>
   {/if}
 
-  {#if editor.draft}
-    <div class="group">
-      <label class="row">
-        <span class="muted">Nome</span>
-        <input class="grow inline" bind:value={editor.draft.name} oninput={() => editor.touch()} aria-label="Nome del piano" />
-      </label>
-    </div>
+  <!-- Catalogo e backup a portata subito, non in fondo a cinque pasti. -->
+  <nav class="links" aria-label="Dati">
+    <a class="chip" href="#/piano/alimenti">Alimenti <span class="count num">{app.foods.length}</span><CaretRight size={14} weight="bold" /></a>
+    <a class="chip" href="#/piano/backup">{#if backupDue}<i class="dot" aria-hidden="true"></i>Backup da fare{:else}Backup{/if}<CaretRight size={14} weight="bold" /></a>
+  </nav>
 
+  {#if editor.draft}
     <Segmented ground bind:value={() => String(editor.day), (v) => (editor.day = Number(v))} options={dayOptions} />
 
     <div class="day-head">
@@ -80,13 +79,13 @@
         {/each}
       </div>
     {/if}
-  {/if}
 
-  <h2 class="section-title">Dati</h2>
-  <div class="group">
-    <a class="row" href="#/piano/alimenti"><span class="grow">Catalogo alimenti</span><span class="value">{app.foods.length}</span><CaretRight size={16} class="chev" /></a>
-    <a class="row" href="#/piano/backup"><span class="grow">Backup e impostazioni</span>{#if backupDue}<span class="badge">Backup</span>{/if}<CaretRight size={16} class="chev" /></a>
-  </div>
+    <!-- Il nome si cambia di rado: sta in fondo. -->
+    <h2 class="section-title">Nome del piano</h2>
+    <div class="group">
+      <input class="row inline" bind:value={editor.draft.name} oninput={() => editor.touch()} aria-label="Nome del piano" />
+    </div>
+  {/if}
 </main>
 
 <Sheet bind:open={copying} title="Copia {DAY_NAMES[editor.day]} su…">
@@ -105,7 +104,11 @@
 </Sheet>
 
 <style>
-  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+  a.chip { text-decoration: none; min-height: 40px; }
+  .count { color: var(--on-hour-2); }
+  .dot { width: 8px; height: 8px; margin-right: 4px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 2px var(--on-hour); }
 
   .actions { display: flex; align-items: center; gap: 14px; }
   .save { width: auto; min-height: 36px; padding: 0 18px; border-radius: 18px; font-size: 15px; }
@@ -115,12 +118,10 @@
   .tot { color: var(--on-hour-2); font-weight: 600; font-size: 14px; }
   .empty { color: var(--on-hour-2); }
   .notice ul { margin: 6px 0 0; padding-left: 18px; }
-  .inline { border: 0; background: none; outline: none; text-align: right; font-size: 17px; }
-  a.row { color: inherit; text-decoration: none; }
+  .inline { border: 0; background: none; outline: none; font-size: 17px; }
   .day-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 4px 10px; font-size: 15px; }
   .small-link { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; white-space: nowrap; }
   .center { text-align: center; }
   .add-meal { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; }
   .chip { display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 999px; background: var(--veil); color: var(--on-hour); padding: 9px 14px; font-size: 15px; font-weight: 600; }
-  .badge { background: var(--warn); color: #fff; border-radius: 10px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
 </style>

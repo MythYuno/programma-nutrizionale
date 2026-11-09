@@ -31,6 +31,8 @@ export function validatePlan(plan: Plan, foods: readonly Food[]): PlanIssue[] {
         if (!(it.grams > 0)) issues.push({ day: d, mealIndex: m, itemIndex: i, message: `${where}: grammi mancanti.` });
         if (it.subs.some((s) => !ids.has(s.foodId) || !(s.grams > 0)))
           issues.push({ day: d, mealIndex: m, itemIndex: i, message: `${where}: uno scambio è incompleto.` });
+        if (repeatedSub(it.foodId, it.subs))
+          issues.push({ day: d, mealIndex: m, itemIndex: i, message: `${where}: uno scambio è ripetuto.` });
       });
     });
   });
@@ -38,6 +40,16 @@ export function validatePlan(plan: Plan, foods: readonly Food[]): PlanIssue[] {
 }
 
 export { DAY_NAMES };
+
+// Il primo scambio che ripete un altro scambio o l'alimento stesso; null se non ce ne sono.
+export function repeatedSub(foodId: string, subs: readonly { foodId: string }[]): string | null {
+  const seen = new Set([foodId]);
+  for (const s of subs) {
+    if (seen.has(s.foodId)) return s.foodId;
+    seen.add(s.foodId);
+  }
+  return null;
+}
 
 // Toglie dal piano tutto quello che non ha scritto il medico (titoli dei piatti,
 // note, preparazioni delle versioni precedenti): restano fasce, alimenti e scambi.

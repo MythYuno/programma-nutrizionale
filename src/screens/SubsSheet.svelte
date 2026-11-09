@@ -78,7 +78,8 @@
   }
 </script>
 
-<Sheet bind:open title={last ? `${name(last.item.foodId)} · ${fmtGrams(last.item.grams)}` : ''}>
+<!-- I grammi del piano si leggono già in «Come da piano»: il titolo dice solo l'alimento. -->
+<Sheet bind:open title={last ? name(last.item.foodId) : ''}>
   {#if last}
     {@const meal = SLOT_LABEL[last.slot].toLowerCase()}
     <p class="sub">
@@ -116,7 +117,7 @@
         <button class="step" aria-label="5 grammi in meno" disabled={grams <= 5} onclick={() => step(-5)}><Minus size={20} weight="bold" /></button>
         <label class="gv">
           <span class="field-row"><input inputmode="decimal" value={typed ?? fmtDecimal(grams)} oninput={(e) => (typed = e.currentTarget.value)} onchange={commitTyped} onkeydown={(e) => e.key === 'Enter' && e.currentTarget.blur()} enterkeyhint="done" aria-label="Grammi mangiati" autocomplete="off" /><i>g</i></span>
-          <small>di {name(foodId).toLowerCase()} · {fmtGrams(choiceGrams(last.item, foodId) ?? last.item.grams)} previsti</small>
+          <small>{#if foodId !== last.item.foodId}di {name(foodId).toLowerCase()} · {/if}{fmtGrams(choiceGrams(last.item, foodId) ?? last.item.grams)} previsti</small>
         </label>
         <button class="step" aria-label="5 grammi in più" onclick={() => step(5)}><Plus size={20} weight="bold" /></button>
       </div>
@@ -144,7 +145,9 @@
   .opt { cursor: pointer; }
   .opt input { width: 22px; height: 22px; margin: 0; accent-color: var(--act); flex: none; }
   .opts small { display: block; font-size: 13px; color: var(--ink-2); }
-  .grams { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-radius: 18px; background: var(--card); box-shadow: 0 0 0 2px var(--act); }
+  .grams { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-radius: 18px; background: var(--card); box-shadow: 0 0 0 1px var(--sep); }
+  /* Il bordo del colore del pasto solo mentre si scrive. */
+  .grams:focus-within { box-shadow: 0 0 0 2px var(--act); }
   .step { width: 48px; height: 48px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; background: var(--fill); color: var(--act); }
   .step:disabled { opacity: 0.35; }
   .gv { flex: 1; min-width: 0; text-align: center; }

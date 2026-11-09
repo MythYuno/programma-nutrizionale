@@ -42,7 +42,16 @@ export interface BackupSummary {
   freeMeals: number;
   weights: number;
   extras: number;
+  itemLogs: number; // scambi e grammi segnati
   exportedAt: string;
+}
+
+// Giorni, pasti e alimenti devono esserci tutti: altrimenti più avanti il codice
+// si romperebbe senza dire niente.
+function wholePlan(p: unknown): p is Plan {
+  const days = (p as Plan | null)?.days;
+  return Array.isArray(days) && days.every((d) => Array.isArray(d?.meals)
+    && d.meals.every((m) => Array.isArray(m?.items) && m.items.every((it) => Array.isArray(it?.subs))));
 }
 
 // Controllo di forma prima di toccare i dati: meglio rifiutare un file che
@@ -56,7 +65,8 @@ export function parseBackup(text: string): { backup: Backup; summary: BackupSumm
   const arrays = ['foods', 'plans', 'mealLogs', 'weights', 'legacyWeeks'] as const;
   for (const k of arrays) if (!Array.isArray(b[k])) return { error: `Nel backup manca "${k}".` };
   if (!b.settings || typeof b.settings !== 'object') return { error: 'Nel backup mancano le impostazioni.' };
-  if (b.plans!.some((p) => !Array.isArray(p.days) || p.days.length !== 7)) return { error: 'Un piano nel backup non ha 7 giorni.' };
+  if (!b.plans!.every(wholePlan)) return { error: 'Un piano nel backup è incompleto.' };
+  if (b.plans!.some((p) => p.days.length !== 7)) return { error: 'Un piano nel backup non ha 7 giorni.' };
   // Un backup della versione 2 non ha voci fuori piano.
   const extras = Array.isArray(b.extras) ? b.extras : [];
   const customItems = Array.isArray(b.customItems) ? b.customItems : [];
@@ -69,7 +79,7 @@ export function parseBackup(text: string): { backup: Backup; summary: BackupSumm
       plans: backup.plans.length, foods: backup.foods.length,
       mealLogs: backup.mealLogs.filter((l) => l.kind !== 'libero').length,
       freeMeals: backup.mealLogs.filter((l) => l.kind === 'libero').length,
-      weights: backup.weights.length, extras: extras.length, exportedAt: backup.exportedAt,
+      weights: backup.weights.length, extras: extras.length, itemLogs: itemLogs.length, exportedAt: backup.exportedAt,
     },
   };
 }

@@ -5,7 +5,7 @@
   import ArrowsLeftRight from 'phosphor-svelte/lib/ArrowsLeftRight';
   import type { Meal, Slot } from '../../domain/types';
   import { SLOT_LABEL } from '../../domain/types';
-  import { fmtGrams, fmtNumber, mealMacro, portionMacro } from '../../domain/nutrition';
+  import { fmtGrams, fmtNumber, mealMacro } from '../../domain/nutrition';
   import { app } from '../../state/app.svelte';
   import { editor } from '../../state/editor.svelte';
   import { SLOT_COLOR } from '../../ui/format';
@@ -31,9 +31,12 @@
   </div>
 
   {#each meal.items as it, i (i)}
+    {@const words = name(it.foodId).split(' ')}
     <button class="row" class:bad={hasIssue(i)} onclick={() => (editing = i)}>
-      <span class="grow">{name(it.foodId)}{#if it.subs.length}<span class="subs"><ArrowsLeftRight size={12} /> {it.subs.length}</span>{/if}</span>
-      <span class="value num">{fmtGrams(it.grams)} · {fmtNumber(portionMacro(it, app.foodIndex).kcal)} kcal</span>
+      <!-- Il segno degli scambi resta attaccato all'ultima parola: mai da solo a capo. -->
+      <span class="grow">{words.slice(0, -1).join(' ')} <span class="last">{words.at(-1)}{#if it.subs.length}<span class="subs"><ArrowsLeftRight size={12} /> {it.subs.length}</span>{/if}</span></span>
+      <!-- Solo i grammi: le kcal del pasto sono nell'intestazione, quelle della voce nel suo foglio. -->
+      <span class="value num">{fmtGrams(it.grams)}</span>
       <CaretRight size={16} class="chev" />
     </button>
   {/each}
@@ -57,6 +60,7 @@
   .head { display: flex; align-items: center; gap: 8px; padding: 14px 8px 6px 16px; }
   .slot { flex: 1; color: var(--accent); font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
   .icon { border: 0; background: none; color: var(--act); width: 36px; height: 32px; display: grid; place-items: center; }
+  .last { white-space: nowrap; }
   .subs { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; font-size: 12px; color: var(--act); }
   .row.bad .grow { color: var(--danger); }
   .row.add { color: var(--act); gap: 8px; }

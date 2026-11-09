@@ -43,6 +43,8 @@
   const freeKcal = $derived(sumExtras(freeItems).kcal);
   // Al posto del nome di un piatto: gli alimenti del medico, in fila.
   const foods = $derived(rows.map((r) => name(r.e?.foodId ?? r.item.foodId)).join(', '));
+  // Il pasto libero sostituisce il piano: uno scambio scelto prima non conta più.
+  const planFoods = $derived(meal.items.map((it) => name(it.foodId)).join(', '));
 
   function name(id: string) {
     return app.foodIndex.get(id)?.name ?? 'Alimento sconosciuto';
@@ -80,15 +82,15 @@
         <span class="slot">{SLOT_LABEL[meal.slot]}{#if skipped}<span class="skip">non segnato</span>{/if}{#if free}<span class="skip">pasto libero</span>{/if}</span>
         <span class="title">{free ? freeItems.map((e) => e.name).join(', ') || 'Cosa hai mangiato?' : foods}</span>
       </span>
-      <span class="kcal num">{fmtNumber(free ? freeKcal : eatenKcal)} kcal</span>
-      {#if !free}<span class="caret" class:up={open}><CaretDown size={16} weight="bold" /></span>{/if}
+      <!-- Le kcal stanno nel piede quando la riga è aperta: chiusa, lo spazio va al nome. -->
+      {#if free}<span class="kcal num">{fmtNumber(freeKcal)} kcal</span>{:else}<span class="caret" class:up={open}><CaretDown size={16} weight="bold" /></span>{/if}
     </button>
   {/if}
 
   {#if expanded}
     <div class="body" transition:slide={{ duration: hero || readonly ? 0 : 260, easing: cubicOut }}>
       {#if free}
-        <FreeMealBody planTitle={foods} items={freeItems} onAdd={() => onAddToFree?.()} onUnfree={() => onUnfree?.()} onOpen={(id) => onOpenExtra?.(id)} />
+        <FreeMealBody planTitle={planFoods} items={freeItems} onAdd={() => onAddToFree?.()} onUnfree={() => onUnfree?.()} onOpen={(id) => onOpenExtra?.(id)} />
       {:else}
         <ul class="items">
           {#each rows as { item: it, e }, i (i)}
@@ -113,7 +115,7 @@
           </button>
           {#if onFree}<button class="link free-link" onclick={onFree}>Pasto libero</button>{/if}
         {/if}
-        {#if !readonly && (hero || modified)}<p class="foot num">{fmtNumber(eatenKcal)} kcal stimate{#if modified}&nbsp;(piano {fmtNumber(kcal)}){/if}</p>{/if}
+        {#if !readonly}<p class="foot num">{fmtNumber(eatenKcal)} kcal stimate{#if modified}&nbsp;(piano {fmtNumber(kcal)}){/if}</p>{/if}
       {/if}
     </div>
   {/if}
@@ -141,7 +143,8 @@
   .dot { display: flex; color: var(--on-hour); }
   .open .dot { color: var(--accent); }
   .grow { flex: 1; min-width: 0; }
-  .slot { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: 13px; font-weight: 700; color: var(--on-hour-2); }
+  /* Una riga sola: tutte le righe chiuse hanno la stessa altezza. */
+  .slot { display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; font-size: 13px; font-weight: 700; color: var(--on-hour-2); }
   .open .slot { color: var(--accent); }
   .skip { white-space: nowrap; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--veil-2); color: var(--on-hour); }
   .open .skip { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }

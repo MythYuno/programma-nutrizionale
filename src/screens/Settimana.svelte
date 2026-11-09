@@ -8,7 +8,7 @@
   import { fmtNumber } from '../domain/nutrition';
   import { dayBalance, FREE_MEALS_PER_WEEK, weekSummary } from '../domain/extras';
   import { eatenState } from '../state/eaten.svelte';
-  import { dayMonth, shortDate } from '../ui/format';
+  import { shortDate, weekRange } from '../ui/format';
   import { swipe } from '../ui/swipe';
   import DayStrip from '../ui/DayStrip.svelte';
 
@@ -44,7 +44,7 @@
       <button class="icon-btn" aria-label="Settimana successiva" onclick={() => goWeek(1)}><CaretRight size={22} weight="bold" /></button>
     </div>
   </div>
-  <p class="subtitle">Settimana {isoWeek(anchor).split('-W')[1]}, dal {dayMonth(dates[0]!)} al {dayMonth(dates[6]!)}</p>
+  <p class="subtitle">Settimana {isoWeek(anchor).split('-W')[1]}, {weekRange(dates[0]!, dates[6]!)}</p>
 
   <!-- Una settimana che deve ancora cominciare non ha niente da contare. -->
   {#if past.length}
@@ -53,29 +53,24 @@
     <div class="bar"><i style="width:{totalCount ? (doneCount / totalCount) * 100 : 0}%"></i></div>
   </div>
 
-  <div class="week">
-    <div class="wrow" class:over={summary.freeMeals > FREE_MEALS_PER_WEEK}>
-      <span class="grow">Pasto libero usato{#if summary.freeMeals > FREE_MEALS_PER_WEEK}<small>Il piano ne prevede uno a settimana</small>{/if}</span>
-      <b class="num">{summary.freeMeals} su {FREE_MEALS_PER_WEEK}</b>
-    </div>
-    <div class="wrow">
-      <span class="grow">Sgarri</span>
-      <b class="num">{summary.offPlanKcal ? `${fmtNumber(summary.offPlanKcal)} kcal in ${summary.offPlanDays} ${summary.offPlanDays === 1 ? 'giorno' : 'giorni'}` : 'nessuno'}</b>
-    </div>
+  <!-- Fuori piano della settimana: una riga velata, due numeri affiancati. -->
+  <div class="week" class:over={summary.freeMeals > FREE_MEALS_PER_WEEK}>
+    <div class="stat"><span>Pasto libero</span><b class="num">{summary.freeMeals} su {FREE_MEALS_PER_WEEK}</b></div>
+    <div class="stat"><span>Sgarri</span><b class="num">{summary.offPlanKcal ? `${fmtNumber(summary.offPlanKcal)} kcal in ${summary.offPlanDays} ${summary.offPlanDays === 1 ? 'giorno' : 'giorni'}` : 'nessuno'}</b></div>
+    {#if summary.freeMeals > FREE_MEALS_PER_WEEK}<small>Il piano ne prevede uno a settimana</small>{/if}
   </div>
   {/if}
 
   <div class="group">
     {#each rows as r (r.date)}
+      <!-- Griglia: nome e numeri sopra, striscia sotto a tutta larghezza, così le striscette sono allineate. -->
       <button class="row day" class:today={r.date === app.today} onclick={() => router.go('giorno/' + r.date)}>
-        <span class="grow">
-          <span class="name">{shortDate(r.date)}{#if r.date === app.today}<span class="pill">oggi</span>{/if}</span>
-          {#if r.total}<DayStrip segments={r.segments} size="sm" />{/if}
-        </span>
+        <span class="name">{shortDate(r.date)}{#if r.date === app.today}<span class="pill">oggi</span>{/if}</span>
         {#if r.date <= app.today || r.done}
-          <span class="value"><b>{r.done}/{r.total}</b>{#if r.done || r.extra}<br /><span class="small">{fmtNumber(r.kcal)} kcal{#if r.extra}&nbsp;· +{fmtNumber(r.extra)}{/if}</span>{/if}</span>
+          <span class="value num"><b>{r.done}/{r.total}</b>{#if r.done || r.extra}<span class="small">{fmtNumber(r.kcal)} kcal{#if r.extra}&nbsp;· +{fmtNumber(r.extra)}{/if}</span>{/if}</span>
         {/if}
         <CaretRight size={16} weight="bold" class="chev" />
+        {#if r.total}<span class="strip"><DayStrip segments={r.segments} size="sm" /></span>{/if}
       </button>
     {/each}
   </div>
@@ -98,17 +93,18 @@
   .bar { height: 8px; border-radius: 4px; background: var(--veil-2); margin-top: 12px; overflow: hidden; }
   .bar i { display: block; height: 100%; background: var(--on-hour); border-radius: 4px; transition: width 0.5s var(--ease-out); }
   /* Riepilogo del fuori piano: righe velate sul fondo, come gli sgarri in Oggi. */
-  .week { display: grid; gap: 8px; margin: 0 0 16px; }
-  .wrow { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-row); background: var(--veil); font-size: 15px; font-weight: 650; }
-  .wrow .grow { flex: 1; min-width: 0; }
-  .wrow small { display: block; font-size: 13px; font-weight: 600; color: var(--on-hour-2); }
-  .wrow b { color: var(--on-hour-2); font-weight: 700; }
-  .wrow.over b { color: var(--on-hour); }
-  .day { min-height: 64px; }
-  .day .grow { display: flex; flex-direction: column; gap: 8px; }
-  .name { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .week { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; margin: 0 0 16px; padding: 12px 14px; border-radius: var(--radius-row); background: var(--veil); }
+  .stat { display: grid; gap: 2px; min-width: 0; }
+  .stat + .stat { padding-left: 14px; border-left: 1px solid var(--veil-2); }
+  .stat span { font-size: 13px; font-weight: 650; color: var(--on-hour-2); }
+  .stat b { font-size: 16px; font-weight: 750; color: var(--on-hour); }
+  .week small { grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--on-hour); }
+  .day { display: grid; grid-template-columns: 1fr auto 16px; align-items: center; gap: 10px 10px; min-height: 64px; }
+  .name { font-weight: 600; display: flex; align-items: center; gap: 8px; min-width: 0; }
   .today .name { color: var(--act); }
   .pill { font-size: 12px; font-weight: 700; color: var(--act); background: color-mix(in srgb, var(--act) 12%, transparent); padding: 2px 8px; border-radius: 999px; }
-  .value { text-align: right; line-height: 1.25; }
+  .value { grid-column: 2; display: flex; align-items: baseline; gap: 8px; }
   .value b { color: var(--ink); font-weight: 700; }
+  .day :global(.chev) { grid-column: 3; }
+  .strip { grid-column: 1 / 3; }
 </style>

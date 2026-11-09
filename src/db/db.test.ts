@@ -84,6 +84,20 @@ describe('backup', () => {
     expect(parseBackup('{"app":"programma-nutrizionale","version":1}')).toMatchObject({ error: expect.stringMatching(/Versione/) });
   });
 
+  it('un piano rotto nel backup dà un messaggio, non un errore muto', async () => {
+    const a = freshDb();
+    await ensureStartup(a, storage({}), '2026-11-03');
+    const b = await exportBackup(a);
+    const broken = [
+      [null],
+      [{ id: 'x', name: 'X', startDate: '2026-11-02', days: Array.from({ length: 7 }, () => ({})) }],
+      [{ id: 'x', name: 'X', startDate: '2026-11-02', days: Array.from({ length: 7 }, () => ({ meals: [{ slot: 'pranzo' }] })) }],
+    ];
+    for (const plans of broken) {
+      expect(parseBackup(JSON.stringify({ ...b, plans }))).toEqual({ error: 'Un piano nel backup è incompleto.' });
+    }
+  });
+
   it('annullare un pasto fatto lo toglie', async () => {
     const db = freshDb();
     const log = { date: '2026-10-28', slot: 'cena' as const, planId: 'p' };
@@ -198,7 +212,7 @@ describe('scambi e grammi nel database', () => {
     expect(exported.version).toBe(4);
     const parsed = parseBackup(JSON.stringify(exported));
     if ('error' in parsed) throw new Error(parsed.error);
-    expect(parsed.summary).toMatchObject({ mealLogs: 1, freeMeals: 1 });
+    expect(parsed.summary).toMatchObject({ mealLogs: 1, freeMeals: 1, itemLogs: 1 });
     const b = freshDb();
     await restoreBackup(b, parsed.backup);
     expect(await b.itemLogs.toArray()).toEqual([itemLog]);

@@ -23,27 +23,32 @@
 
 <button class="bal" aria-label={label} onclick={onDetails}>
   <span class="num">
-    <b class="n">{fmtNumber(balance.total.kcal)}</b>
+    <span><b class="n">{fmtNumber(balance.total.kcal)}</b> <span class="u">kcal</span></span>
     <!-- Senza piano non c'è un "di quanto": solo il totale. -->
-    <span class="of">{#if hasPlan}di {fmtNumber(balance.planned.kcal)} kcal{#if balance.delta > 0}&nbsp;· +{fmtNumber(balance.delta)}{/if}{:else}kcal{/if}</span>
+    {#if hasPlan}<span class="of">di {fmtNumber(balance.planned.kcal)}{#if balance.delta > 0}&nbsp;· +{fmtNumber(balance.delta)}{/if}</span>{/if}
   </span>
   <span class="bar" aria-hidden="true">
     <i class="p" style:width={pct(balance.fromPlan.kcal)}></i><i class="x" style:width={pct(extra)}></i>
     {#if hasPlan}<i class="tick" style:left={pct(balance.planned.kcal)}></i>{/if}
   </span>
-  <span class="leg">
-    {#if hasPlan}<span><i class="sw"></i>Piano {fmtNumber(balance.fromPlan.kcal)}</span>{/if}
-    {#if balance.offPlan.kcal > 0}<span><i class="sw h"></i>Fuori piano {fmtNumber(balance.offPlan.kcal)}</span>{/if}
-    {#if balance.free.kcal > 0}<span><i class="sw h"></i>Pasto libero {fmtNumber(balance.free.kcal)}</span>{/if}
-  </span>
+  <!-- La legenda serve solo quando la barra ha due parti. -->
+  {#if extra > 0}
+    <span class="leg">
+      {#if hasPlan}<span><i class="sw"></i>Piano {fmtNumber(balance.fromPlan.kcal)}</span>{/if}
+      {#if balance.offPlan.kcal > 0}<span><i class="sw h"></i>Fuori piano {fmtNumber(balance.offPlan.kcal)}</span>{/if}
+      {#if balance.free.kcal > 0}<span><i class="sw h"></i>Pasto libero {fmtNumber(balance.free.kcal)}</span>{/if}
+    </span>
+  {/if}
 </button>
 
 <style>
   .bal { display: block; width: 100%; padding: 4px 4px 0; border: 0; background: none; color: var(--on-hour); text-align: left; }
   .num { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-  .n { font-size: 32px; font-weight: 800; letter-spacing: -0.035em; font-variant-numeric: tabular-nums; }
+  /* Il conto accompagna il pasto di adesso, non gli contende la scena. */
+  .n { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .u { font-size: 15px; font-weight: 700; color: var(--on-hour-2); }
   .of { font-size: 15px; font-weight: 600; color: var(--on-hour-2); font-variant-numeric: tabular-nums; }
-  .bar { position: relative; display: flex; height: 14px; margin: 10px 0 8px; border-radius: 7px; background: var(--veil-2); }
+  .bar { position: relative; display: flex; height: 12px; margin: 8px 0 6px; border-radius: 7px; background: var(--veil-2); }
   .bar i { display: block; height: 100%; transition: width 0.5s var(--ease-out); }
   .p { background: var(--on-hour); border-radius: 7px 0 0 7px; }
   .x { background: var(--hatch); border-radius: 0 7px 7px 0; }
